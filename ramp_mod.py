@@ -1,4 +1,3 @@
-import qt
 import numpy as np
 import time as timemod
 from time import sleep
@@ -12,7 +11,8 @@ def ramp(instrument,parameter,value,step,time):
     time -- timestep
     '''
     v_start = getattr(instrument,'get_%s' % parameter)()
-
+    #v_start = str(instrument)+'.get_'+str(parameter)
+    
     if value > v_start:
         step = abs(step)
     else:
@@ -24,6 +24,6 @@ def ramp(instrument,parameter,value,step,time):
     else:
         for v in np.arange(v_start,value,step):
             getattr(instrument,'set_%s' % parameter)(v)
-            sleep(time/1000.0)
+            sleep(time)
 
         getattr(instrument,'set_%s' % parameter)(value)
