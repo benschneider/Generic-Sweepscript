@@ -50,11 +50,10 @@ class instrument1():
         nByte = int(sData[i0+2:i0+2+nDig])
         nData = nByte/4
         nPts = nData/2
-        # get data to numpy array
-        vData = np.frombuffer(sData[(i0+2+nDig):(i0+2+nDig+nByte)],
-							  dtype='>f', count=nData)
+        data32 = sData[(i0+2+nDig):(i0+2+nDig+nByte)]
+        vData = unpack('!'+str(nData)+'f', data32)
+        vData = np.array(vData)
         # data is in I0,Q0,I1,Q1,I2,Q2,.. format, convert to complex
         mC = vData.reshape((nPts,2))
         vComplex = mC[:,0] + 1j*mC[:,1]
         return vComplex
-
