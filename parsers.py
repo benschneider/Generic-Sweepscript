@@ -20,6 +20,16 @@ missing:
 import numpy as np
 from struct import pack, unpack
 import csv
+from os.path import isfile
+import sys
+
+
+def ask_overwrite(filename):
+    if isfile(filename):
+        print 'Overwrite File? type:yes'
+        a0 = raw_input()
+        if a0 != 'yes':
+            return sys.exit("Abort")
 
 def loaddat(*inputs):
     '''
