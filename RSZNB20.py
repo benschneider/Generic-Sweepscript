@@ -43,7 +43,7 @@ class instrument1():
         self.w(':SENS:AVER:CLE') #clear prev averages
         self.w(':SENS:SWE:COUN 1') #set counts to 1
 
-    def get_vnadata(self):
+    def get_data(self):
         sData = self.a(':FORM REAL,32;CALC:DATA? SDATA') #grab data from VNA
         i0 = sData.find('#')
         nDig = int(sData[i0+1])
