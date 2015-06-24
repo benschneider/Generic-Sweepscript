@@ -20,16 +20,33 @@ missing:
 import numpy as np
 from struct import pack, unpack
 import csv
-from os.path import isfile
+from os import path
 import sys
-
+from shutil import copy
+from inspect import currentframe, getfile
 
 def ask_overwrite(filename):
-    if isfile(filename):
+    if path.isfile(filename):
         print 'Overwrite File? type:yes'
         a0 = raw_input()
         if a0 != 'yes':
             return sys.exit("Abort")
+
+
+def copy_thisfile(file_add,folder = ''):
+    ''' folder = "somefolder\\" 
+    i.e.
+    copy_yourself('bla','test\\')
+    '''
+    _file = getfile(currentframe())
+    #drive = os.getcwd() #D:\
+    filen = path.basename(_file) #test.py
+    ffile = path.abspath(_file)    #D:\test.py
+    ffolder = path.dirname(_file) #EMPTY
+    new_ffile = ffolder + folder + filen[:-3] +'_' + file_add + filen[-3:]
+    copy(ffile, new_ffile)
+
+
 
 def loaddat(*inputs):
     '''
