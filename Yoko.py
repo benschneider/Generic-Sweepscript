@@ -22,6 +22,7 @@ class instrument2():
     def __init__(self, adress):
         self._adress = adress
         self._visainstrument = visa.instrument(self._adress)
+        self.v = 0
 
     def w(self,write_cmd):
         self._visainstrument.write(write_cmd)
@@ -33,24 +34,27 @@ class instrument2():
         return self._visainstrument.ask(ask_cmd)
 
     def set_mode(self,option):
-        '''
+        ''' option = 
         1 -- Voltage mode,
         5 -- Current mode
         '''
-        self.write('F' + str(option) + ' E')
+        self.w('F' + str(option) + ' E')
 
     def set_vrange(self, range):
-        '''range =
-        2 10mV,
-        3 100mV,
-        4 1V,
-        5 10V,
-        6 30V
+        ''' range =
+        2 -- 10mV,
+        3 -- 100mV,
+        4 -- 1V,
+        5 -- 10V,
+        6 -- 30V
         '''
-        self.write('R' + str(range) + ' E')
+        self.w('R' + str(range) + ' E')
 
     def output(self, boolean):
-        ''' output on O1, off O0'''
+        ''' boolean =
+        1 -- ON,
+        0 -- OFF
+        '''
         self.w('O' + str(boolean) + ' E')
 
     def sweep_v(self, value, sweeptime):
@@ -58,3 +62,12 @@ class instrument2():
         value, sweeptime
         '''
         self.w('M1 PI'+str(sweeptime)+' SW'+str(sweeptime)+' PRS S'+str(value)+' PRE RU2')
+        
+    def set_v(self, value):
+        self.w('S'+str(value)+' E')
+        self.v = value
+        
+    def get_v(self):
+        eval(self.a('H0 OD'))
+        self.v = eval(self.a('H0 OD'))
+        return self.v
