@@ -7,7 +7,7 @@ Keithley 2000 driver
 
 
 import visa
-
+from time import time
 
 class instrument3():
     '''
@@ -43,10 +43,16 @@ class instrument3():
         self.w('INITiate:CONTinuous OFF;:ABORt')      #self.set_trigger_continuous(False)
         self.w('SYSTem:AZERo:STATe OFF')               #Turn autozero off for speed (will result in voltage offsets over time!!)
         self.w('SENSe:VOLTage:DC:AVERage:STATe OFF')  #Turn off filter for speed
-        self.w('SENSe:VOLTage:DC:RANGe 1')          #give it a fixed range to max speed
+        self.w('SENSe:VOLTage:DC:RANGe 10')          #give it a fixed range to max speed
         self.w('TRIG:DEL:AUTO OFF')                   #set triger delay to manual
         self.w('TRIG:DEL 0')                          #TRIGger:DELay to 0 sec
         self.w('TRIGger:COUNt 1')
 
-    def read(self):
+    def get_val(self):
         return eval(self.a('READ?'))
+    
+    def testspeed(self):
+        t00 = time()
+        self.get_val()
+        t01 = time()
+        print 'less than 32ms is good, '+str(t01-t00) +'s'
