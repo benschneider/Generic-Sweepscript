@@ -9,7 +9,7 @@ Keithley 2000 driver
 import visa
 from time import time
 
-class instrument3():
+class instrument():
     '''
     vm2000 = instrument3('GPIB0::29::INSTR')
     w write

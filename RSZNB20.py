@@ -15,7 +15,12 @@ from struct import unpack #, pack
 from time import sleep
 import visa
 
-class instrument1():
+class instrument2():
+    #name = 'ZNB20'
+    #start = -30e-3 
+    #stop = 30e-3
+    #pt = 1001 # number of points
+    #power = -30 #rf power
     '''
     vna = instrument1('TCPIP::169.254.107.192::INSTR')
     w write
@@ -45,16 +50,21 @@ class instrument1():
         self.w(':SENS:AVER:CLE') #clear prev averages
         self.w(':SENS:SWE:COUN 1') #set counts to 1
 
-    def get_data2(self):
+    def get_data(self):
         try:
             a = self.get_data()
         except:
             sleep (1)
             a = self.get_data2()
         return a
-            
+    
+    def set_power(self,power):
+        self.w(':SOUR:POW '+str(power))
+    
+    def get_power(self):
+        return self.a(':SOUR:POW?')
 
-    def get_data(self):
+    def get_data2(self):
         sData = self.a(':FORM REAL,32;CALC:DATA? SDATA') #grab data from VNA
         i0 = sData.find('#')
         nDig = int(sData[i0+1])

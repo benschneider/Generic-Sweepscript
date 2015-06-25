@@ -11,7 +11,7 @@ Voltage / Current source
 import visa
 from time import sleep
 
-class instrument2():
+class instrument():
     '''
     yoko = instrument2('GPIB0::10::INSTR')
     w write

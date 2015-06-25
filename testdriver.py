@@ -1,7 +1,7 @@
 from time import sleep
 import numpy as np
 
-class instrument00():
+class instrument():
 
     def __init__(self, adress):
         self.adress = adress
