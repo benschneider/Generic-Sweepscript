@@ -15,7 +15,7 @@ from struct import unpack #, pack
 from time import sleep
 import visa
 
-class instrument2():
+class instrument():
     #name = 'ZNB20'
     #start = -30e-3 
     #stop = 30e-3
