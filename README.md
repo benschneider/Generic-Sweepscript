@@ -1,4 +1,6 @@
-(Uploaded and intended for myself)
+(Currenly uploaded and intended for myself)
+Note: As I use the script I will improve it.
+
 This little script sweeps both a Yokogawa Voltage source and a VNA in CW mode,
 most setting on the VNA still have to be set by hand first.
 (This is more of a quick and dirty measurement)
