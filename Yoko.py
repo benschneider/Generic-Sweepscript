@@ -9,7 +9,7 @@ Voltage / Current source
 
 #import numpy as np
 import visa
-
+from time import sleep
 
 class instrument2():
     '''
@@ -23,6 +23,7 @@ class instrument2():
         self._adress = adress
         self._visainstrument = visa.instrument(self._adress)
         self.v = 0
+        self.name = 'Yokogawa'
 
     def w(self,write_cmd):
         self._visainstrument.write(write_cmd)
@@ -71,3 +72,9 @@ class instrument2():
         eval(self.a('H0 OD'))
         self.v = eval(self.a('H0 OD'))
         return self.v
+        
+    def prepare(self):
+        '''Sweeps to 0 in 10 sec and then switches on'''
+        self.sweep_v(0, 5)
+        sleep(5)
+        self.output(1)

@@ -11,7 +11,8 @@ Vector Network Analyzer
 '''
 
 import numpy as np
-from struct import unpack, pack
+from struct import unpack #, pack
+from time import sleep
 import visa
 
 class instrument1():
@@ -25,7 +26,8 @@ class instrument1():
     def __init__(self, adress):
         self._adress = adress
         self._visainstrument = visa.instrument(self._adress)
-
+        self.name = 'ZNB20'
+        
     def w(self,write_cmd):
         self._visainstrument.write(write_cmd)
 
@@ -43,6 +45,15 @@ class instrument1():
         self.w(':SENS:AVER:CLE') #clear prev averages
         self.w(':SENS:SWE:COUN 1') #set counts to 1
 
+    def get_data2(self):
+        try:
+            a = self.get_data()
+        except:
+            sleep (1)
+            a = self.get_data2()
+        return a
+            
+
     def get_data(self):
         sData = self.a(':FORM REAL,32;CALC:DATA? SDATA') #grab data from VNA
         i0 = sData.find('#')
@@ -56,4 +67,6 @@ class instrument1():
         # data is in I0,Q0,I1,Q1,I2,Q2,.. format, convert to complex
         mC = vData.reshape((nPts,2))
         vComplex = mC[:,0] + 1j*mC[:,1]
+        
         return vComplex
+

@@ -8,20 +8,25 @@ Generic Sweep script
 
 #import visa
 import numpy as np
-from time import sleep
-from time import time
+from time import time, sleep
+from inspect import currentframe, getfile
+thisfile = getfile(currentframe())
 
 #for storing results
 execfile('parsers.py')
 execfile('ramp_mod.py')
 
-#Overwrites without asking!!
-filen_1 = 'S1_133_voltage.mtx'
+filen_1 = 'S1_136.mtx'
+folder = 'data\\'
+
+#ask_overwrite(folder+filen_1)
+ask_overwrite(folder+filen_1)
+copy_file(thisfile, filen_1[:-4], folder)
 
 #first sweep dim:
 dim_1start = -35e-3 #yokoV
 dim_1stop = 35e-3
-dim_1pt = 70001
+dim_1pt = 301
 
 dim_2start = 0.3 #yokoM
 dim_2stop = 0.3
@@ -88,7 +93,7 @@ for kk in range(dim_3pt):
         for ii in range(dim_1pt):
             dim_3val = dim_1lin[ii]
             #t0 = time()
-            if dim_1pt > 600:
+            if dim_1pt > 1000:
                 yokoV.set_v(dim_3val) #sets value imediately (Dangerous!)
             else:
                 ramp(yokoV, 'v', dim_3val, 0.002, 0.01) #slower but safer sweep
@@ -98,7 +103,7 @@ for kk in range(dim_3pt):
             matrix3d[kk,jj,ii] = vmdata
 
         #store data into a file
-        savemtx(filen_1, matrix3d, header = head1)
+        savemtx(folder + filen_1, matrix3d, header = head1)
         t1 = time()
         remaining_time = ((t1-t0)/(jj+1)*dim_2pt - (t1-t0))
         print 'req est time (h):'+str(remaining_time/3600)

@@ -23,7 +23,7 @@ import csv
 from os import path
 import sys
 from shutil import copy
-from inspect import currentframe, getfile
+
 
 def ask_overwrite(filename):
     if path.isfile(filename):
@@ -33,19 +33,18 @@ def ask_overwrite(filename):
             return sys.exit("Abort")
 
 
-def copy_thisfile(file_add,folder = ''):
+def copy_file(thisfile, file_add, folder = ''):
     ''' folder = "somefolder\\" 
     i.e.
-    copy_yourself('bla','test\\')
+    thisfile = '__filename__'
+    copy_file(thisfile, 'bla','data\\')
     '''
-    _file = getfile(currentframe())
-    #drive = os.getcwd() #D:\
-    filen = path.basename(_file) #test.py
-    ffile = path.abspath(_file)    #D:\test.py
-    ffolder = path.dirname(_file) #EMPTY
-    new_ffile = ffolder + folder + filen[:-3] +'_' + file_add + filen[-3:]
+    #drive = os.getcwd()                #D:\
+    #filen = path.basename(thisfile)     #something.py
+    ffile = path.abspath(thisfile)     #D:\something.py
+    ffolder = path.dirname(thisfile)    #EMPTY
+    new_ffile = ffolder + folder + thisfile[:-3] +'_' + file_add + thisfile[-3:]
     copy(ffile, new_ffile)
-
 
 
 def loaddat(*inputs):

@@ -13,20 +13,26 @@ from time import time
 
 execfile('parsers.py')
 
+#driver
 execfile('RSZNB20.py')
 vna = instrument1('TCPIP::169.254.107.192::INSTR')
-
 execfile('Yoko.py')
-magnet = instrument2('GPIB0::10::INSTR')
-vsource = instrument2('GPIB0::13::INSTR')
-
+yokoM = instrument2('GPIB0::10::INSTR')
+yokoV = instrument2('GPIB0::13::INSTR')
 execfile('keithley2000.py')
-vm2000 = instrument3('GPIB0::29::INSTR')
+vm = instrument3('GPIB0::29::INSTR')
 
+
+#setup 
+vm.optimise()
+sleep(0.1)
+vm.testspeed()
 
 filen_1 = 'ben_data_130.mtx'
+
 start_v = -0.1
 stop_v = 0.15
+
 v_swt = 297 #set time for voltage sweep
 
 averages = 100

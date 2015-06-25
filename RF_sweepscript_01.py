@@ -14,7 +14,7 @@ thisfile = getfile(currentframe())
 execfile('parsers.py')
 execfile('ramp_mod.py')
 
-filen_0 = 'S1_136'
+filen_0 = 'S1_137'
 folder = 'data\\'
 
 dim_1name = 'VNA S21 - Time'
@@ -40,9 +40,9 @@ dim_1b.output(1) #turn Yoko ON
 sleep(1)
 
 dim_2name = 'Yoko V' 
-dim_2start = -20e-3
-dim_2stop = 20e-3
-dim_2pt = 601
+dim_2start = -10e-3
+dim_2stop = 10e-3
+dim_2pt = 201
 execfile('Yoko.py')
 dim_2 = instrument2('GPIB0::13::INSTR') #'Yoko V' 
 dim_2.set_mode(1)
@@ -129,7 +129,7 @@ for kk in range(dim_3pt):
         dim_1b.sweep_v(dim_1b_stop, dim_1b_time)        
         #Wait for both to be finished
         sleep(dim_1b_time+1)
-        vdata = dim_1.get_data() # np.array(real+ i* imag)
+        vdata = dim_1.get_data2() # np.array(real+ i* imag)
         phase_data = np.angle(vdata)        
         matrix3d_1[kk,jj] = vdata.real
         matrix3d_2[kk,jj] = vdata.imag
