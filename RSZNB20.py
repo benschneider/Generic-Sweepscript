@@ -50,33 +50,38 @@ class instrument():
         self.w(':SENS:AVER:CLE') #clear prev averages
         self.w(':SENS:SWE:COUN 1') #set counts to 1
 
-    def get_data(self):
-        try:
-            a = self.get_data()
-        except:
-            sleep (1)
-            a = self.get_data2()
-        return a
-    
+   
     def set_power(self,power):
         self.w(':SOUR:POW '+str(power))
     
     def get_power(self):
         return self.a(':SOUR:POW?')
 
-    def get_data2(self):
-        sData = self.a(':FORM REAL,32;CALC:DATA? SDATA') #grab data from VNA
+    def get_data(self):
+        try:
+            sData = self.a(':FORM REAL,32;CALC:DATA? SDATA') #grab data from VNA
+        except:
+            print 'Waiting for VNA'
+            sleep (10) #poss. asked to early for data (for now just sleep 10 sec)
+            sData = self.a(':FORM REAL,32;CALC:DATA? SDATA') #try once more after 5 seconds
         i0 = sData.find('#')
         nDig = int(sData[i0+1])
         nByte = int(sData[i0+2:i0+2+nDig])
         nData = nByte/4
         nPts = nData/2
         data32 = sData[(i0+2+nDig):(i0+2+nDig+nByte)]
-        vData = unpack('!'+str(nData)+'f', data32)
-        vData = np.array(vData)
-        # data is in I0,Q0,I1,Q1,I2,Q2,.. format, convert to complex
-        mC = vData.reshape((nPts,2))
-        vComplex = mC[:,0] + 1j*mC[:,1]
-        
-        return vComplex
-
+        #if len(data32) == nByte unpack should work
+        try:
+            vData = unpack('!'+str(nData)+'f', data32)
+            vData = np.array(vData)
+            mC = vData.reshape((nPts,2)) # data is in I0,Q0,I1,Q1,I2,Q2,.. format, convert to complex
+            vComplex = mC[:,0] + 1j*mC[:,1]
+        except:
+            print 'problem with unpack likely bad data from VNA'
+            print self.get_error()
+            self.w('*CLS') #CLear Status
+            return 'Error'            
+        return vComplex 
+            
+    def get_error(self):
+        return self.a('SYST:ERR:ALL?')

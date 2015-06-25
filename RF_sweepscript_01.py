@@ -26,24 +26,26 @@ thisfile = getfile(currentframe())
 from parsers import savemtx, ask_overwrite, copy_file
 from ramp_mod import ramp
 
-filen_0 = 'S1_139'
+filen_0 = 'S1_140'
 folder = 'data\\'
 
 
 from RSZNB20 import instrument as i1
 dim_1 = i1('TCPIP::169.254.107.192::INSTR')
 dim_1.name = 'ZNB20 S21 - Time'
-dim_1.start = -30e-3 
-dim_1.stop = 30e-3
-vdata = dim_1.get_data2()
-dim_1.pt = vdata.shape[0]
+dim_1.start = -1
+dim_1.stop = 1
+vdata = dim_1.get_data()
+if vdata == 'Error':
+    print 'VNA data Problem'
+dim_1.pt = vdata.shape[0]    
 
 from Yoko import instrument as i2
 dim_1b = i2('GPIB0::10::INSTR') #'Yoko M' 
 dim_1b.name = 'Yoko M'
 dim_1b.start = -1 
 dim_1b.stop = 1
-dim_1b.time = 60 #sweep in 200 seconds, while VNA records
+dim_1b.time = 16 #sweep in 200 seconds, while VNA records
 
 dim_1b.set_mode(1) #V mode
 dim_1b.set_vrange(4) #2  10mV, 3  100mV, 4  1V, 5  10V, 6  30V
@@ -130,7 +132,6 @@ try:
         '''Do Dim 2 prep'''
         dim_2.sweep_v(dim_2.start, 5)
         sleep(5.2)
-        
         for jj in range(dim_2.pt):
             '''Do Dim 2 '''
             dim_2val = dim_2lin[jj] 
@@ -141,13 +142,16 @@ try:
             sleep(5.2)
             '''Do Dim 1 '''
             #Sweep magnet while measuring with the VNA
-            #Start VNA sweep
             dim_1.init_sweep()
-            #Start 
             dim_1b.sweep_v(dim_1b.stop, dim_1b.time)        
-            #Wait for both to be finished
             sleep(dim_1b.time+1)
             vdata = dim_1.get_data() # np.array(real+ i* imag)
+            if vdata == 'Error': #retake
+                dim_1.init_sweep()
+                dim_1b.sweep_v(dim_1b.stop, dim_1b.time)        
+                sleep(dim_1b.time+5)
+                vdata = dim_1.get_data()
+            
             phase_data = np.angle(vdata)        
             matrix3d_1[kk,jj] = vdata.real
             matrix3d_2[kk,jj] = vdata.imag
@@ -159,7 +163,7 @@ try:
             savemtx(folder + filen_4, matrix3d_4, header = head_4)
             
             t1 = time()
-            remaining_time = ((t1-t0)/(jj+1)*dim_2.pt - (t1-t0))
+            remaining_time = ((t1-t0)/(jj+1)*dim_2.pt*dim_3.pt - (t1-t0))
             print 'req est time (h):'+str(remaining_time/3600)
 
 finally:
