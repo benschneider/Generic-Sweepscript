@@ -27,7 +27,7 @@ from parsers import savemtx, ask_overwrite, copy_file, make_header
 from ramp_mod import ramp
 import sys
 
-filen_0 = 'S1_142'
+filen_0 = 'S1_143'
 folder = 'data\\'
 
 ### DIM 1
@@ -46,8 +46,7 @@ vdata = dim_1.get_data()
 dim_1.pt = vdata.shape[0]    
 dim_1.sweeptime = dim_1.get_sweeptime()
 if dim_1.sweeptime < 5:
-    print 'dim_1 sweeptime is too short'
-    sys.exit("Abort")
+    sys.exit("Dim_1 Sweeptime is too short")
 
 dim_1b.time = dim_1.sweeptime #second sweep while VNA records
 dim_1b.set_mode(1) #V mode
@@ -63,20 +62,20 @@ def sweep_dim1(dim_1,dim_1b):
     2. sweep magnet at the same time with the VNA
     3. return VNA data
     '''
-    dim_1b.sweep_v(dim_1b.start, 5)
-    sleep(5.2)
+    dim_1b.sweep_v(dim_1b.start, 4)
+    sleep(4.2)
     dim_1.init_sweep()
     dim_1b.sweep_v(dim_1b.stop, dim_1b.time)        
-    sleep(dim_1b.time+1)
+    sleep(dim_1b.time+0.5)
     vdata = dim_1.get_data() # np.array(real+ i* imag)
     return vdata
 
 from Yoko import instrument as i3
 dim_2 = i3('GPIB0::13::INSTR') #'Yoko V' 
-dim_2.name = 'Yoko V' 
-dim_2.start = -8e-3
-dim_2.stop = 8e-3
-dim_2.pt = 81
+dim_2.name = 'Yoko V 14.8KOhm' 
+dim_2.start = -12e-3
+dim_2.stop = 12e-3
+dim_2.pt = 121
 
 dim_2.set_mode(1)
 dim_2.set_vrange(3) 
@@ -87,11 +86,11 @@ sleep(1)
 
 from testdriver import instrument as i4 #just a dummy driver
 dim_3 = i4('Nothing') #VNA POWER sweep
-dim_3.set_power = dim_1.set_power #thats what I like to sweep
-dim_3.name = 'RF-Power' 
-dim_3.start = 12
-dim_3.stop = -30
-dim_3.pt = 15
+dim_3.name = 'RF-CW-FREQ' 
+dim_3.start = 8.35e9
+dim_3.stop = 8.55e9
+dim_3.pt = 21
+dim_3.set_freq_cw = dim_1.set_freq_cw
 
 '''
 #Other Equipment
@@ -120,25 +119,25 @@ matrix3d_4 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
 ask_overwrite(folder+filen_1)
 copy_file(thisfile, filen_0, folder) #backup this script
 
-dim_1lin = np.linspace(dim_1.start,dim_1.stop,dim_1.pt)
-dim_2lin = np.linspace(dim_2.start,dim_2.stop,dim_2.pt)
-dim_3lin = np.linspace(dim_3.start,dim_3.stop,dim_3.pt)
+dim_1.lin = np.linspace(dim_1.start,dim_1.stop,dim_1.pt)
+dim_2.lin = np.linspace(dim_2.start,dim_2.stop,dim_2.pt)
+dim_3.lin = np.linspace(dim_3.start,dim_3.stop,dim_3.pt)
 #execute sweep
-print 'req time (m):'+str(dim_3.pt*dim_2.pt*dim_1.pt*0.03/60)
+print 'req time (m):'+str(dim_3.pt*dim_2.pt*dim_1.sweeptime/60)
 t0 = time()
 try:
     for kk in range(dim_3.pt): 
         ''' Do Dim 3 '''
-        dim_3val = dim_3lin[kk] 
-        dim_3.set_power(dim_3val)
+        dim_3val = dim_3.lin[kk] 
+        dim_3.set_freq_cw(dim_3val)
     
         #sleep(5.2)
         '''Do Dim 2 prep'''
-        dim_2.sweep_v(dim_2.start, 5)
-        sleep(5.2)
+        dim_2.sweep_v(dim_2.start, 4)
+        sleep(4.2)
         for jj in range(dim_2.pt):
             '''Do Dim 2 '''
-            dim_2val = dim_2lin[jj] 
+            dim_2val = dim_2.lin[jj] 
             dim_2.sweep_v(dim_2val, 0.1)
             
             vdata = sweep_dim1(dim_1,dim_1b) #sweep dim1 & dim_1b

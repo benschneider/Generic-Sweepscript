@@ -59,6 +59,10 @@ class instrument():
         return self.a('SYST:ERR:ALL?')
     def get_sweeptime(self):
         return eval(self.a('SWE:TIME?'))
+    def get_freq(self):
+        return eval(self.a('FREQ?'))
+    def set_freq_cw(self,value):
+        self.w('FREQ:CW '+str(value))
 
     def get_data(self):
         ''' involves some error handling
