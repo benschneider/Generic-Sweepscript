@@ -32,6 +32,7 @@ class instrument():
         self._adress = adress
         self._visainstrument = visa.instrument(self._adress)
         self.name = 'ZNB20'
+        self.sweeptime = self.get_sweeptime()
         
     def w(self,write_cmd):
         self._visainstrument.write(write_cmd)
@@ -50,14 +51,19 @@ class instrument():
         self.w(':SENS:AVER:CLE') #clear prev averages
         self.w(':SENS:SWE:COUN 1') #set counts to 1
 
-   
     def set_power(self,power):
         self.w(':SOUR:POW '+str(power))
-    
     def get_power(self):
         return self.a(':SOUR:POW?')
+    def get_error(self):
+        return self.a('SYST:ERR:ALL?')
+    def get_sweeptime(self):
+        return eval(self.a('SWE:TIME?'))
 
     def get_data(self):
+        ''' involves some error handling
+        if an error occures it returns 'Error'
+        '''
         try:
             sData = self.a(':FORM REAL,32;CALC:DATA? SDATA') #grab data from VNA
         except:
@@ -83,5 +89,3 @@ class instrument():
             return 'Error'            
         return vComplex 
             
-    def get_error(self):
-        return self.a('SYST:ERR:ALL?')

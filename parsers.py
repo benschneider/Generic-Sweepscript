@@ -194,3 +194,20 @@ def savemtx(filename, *data, **quarks):
             f.write(raw)
 
         f.close()
+        
+def make_header(dim_1, dim_2, dim_3, meas_data='Meas_data (unknown units)'):
+    '''
+    def your sweep axis/name, start and stop 
+    values = Measured Voltage (V)
+    dim_1.name = Current (A)
+    dim_1.start = 0
+    dim_1.stop = 1
+    dim_2.name = Voltage (V)
+    ...
+    dim_3.name = RF Power (dB)
+    '''
+    head_1 = ['Units', meas_data,
+        dim_1.name, str(dim_1.start), str(dim_1.stop),
+        dim_2.name, str(dim_2.stop), str(dim_2.start),
+        dim_3.name, str(dim_3.start), str(dim_3.stop),]
+    return head_1

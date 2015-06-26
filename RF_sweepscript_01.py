@@ -23,30 +23,33 @@ import numpy as np
 from time import time, sleep
 from inspect import currentframe, getfile #
 thisfile = getfile(currentframe())
-from parsers import savemtx, ask_overwrite, copy_file
+from parsers import savemtx, ask_overwrite, copy_file, make_header
 from ramp_mod import ramp
+import sys
 
-filen_0 = 'S1_140'
+filen_0 = 'S1_142'
 folder = 'data\\'
 
-
-from RSZNB20 import instrument as i1
-dim_1 = i1('TCPIP::169.254.107.192::INSTR')
-dim_1.name = 'ZNB20 S21 - Time'
-dim_1.start = -1
-dim_1.stop = 1
-vdata = dim_1.get_data()
-if vdata == 'Error':
-    print 'VNA data Problem'
-dim_1.pt = vdata.shape[0]    
-
+### DIM 1
 from Yoko import instrument as i2
 dim_1b = i2('GPIB0::10::INSTR') #'Yoko M' 
 dim_1b.name = 'Yoko M'
 dim_1b.start = -1 
 dim_1b.stop = 1
-dim_1b.time = 16 #sweep in 200 seconds, while VNA records
 
+from RSZNB20 import instrument as i1
+dim_1 = i1('TCPIP::169.254.107.192::INSTR')
+dim_1.name = dim_1b.name #'ZNB20 S21 - Time'
+dim_1.start = dim_1b.start
+dim_1.stop = dim_1b.stop
+vdata = dim_1.get_data()
+dim_1.pt = vdata.shape[0]    
+dim_1.sweeptime = dim_1.get_sweeptime()
+if dim_1.sweeptime < 5:
+    print 'dim_1 sweeptime is too short'
+    sys.exit("Abort")
+
+dim_1b.time = dim_1.sweeptime #second sweep while VNA records
 dim_1b.set_mode(1) #V mode
 dim_1b.set_vrange(4) #2  10mV, 3  100mV, 4  1V, 5  10V, 6  30V
 dim_1b.sweep_v(0.0,4) #sweep to 0 V
@@ -54,12 +57,26 @@ sleep(4.2)
 dim_1b.output(1) #turn Yoko ON
 sleep(1)
 
+def sweep_dim1(dim_1,dim_1b):
+    '''
+    1. sweep magnet to start position
+    2. sweep magnet at the same time with the VNA
+    3. return VNA data
+    '''
+    dim_1b.sweep_v(dim_1b.start, 5)
+    sleep(5.2)
+    dim_1.init_sweep()
+    dim_1b.sweep_v(dim_1b.stop, dim_1b.time)        
+    sleep(dim_1b.time+1)
+    vdata = dim_1.get_data() # np.array(real+ i* imag)
+    return vdata
+
 from Yoko import instrument as i3
 dim_2 = i3('GPIB0::13::INSTR') #'Yoko V' 
 dim_2.name = 'Yoko V' 
-dim_2.start = -10e-3
-dim_2.stop = 10e-3
-dim_2.pt = 21
+dim_2.start = -8e-3
+dim_2.stop = 8e-3
+dim_2.pt = 81
 
 dim_2.set_mode(1)
 dim_2.set_vrange(3) 
@@ -72,9 +89,9 @@ from testdriver import instrument as i4 #just a dummy driver
 dim_3 = i4('Nothing') #VNA POWER sweep
 dim_3.set_power = dim_1.set_power #thats what I like to sweep
 dim_3.name = 'RF-Power' 
-dim_3.start = 10
+dim_3.start = 12
 dim_3.stop = -30
-dim_3.pt = 9
+dim_3.pt = 15
 
 '''
 #Other Equipment
@@ -90,43 +107,30 @@ filen_1 = filen_0 + '_real'  + '.mtx'
 filen_2 = filen_0 + '_imag'  + '.mtx'
 filen_3 = filen_0 + '_mag'   + '.mtx'
 filen_4 = filen_0 + '_phase' + '.mtx'
-head_1 = ['Units', 'S21 _real',
-        dim_1b.name, str(dim_1.start), str(dim_1.stop),
-        dim_2.name, str(dim_2.stop), str(dim_2.start),
-        dim_3.name, str(dim_3.start), str(dim_3.stop),]
-head_2 = ['Units', 'S21 _imag',
-        dim_1b.name, str(dim_1.start), str(dim_1.stop),
-        dim_2.name, str(dim_2.stop), str(dim_2.start),
-        dim_3.name, str(dim_3.start), str(dim_3.stop),]
-
-head_3 = ['Units', 'S21 _mag',
-        dim_1b.name, str(dim_1.start), str(dim_1.stop),
-        dim_2.name, str(dim_2.stop), str(dim_2.start),
-        dim_3.name, str(dim_3.start), str(dim_3.stop),]
-head_4 = ['Units', 'S21 _phase',
-        dim_1b.name, str(dim_1.start), str(dim_1.stop),
-        dim_2.name, str(dim_2.stop), str(dim_2.start),
-        dim_3.name, str(dim_3.start), str(dim_3.stop),]
+head_1 = make_header(dim_1, dim_2, dim_3, 'S21 _real')
+head_2 = make_header(dim_1, dim_2, dim_3, 'S21 _imag')
+head_3 = make_header(dim_1, dim_2, dim_3, 'S21 _mag')
+head_4 = make_header(dim_1, dim_2, dim_3, 'S21 _phase')
 matrix3d_1 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
 matrix3d_2 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
 matrix3d_3 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
 matrix3d_4 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
 
-dim_1lin = np.linspace(dim_1.start,dim_1.stop,dim_1.pt)
-dim_2lin = np.linspace(dim_2.start,dim_2.stop,dim_2.pt)
-dim_3lin = np.linspace(dim_3.start,dim_3.stop,dim_3.pt)
 
 ask_overwrite(folder+filen_1)
 copy_file(thisfile, filen_0, folder) #backup this script
 
+dim_1lin = np.linspace(dim_1.start,dim_1.stop,dim_1.pt)
+dim_2lin = np.linspace(dim_2.start,dim_2.stop,dim_2.pt)
+dim_3lin = np.linspace(dim_3.start,dim_3.stop,dim_3.pt)
 #execute sweep
-print 'req est time (min):'+str(dim_3.pt*dim_2.pt*dim_1.pt*0.03/60)
+print 'req time (m):'+str(dim_3.pt*dim_2.pt*dim_1.pt*0.03/60)
 t0 = time()
 try:
     for kk in range(dim_3.pt): 
         ''' Do Dim 3 '''
         dim_3val = dim_3lin[kk] 
-        dim_3.set_power(kk)
+        dim_3.set_power(dim_3val)
     
         #sleep(5.2)
         '''Do Dim 2 prep'''
@@ -136,21 +140,10 @@ try:
             '''Do Dim 2 '''
             dim_2val = dim_2lin[jj] 
             dim_2.sweep_v(dim_2val, 0.1)
-    
-            '''Do Dim 1 prep'''
-            dim_1b.sweep_v(dim_1b.start, 5)
-            sleep(5.2)
-            '''Do Dim 1 '''
-            #Sweep magnet while measuring with the VNA
-            dim_1.init_sweep()
-            dim_1b.sweep_v(dim_1b.stop, dim_1b.time)        
-            sleep(dim_1b.time+1)
-            vdata = dim_1.get_data() # np.array(real+ i* imag)
-            if vdata == 'Error': #retake
-                dim_1.init_sweep()
-                dim_1b.sweep_v(dim_1b.stop, dim_1b.time)        
-                sleep(dim_1b.time+5)
-                vdata = dim_1.get_data()
+            
+            vdata = sweep_dim1(dim_1,dim_1b) #sweep dim1 & dim_1b
+            if vdata == 'Error':
+                vdata = sweep_dim1(dim_1,dim_1b)
             
             phase_data = np.angle(vdata)        
             matrix3d_1[kk,jj] = vdata.real
@@ -164,7 +157,7 @@ try:
             
             t1 = time()
             remaining_time = ((t1-t0)/(jj+1)*dim_2.pt*dim_3.pt - (t1-t0))
-            print 'req est time (h):'+str(remaining_time/3600)
+            print 'req time (h):'+str(remaining_time/3600)
 
 finally:
     #Finish measurements
