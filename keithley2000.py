@@ -8,6 +8,8 @@ Keithley 2000 driver
 
 import visa
 from time import time, sleep
+from parsers import savemtx, make_header, ask_overwrite
+import numpy as np
 
 class instrument():
     '''
@@ -61,3 +63,19 @@ class instrument():
         self.get_val()
         t01 = time()
         print 'less than 32ms is good, '+str(t01-t00) +'s'
+
+#Data storage stuff
+    def prepare_data_save(self, folder, filen_0, dim_1, dim_2, dim_3):
+        self._folder = folder
+        self._filen_1 = filen_0 + '_voltage'  + '.mtx'
+        self._head_1 = make_header(dim_1, dim_2, dim_3, 'Voltage (V) x1k')
+        self._matrix3d_1 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
+                
+    def record_data(self,vdata,kk,jj,ii=1):
+        self._matrix3d_1[kk,jj,ii] = vdata
+        
+    def save_data(self):
+        savemtx(self._folder + self._filen_1, self._matrix3d_1, header = self._head_1)
+                
+    def ask_overwrite(self):
+        ask_overwrite(self._folder+self._filen_1)
