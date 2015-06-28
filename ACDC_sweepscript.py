@@ -19,10 +19,10 @@ import numpy as np
 from time import time, sleep
 from inspect import currentframe, getfile #
 thisfile = getfile(currentframe())
-from parsers import savemtx, ask_overwrite, copy_file, make_header
+from parsers import copy_file #,savemtx, ask_overwrite,  make_header
 from ramp_mod import ramp
 
-filen_0 = 'S1_148'
+filen_0 = 'S1_150'
 folder = 'data\\'
 
 ### MEASURING SHAPIRO-STEPS ###
@@ -39,31 +39,32 @@ vm = key2000('GPIB0::29::INSTR')
 #Sweep instruments
 dim_1 = yoko('GPIB0::13::INSTR',
            name = 'Yoko V R=14.8KOhm',
-           start = -100e-3, 
-           stop = 100e-3, 
-           pt = 2001 ) #'Yoko V' 
+           start = -20e-3, 
+           stop = 20e-3, 
+           pt = 4001 ) #'Yoko V' 
 dim_1.prepare_v(vrange = 3)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
 def sweep_dim_1(dim_1,value):
      ramp(dim_1, 'v', value, 0.0001, 0.001)
 
-dim_2 = yoko('GPIB0::10::INSTR',
-            name = 'Magnet V R=2.19KOhm',
-            start = -0.5, 
-            stop = 0.5, 
-            pt = 201) #'Yoko M' 
-dim_2.prepare_v(vrange = 4)
-def sweep_dim_2(dim_2,value):
-     ramp(dim_2, 'v', value, 0.01, 0.01)
-
-
-dim_3 = ddriver(name = 'RF-Power',
+dim_2 = ddriver(name = 'RF-Power',
                 start = -30,
-                stop = -30,
-                pt = 1) #VNA POWER sweep
-#dim_3.set_power = vna.set_power
+                stop = 12,
+                pt = 321) #VNA POWER sweep
+dim_2.set_power = vna.set_power
+#RF FREQ is fixed to 8GHz
+def sweep_dim_2(dim_2,value):
+     dim_2.set_power(value)
+     
+dim_3 = yoko('GPIB0::10::INSTR',
+            name = 'Magnet V R=2.19KOhm',
+            start = 0.17, 
+            stop = 0.17, 
+            pt = 1) #'Yoko M' 
+dim_3.prepare_v(vrange = 4)
 def sweep_dim_3(dim_3,value):
-     pass
-          
+     ramp(dim_3, 'v', value, 0.01, 0.01)
+
+     
 vm.prepare_data_save(folder, filen_0, dim_1, dim_2, dim_3)
 vm.ask_overwrite()
 
