@@ -208,6 +208,6 @@ def make_header(dim_1, dim_2, dim_3, meas_data='Meas_data (unknown units)'):
     '''
     head_1 = ['Units', meas_data,
         dim_1.name, str(dim_1.start), str(dim_1.stop),
-        dim_2.name, str(dim_2.stop), str(dim_2.start),
+        dim_2.name, str(dim_2.start), str(dim_2.stop),
         dim_3.name, str(dim_3.start), str(dim_3.stop),]
     return head_1

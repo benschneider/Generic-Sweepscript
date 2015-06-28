@@ -28,11 +28,16 @@ class instrument():
     a ask
     '''
 
-    def __init__(self, adress):
+    def __init__(self, adress,name = 'ZNB20',start = 0, stop = 0, pt = 1):
         self._adress = adress
         self._visainstrument = visa.instrument(self._adress)
-        self.name = 'ZNB20'
-        self.sweeptime = self.get_sweeptime()
+        self.name = name
+        self.tempdata = self.get_data()
+        self.pt = self.tempdata.shape[0]   
+        self.sweeptime = self.get_sweeptime()+0.1
+        self.start = start
+        self.stop = stop
+        self.lin = np.linspace(self.start,self.stop,self.pt)
         
     def w(self,write_cmd):
         self._visainstrument.write(write_cmd)
@@ -72,7 +77,7 @@ class instrument():
             sData = self.a(':FORM REAL,32;CALC:DATA? SDATA') #grab data from VNA
         except:
             print 'Waiting for VNA'
-            sleep (10) #poss. asked to early for data (for now just sleep 10 sec)
+            sleep (3) #poss. asked to early for data (for now just sleep 10 sec)
             sData = self.a(':FORM REAL,32;CALC:DATA? SDATA') #try once more after 5 seconds
         i0 = sData.find('#')
         nDig = int(sData[i0+1])
@@ -92,4 +97,10 @@ class instrument():
             self.w('*CLS') #CLear Status
             return 'Error'            
         return vComplex 
-            
+        
+    def get_data2(self):
+        vnadata = self.get_data() # np.array(real+ i* imag)
+        if vnadata == 'Error':
+            vnadata = self.get_data2()
+            print 'retake VNA Data'
+        return vnadata

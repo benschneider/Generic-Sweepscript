@@ -10,6 +10,7 @@ Voltage / Current source
 #import numpy as np
 import visa
 from time import sleep
+import numpy as np
 
 class instrument():
     '''
@@ -19,11 +20,16 @@ class instrument():
     a ask
     '''
 
-    def __init__(self, adress):
+    def __init__(self, adress, name = 'Yokogawa IV source', start = 0, stop = 0, pt = 1):
         self._adress = adress
         self._visainstrument = visa.instrument(self._adress)
         self.v = 0
-        self.name = 'Yokogawa'
+        self.name = name
+        self.start = start
+        self.stop = stop
+        self.pt = pt
+        self.lin = np.linspace(self.start,self.stop,self.pt)
+
 
     def w(self,write_cmd):
         self._visainstrument.write(write_cmd)
@@ -41,15 +47,15 @@ class instrument():
         '''
         self.w('F' + str(option) + ' E')
 
-    def set_vrange(self, range):
-        ''' range =
+    def set_vrange(self, vrange):
+        ''' vrange =
         2 -- 10mV,
         3 -- 100mV,
         4 -- 1V,
         5 -- 10V,
         6 -- 30V
         '''
-        self.w('R' + str(range) + ' E')
+        self.w('R' + str(vrange) + ' E')
 
     def output(self, boolean):
         ''' boolean =
@@ -73,8 +79,10 @@ class instrument():
         self.v = eval(self.a('H0 OD'))
         return self.v
         
-    def prepare(self):
-        '''Sweeps to 0 in 10 sec and then switches on'''
-        self.sweep_v(0, 5)
-        sleep(5)
+    def prepare_v(self, vrange=3):
+        self.set_mode(1)
+        self.set_vrange(vrange) 
+        self.sweep_v(0.0,4)
+        sleep(4.1)
         self.output(1)
+        sleep(0.2)

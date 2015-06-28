@@ -7,7 +7,7 @@ Keithley 2000 driver
 
 
 import visa
-from time import time
+from time import time, sleep
 
 class instrument():
     '''
@@ -17,9 +17,14 @@ class instrument():
     a ask
     '''
 
-    def __init__(self, adress):
+    def __init__(self, adress, name= 'Keithley 2000 Voltmeter'):
+        self.name = name
         self._adress = adress
         self._visainstrument = visa.instrument(self._adress)
+        self.optimise()
+        sleep(0.1)
+        self.testspeed()
+
 
     def w(self,write_cmd):
         self._visainstrument.write(write_cmd)
