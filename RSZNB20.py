@@ -86,7 +86,6 @@ class instrument():
         nData = nByte/4
         nPts = nData/2
         data32 = sData[(i0+2+nDig):(i0+2+nDig+nByte)]
-        #if len(data32) == nByte unpack should work
         try:
             vData = unpack('!'+str(nData)+'f', data32)
             vData = np.array(vData)
