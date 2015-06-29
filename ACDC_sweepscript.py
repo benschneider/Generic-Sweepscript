@@ -67,7 +67,6 @@ def sweep_dim_3(dim_3,value):
      
 vm.prepare_data_save(folder, filen_0, dim_1, dim_2, dim_3)
 vm.ask_overwrite()
-
 copy_file(thisfile, filen_0, folder) #backup this script
 print 'Executing sweep'
 print 'req time (h):'+str(dim_3.pt*dim_2.pt*dim_1.pt*0.03/3600)
