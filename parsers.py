@@ -34,7 +34,7 @@ def ask_overwrite(filename):
 
 
 def copy_file(thisfile, file_add, folder = ''):
-    ''' folder = "somefolder\\" 
+    ''' folder = "somefolder\\"
     i.e.
     thisfile = '__filename__'
     copy_file(thisfile, 'bla','data\\')
@@ -194,10 +194,10 @@ def savemtx(filename, *data, **quarks):
             f.write(raw)
 
         f.close()
-        
+
 def make_header(dim_1, dim_2, dim_3, meas_data='Meas_data (unknown units)'):
     '''
-    def your sweep axis/name, start and stop 
+    def your sweep axis/name, start and stop
     values = Measured Voltage (V)
     dim_1.name = Current (A)
     dim_1.start = 0
@@ -211,3 +211,12 @@ def make_header(dim_1, dim_2, dim_3, meas_data='Meas_data (unknown units)'):
         dim_2.name, str(dim_2.start), str(dim_2.stop),
         dim_3.name, str(dim_3.start), str(dim_3.stop),]
     return head_1
+
+
+class dim():
+    def __init__(self, name = 'void' ,start = 0, stop = 0, pt = 1, scale = 1):
+        self.name = name
+        self.start = start
+        self.stop = stop
+        self.pt = pt
+        self.lin = np.linspace(self.start,self.stop,self.pt)*scale
