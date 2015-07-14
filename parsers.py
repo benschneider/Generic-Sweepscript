@@ -33,7 +33,7 @@ def ask_overwrite(filename):
             return sys.exit("Abort")
 
 
-def copy_file(thisfile, file_add, folder = ''):
+def copy_file_interminal(thisfile, file_add, folder = ''):
     ''' folder = "somefolder\\"
     i.e.
     thisfile = '__filename__'
@@ -46,6 +46,18 @@ def copy_file(thisfile, file_add, folder = ''):
     new_ffile = ffolder + folder + thisfile[:-3] +'_' + file_add + thisfile[-3:]
     copy(ffile, new_ffile)
 
+def copy_file(thisfile, file_add, folder = ''):
+    ''' folder = "somefolder\\"
+    i.e.
+    thisfile = '__filename__'
+    copy_file(thisfile, 'bla','data\\')
+    '''
+    #drive = os.getcwd()                #D:\
+    filen = path.basename(thisfile)     #something.py
+    ffile = path.abspath(thisfile)     #D:\something.py
+    ffolder = path.dirname(thisfile)    #EMPTY
+    new_ffile = ffolder +'\\'+ folder + file_add +'_' + filen[:-3] + thisfile[-3:]
+    copy(ffile, new_ffile)
 
 def loaddat(*inputs):
     '''

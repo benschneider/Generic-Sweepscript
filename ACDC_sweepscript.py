@@ -5,64 +5,55 @@ Generic Sweep script
 22/06/2015
 - B
 '''
-
-#how to update functions of a module when loading from console ? ??? or tell Python to recompile its files :
-import ramp_mod, parsers, RSZNB20, Yoko, dummydriver
-reload(RSZNB20)
-reload(Yoko)
-reload(parsers)
-reload(ramp_mod)
-reload(dummydriver)
-del ramp_mod, parsers, RSZNB20, Yoko, dummydriver
-
-import numpy as np
 from time import time, sleep
-from inspect import currentframe, getfile #
-thisfile = getfile(currentframe())
-from parsers import copy_file #,savemtx, ask_overwrite,  make_header
+from parsers import copy_file
 from ramp_mod import ramp
+#from inspect import currentframe, getfile
+#thisfile = getfile(currentframe())
+thisfile = __file__
 
-filen_0 = 'S1_150'
+filen_0 = 'S1_165'
 folder = 'data\\'
 
-### MEASURING SHAPIRO-STEPS ###
+### Sc vs. Mag field ###
 
 #Drivers
-from RSZNB20 import instrument as znb20
+#from RSZNB20 import instrument as znb20
 from keithley2000 import instrument as key2000
 from Yoko import instrument as yoko
-from dummydriver import instrument as ddriver
+from dummydriver import instrument as dummy
 #Data aquisition instruments
-vna = znb20('TCPIP::169.254.107.192::INSTR')
+#vna = znb20('TCPIP::169.254.107.192::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 #Sweep instruments
-dim_1 = yoko('GPIB0::13::INSTR',
+iBias = yoko('GPIB0::13::INSTR',
            name = 'Yoko V R=14.8KOhm',
-           start = -20e-3, 
-           stop = 20e-3, 
-           pt = 4001 ) #'Yoko V' 
-dim_1.prepare_v(vrange = 3)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
-def sweep_dim_1(dim_1,value):
-     ramp(dim_1, 'v', value, 0.0001, 0.001)
+           start = -90e-3, 
+           stop = 90e-3, 
+           pt = 181 ) #'Yoko V' 
+iBias.prepare_v(vrange = 3)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
 
-dim_2 = ddriver(name = 'RF-Power',
-                start = -30,
-                stop = 12,
-                pt = 321) #VNA POWER sweep
-dim_2.set_power = vna.set_power
-#RF FREQ is fixed to 8GHz
-def sweep_dim_2(dim_2,value):
-     dim_2.set_power(value)
-     
-dim_3 = yoko('GPIB0::10::INSTR',
+vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
-            start = 0.17, 
-            stop = 0.17, 
-            pt = 1) #'Yoko M' 
-dim_3.prepare_v(vrange = 4)
-def sweep_dim_3(dim_3,value):
+            start = -0.5, 
+            stop = 0.5, 
+            pt = 51) #'Yoko M' 
+vMag.prepare_v(vrange = 4)
+
+dim_3 = dummy(name = 'Nothing',
+                start = 0,
+                stop = 0,
+                pt = 1)
+
+dim_1= iBias
+dim_2= vMag
+def sweep_dim_1(dim_1,value):
+     ramp(dim_1, 'v', value, 0.001, 0.0001)
+def sweep_dim_2(dim_3,value):
      ramp(dim_3, 'v', value, 0.01, 0.01)
+def sweep_dim_3(dim_2,value):
+     pass
 
      
 vm.prepare_data_save(folder, filen_0, dim_1, dim_2, dim_3)
@@ -82,7 +73,7 @@ try:
             
             sweep_dim_1(dim_1,dim_1.start)
             for ii in range(dim_1.pt):
-                if dim_1.pt > 300:
+                if dim_1.pt > 180:
                     dim_1.set_v(dim_1.lin[ii]) #sets value imediately (Dangerous!)
                 else:
                     sweep_dim_1(dim_1,dim_1.lin[ii]) #slower but safer sweep
@@ -99,8 +90,8 @@ finally:
     print 'Time used :' +str(time()-t0)
     print 'Yokos -> zero and switch off'
     dim_1.sweep_v(0, 5)
-    dim_3.sweep_v(0, 5)
+    dim_2.sweep_v(0, 5)
     sleep(5.2)
     dim_1.output(0) #Yoko Off
-    dim_3.output(0)
+    dim_2.output(0)
     

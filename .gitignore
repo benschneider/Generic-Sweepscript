@@ -42,5 +42,9 @@ Network Trash Folder
 Temporary Items
 .apdisk
 *.mtx
-*.py
 *.pyc
+data
+old
+Measure_list.py
+ACDC_sweepscript_FW.py
+ACDC_sweepscript_BW.py
