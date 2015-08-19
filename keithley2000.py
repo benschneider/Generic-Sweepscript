@@ -13,7 +13,7 @@ import numpy as np
 
 class instrument():
     '''
-    vm2000 = instrument3('GPIB0::29::INSTR')
+    vm2000 = instrument('GPIB0::29::INSTR')
     w write
     r read
     a ask
@@ -65,10 +65,10 @@ class instrument():
         print 'less than 32ms is good, '+str(t01-t00) +'s'
 
 #Data storage stuff
-    def prepare_data_save(self, folder, filen_0, dim_1, dim_2, dim_3):
+    def prepare_data_save(self, folder, filen_0, dim_1, dim_2, dim_3, colour_name):
         self._folder = folder
         self._filen_1 = filen_0 + '_voltage'  + '.mtx'
-        self._head_1 = make_header(dim_1, dim_2, dim_3, 'Voltage (V) x1k')
+        self._head_1 = make_header(dim_1, dim_2, dim_3, colour_name)
         self._matrix3d_1 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
                 
     def record_data(self,vdata,kk,jj,ii=1):

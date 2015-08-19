@@ -20,7 +20,7 @@ class instrument():
     a ask
     '''
 
-    def __init__(self, adress, name = 'Yokogawa IV source', start = 0, stop = 0, pt = 1):
+    def __init__(self, adress, name = 'Yokogawa IV source', start = 0, stop = 0, pt = 1, sstep = 1e-3, stime = 1e-3):
         self._adress = adress
         self._visainstrument = visa.instrument(self._adress)
         self.v = 0
@@ -29,6 +29,8 @@ class instrument():
         self.stop = stop
         self.pt = pt
         self.lin = np.linspace(self.start,self.stop,self.pt)
+        self.sstep = sstep
+        self.stime = stime
 
 
     def w(self,write_cmd):
