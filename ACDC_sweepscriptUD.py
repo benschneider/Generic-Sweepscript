@@ -12,11 +12,11 @@ from ramp_mod import ramp
 #thisfile = getfile(currentframe())
 thisfile = __file__
 
-filen_0 = 'S1_318'
-folder = 'data\\'
+filen_0 = 'JJ'
+folder = 'data_JJ\\'
 
-### Ib vs. RF power v.s. Mag field ###
-## TEST IV CURVE AT 11.2mK ! ##
+### Ib vs. Mag field (Up / Down sweeps) ###
+## TEST IV CURVE AT 8.8mK ! ##
 
 #Drivers
 #from RSZNB20 import instrument as znb20
@@ -39,8 +39,8 @@ iBias.prepare_v(vrange = 3)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V,
 
 vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
-            start = -0.09, 
-            stop = -0.09, 
+            start = -0.5, 
+            stop = +0.5, 
             pt = 101,
             sstep = 20e-3,
             stime = 1e-3) #'Yoko M' 
@@ -81,7 +81,7 @@ vm.prepare_data_save(folder, filen_0, dim_1, dim_2, dim_3, 'Voltage (V) x1k')
 vm.ask_overwrite()
 copy_file(thisfile, filen_0, folder) #backup this script
 print 'Executing sweep'
-print 'req time (h):'+str(dim_3.pt*dim_2.pt*dim_1.pt*0.03/3600)
+print 'req time (min):'+str(dim_3.pt*dim_2.pt*dim_1.pt*0.03/60)
 t0 = time()
 try:
     for kk in range(dim_3.pt): 

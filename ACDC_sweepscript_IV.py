@@ -12,11 +12,11 @@ from ramp_mod import ramp
 #thisfile = getfile(currentframe())
 thisfile = __file__
 
-filen_0 = 'S1_318'
+filen_0 = 'S1_403'
 folder = 'data\\'
 
-### Ib vs. RF power v.s. Mag field ###
-## TEST IV CURVE AT 11.2mK ! ##
+### Ib vs. Mag field (Up / Down sweeps) ###
+## TEST IV CURVE AT 8.8mK ! ##
 
 #Drivers
 #from RSZNB20 import instrument as znb20
@@ -39,9 +39,9 @@ iBias.prepare_v(vrange = 3)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V,
 
 vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
-            start = -0.09, 
-            stop = -0.09, 
-            pt = 101,
+            start = 0, 
+            stop = 0, 
+            pt = 1,
             sstep = 20e-3,
             stime = 1e-3) #'Yoko M' 
 vMag.prepare_v(vrange = 4)
@@ -68,6 +68,7 @@ def sweep_dim_1(obj,value):
 
 dim_2= vMag
 def sweep_dim_2(obj,value):
+    #pass
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
 
 dim_3= PSG
@@ -77,11 +78,11 @@ def sweep_dim_3(obj,value):
     #ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
 
 # Keithley data recording
-vm.prepare_data_save(folder, filen_0, dim_1, dim_2, dim_3, 'Voltage (V) x1k')
+vm.prepare_data_save(folder, filen_0, dim_1, dim_2, dim_3, 'Voltage (V) x100')
 vm.ask_overwrite()
 copy_file(thisfile, filen_0, folder) #backup this script
 print 'Executing sweep'
-print 'req time (h):'+str(dim_3.pt*dim_2.pt*dim_1.pt*0.03/3600)
+print 'req time (min):'+str(dim_3.pt*dim_2.pt*dim_1.pt*0.03/60)
 t0 = time()
 try:
     for kk in range(dim_3.pt): 

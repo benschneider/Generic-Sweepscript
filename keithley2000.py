@@ -24,7 +24,7 @@ class instrument():
         self._adress = adress
         self._visainstrument = visa.instrument(self._adress)
         self.optimise()
-        sleep(0.1)
+        sleep(0.3)
         self.testspeed()
 
 
