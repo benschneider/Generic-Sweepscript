@@ -11,6 +11,7 @@ Voltage / Current source
 import visa
 from time import sleep
 import numpy as np
+import sys
 
 class instrument():
     '''
@@ -58,6 +59,22 @@ class instrument():
         6 -- 30V
         '''
         self.w('R' + str(vrange) + ' E')
+        
+        # catch error before it arrives at the Instrument
+        if vrange == 2:
+            if np.abs(self.start) > 12e-3:
+                return sys.exit("Start value < -12mV. Abort")
+            elif np.abs(self.stop) > 12e-3:
+                return sys.exit("Stop value > 12mV. Abort")
+            else:
+                print ('Voltage range set to 10mV')
+        elif vrange == 3:
+            if np.abs(self.start) > 120e-3:
+                return sys.exit("Start value < -120mV. Abort")
+            elif np.abs(self.stop) > 120e-3:
+                return sys.exit("Stop value > 120mV. Abort")
+            else:
+                print ('Voltage range set to 100mV')
 
     def output(self, boolean):
         ''' boolean =
