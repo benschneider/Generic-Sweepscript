@@ -17,7 +17,7 @@ import numpy as np
 
 class instrument():
     '''
-    PSG = instrument('GPIB0::18::INSTR')
+    PSG = instrument('GPIB0::11::INSTR')
     w write
     r read
     a ask
