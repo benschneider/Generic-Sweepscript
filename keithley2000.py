@@ -26,7 +26,7 @@ class instrument():
         self.optimise()
         sleep(0.3)
         self.testspeed()
-
+        self.testspeed()
 
     def w(self,write_cmd):
         self._visainstrument.write(write_cmd)
