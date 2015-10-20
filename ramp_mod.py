@@ -1,5 +1,5 @@
 import numpy as np
-from time import sleep #,time
+from time import sleep #, time
 
 def ramp(instrument,parameter,value,step, wait):
     '''
@@ -9,7 +9,10 @@ def ramp(instrument,parameter,value,step, wait):
     step -- step size
     wait -- wait time per step
     '''
-    v_start = getattr(instrument,'get_%s' % parameter)()
+    get_v = getattr(instrument,'get_%s' % parameter)
+    set_v = getattr(instrument,'set_%s' % parameter)
+    
+    v_start = get_v()
     
     if value > v_start:
         step = abs(step)
@@ -17,12 +20,15 @@ def ramp(instrument,parameter,value,step, wait):
         step =- abs(step)
 
     if 2*abs(step) > abs(value - v_start):
-        getattr(instrument,'set_%s' % parameter)(value)
+        set_v(value)
 
     else:
         print str(instrument.name)+' '+str(np.arange(v_start,value,step))
         for v in np.arange(v_start,value,step):
-            getattr(instrument,'set_%s' % parameter)(v)
-            sleep(wait)
+            # tt00 = time()
+            set_v(v)
+            if wait > 0.0:
+                sleep(wait)
+            # print time() - tt00
             
-        getattr(instrument,'set_%s' % parameter)(value)
+        set_v(value)
