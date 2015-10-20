@@ -60,6 +60,9 @@ class instrument():
         self.powUnit = value
 
     def set_power(self, power):
+        if self.powUnit == 'V':
+            if power == 0:
+                power = 39.7635e-9 #this is the smallest the Pgen can output
         self.w(':SOUR:POW:IMM:AMPL '+ str(power) + str(self.powUnit))
         self.pow = power
 
