@@ -12,6 +12,7 @@ import visa
 from time import sleep
 import numpy as np
 import sys
+from ramp_mod import ramp
 
 class instrument():
     '''
@@ -32,6 +33,9 @@ class instrument():
         self.lin = np.linspace(self.start,self.stop,self.pt)
         self.sstep = sstep
         self.stime = stime
+        if self.pt > 1 :
+            self.linstep = np.abs(self.lin[1]-self.lin[0])
+        self.sweep_par = 'v'
 
 
     def w(self,write_cmd):
@@ -92,11 +96,17 @@ class instrument():
     def set_v(self, value):
         self.w('S'+str(value)+' E')
         self.v = value
-        
+    
     def get_v(self):
         eval(self.a('H0 OD'))
         self.v = eval(self.a('H0 OD'))
         return self.v
+
+    def set_v2(self, value):
+        if self.linstep < self.sstep:
+            self.set_v(value) #set value immideatly without check
+        else:
+            ramp(self, self.sweep_par, value, self.sstep, self.stime)
         
     def prepare_v(self, vrange=3):
         self.set_mode(1)
