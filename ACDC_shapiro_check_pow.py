@@ -12,12 +12,8 @@ from ramp_mod import ramp
 #thisfile = getfile(currentframe())
 thisfile = __file__
 
-filen_0 = 'S1_493_Shapiro' # 0.203120,  466.836
+filen_0 = 'S1_515_IV' # 0.203120,  466.836
 folder = 'data\\'
-
-### Ib vs. Mag field (Up / Down sweeps) ###
-## TEST IV CURVE AT 11.32mK ! ##
-## GROUND LOOP TESTS inc VNA and Hempt ##
 
 #Drivers
 #from RSZNB20 import instrument as znb20
@@ -31,33 +27,33 @@ vm = key2000('GPIB0::29::INSTR')
 
 iBias = yoko('GPIB0::13::INSTR',
            name = 'Yoko V R=14.24KOhm',
-           start = -120e-3,
-           stop = 120e-3, 
-           pt = 361,
-           sstep = 5e-3, #def step and step/wait-time in sec for ramping
+           start = 65e-6,
+           stop = 65e-6, 
+           pt = 1,
+           sstep = 5e-3, #def max voltage steps it can take
            stime = 1e-3) 
-iBias.prepare_v(vrange = 3)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
+iBias.prepare_v(vrange = 2)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
 
 vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
-            start = 31e-3,
-            stop = 31e-3, 
-            pt = 1,
-            sstep = 20e-3,
-            stime = 1e-3) #'Yoko M' 
-vMag.prepare_v(vrange = 3)
+            start = -280e-3,
+            stop = 360e-3, 
+            pt = 321,
+            sstep = 50e-3,
+            stime = 1e-6) #'Yoko M' 
+vMag.prepare_v(vrange = 4)
 
 PSG = APSG('GPIB0::11::INSTR',
            name = 'RF - Power (V)',
-           start = 500e-3,
+           start = 600e-3,
            stop = 0,
-           pt = 26,
+           pt = 301,
            sstep = 20e-3,
            stime = 1e-3) 
 
 PSG.set_powUnit('V')
-PSG.set_freq(10.23e9)  # 1GHz gives 2 uV steps
-PSG.set_output(1)
+PSG.set_freq(10.14e9)  # 1GHz gives 2 uV steps
+PSG.set_output(0)
 
 #define what is to be swept i.e. get_v(..) /set_v(..) would be 'v'
 iBias.sweep_par = 'v' 
@@ -66,16 +62,18 @@ vMag.sweep_par = 'v'
 
 dim_1= iBias
 def sweep_dim_1(obj,value):
-    obj.sweep_v(value, 2)
-    sleep(2.1)
-    #ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
-
-dim_3= vMag
-def sweep_dim_3(obj,value):
+    #obj.set_v2(value)
+    #obj.sweep_v(value, 1)
+    #sleep(1.1)
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
 
-dim_2= PSG
+dim_2= vMag
 def sweep_dim_2(obj,value):
+    # obj.set_v2(value)
+    ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
+
+dim_3= PSG
+def sweep_dim_3(obj,value):
     obj.set_power(value)
     # ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
 
@@ -96,10 +94,8 @@ try:
             sweep_dim_1(dim_1,dim_1.start)
             #up sweep
             for ii in range(dim_1.pt):
-                if dim_1.pt > 180:
-                    dim_1.set_v(dim_1.lin[ii]) #sets value imediately (Dangerous!)
-                else:
-                    sweep_dim_1(dim_1,dim_1.lin[ii]) #slower but safer sweep
+                dim_1.set_v2(dim_1.lin[ii])
+                #sweep_dim_1(dim_1,dim_1.lin[ii])
                 vdata = vm.get_val()
                 vm.record_data(vdata,kk,jj,ii)
                        
@@ -113,10 +109,11 @@ except (KeyboardInterrupt):
     print '***** Keyboart Interupt *****'
     
 finally:
-    print 'Time used :' +str(time()-t0)
+    print 'Time used min:' +str((time()-t0)/60)
     print 'Yokos -> zero and switch off'
     iBias.sweep_v(0, 5)
     vMag.sweep_v(0, 5)
     sleep(5.2)
     iBias.output(0) #Yoko Off
     vMag.output(0)
+    PSG.set_output(0)

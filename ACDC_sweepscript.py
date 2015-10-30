@@ -12,7 +12,7 @@ from ramp_mod import ramp
 # thisfile = getfile(currentframe())
 thisfile = __file__
 
-filen_0 = 'S1_617' # 0.203120,  466.836
+filen_0 = 'S1_618' # 0.203120,  466.836
 folder = 'data\\'
 
 # Drivers
@@ -27,8 +27,8 @@ vm = key2000('GPIB0::29::INSTR')
 
 iBias = yoko('GPIB0::13::INSTR',
            name = 'Yoko V R=(998.83+14.24)KOhm',
-           start = -6,
-           stop = 6, 
+           start = 6,
+           stop = -6, 
            pt = 601,
            sstep = 0.1, #def max voltage steps it can take
            stime = 0.1) 
@@ -64,8 +64,8 @@ vMag.sweep_par = 'v'
 dim_1= iBias
 def sweep_dim_1(obj,value):
     #obj.set_v2(value)
-    obj.sweep_v(value, 6)
-    sleep(6.5)
+    obj.sweep_v(value, 5)
+    sleep(5.1)
     #sleep(1.1)
     #ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
 

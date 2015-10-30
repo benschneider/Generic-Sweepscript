@@ -12,16 +12,17 @@ from ramp_mod import ramp
 #thisfile = getfile(currentframe())
 thisfile = __file__
 
-filen_0 = 'S1_403'
+filen_0 = 'S1_457_BW' # 0.203120,  466.836
 folder = 'data\\'
 
 ### Ib vs. Mag field (Up / Down sweeps) ###
-## TEST IV CURVE AT 8.8mK ! ##
+## TEST IV CURVE AT 11.32mK ! ##
+## GROUND LOOP TESTS inc VNA and Hempt ##
 
 #Drivers
 #from RSZNB20 import instrument as znb20
-from dummydriver import instrument as dummy
-#from AgilentPSG import instrument as APSG
+#from dummydriver import instrument as dummy
+from AgilentPSG import instrument as APSG
 from keithley2000 import instrument as key2000
 from Yoko import instrument as yoko
 
@@ -29,31 +30,34 @@ from Yoko import instrument as yoko
 vm = key2000('GPIB0::29::INSTR')
 
 iBias = yoko('GPIB0::13::INSTR',
-           name = 'Yoko V R=14.8KOhm',
-           start = -90e-3,
-           stop = 90e-3, 
-           pt = 181,
+           name = 'Yoko V R=14.24KOhm',
+           start = -30e-3,
+           stop = 30e-3, 
+           pt = 1201,
            sstep = 5e-3, #def step and step/wait-time in sec for ramping
            stime = 1e-3) 
-iBias.prepare_v(vrange = 3)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
+iBias.prepare_v(vrange = 4)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
 
 vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
-            start = 0, 
-            stop = 0, 
+            start = 31e-3,
+            stop = 31e-3, 
             pt = 1,
             sstep = 20e-3,
             stime = 1e-3) #'Yoko M' 
 vMag.prepare_v(vrange = 4)
 
-PSG = dummy('GPIB0::18::INSTR',
-           name = 'Nothing',
+PSG = APSG('GPIB0::11::INSTR',
+           name = 'RF - Power (V)',
            start = 300e-3,
-           stop = -1e-3,
-           pt = 1)
-#PSG.set_powUnit('V')
-#PSG.set_freq(1e9) #gives 2 uV steps
-#PSG.set_output(1)
+           stop = 0,
+           pt = 301,
+           sstep = 20e-3,
+           stime = 1e-3) 
+
+PSG.set_powUnit('V')
+PSG.set_freq(10.23e9)  # 1GHz gives 2 uV steps
+PSG.set_output(1)
 
 #define what is to be swept i.e. get_v(..) /set_v(..) would be 'v'
 iBias.sweep_par = 'v' 
@@ -66,31 +70,32 @@ def sweep_dim_1(obj,value):
     sleep(2.1)
     #ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
 
-dim_2= vMag
-def sweep_dim_2(obj,value):
+dim_3= vMag
+def sweep_dim_3(obj,value):
     #pass
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
 
-dim_3= PSG
-def sweep_dim_3(obj,value):
-    pass
-    #obj.set_power(value)
+dim_2= PSG
+def sweep_dim_2(obj,value):
+    obj.set_power(value)
+    return obj.get_power
     #ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
 
+d2range = dim_2.lin 
 # Keithley data recording
-vm.prepare_data_save(folder, filen_0, dim_1, dim_2, dim_3, 'Voltage (V) x100')
+vm.prepare_data_save(folder, filen_0, dim_1, dim_2, dim_3, 'Voltage (V) x1000')
 vm.ask_overwrite()
 copy_file(thisfile, filen_0, folder) #backup this script
 print 'Executing sweep'
-print 'req time (min):'+str(dim_3.pt*dim_2.pt*dim_1.pt*0.03/60)
+print 'req time (min):'+str(dim_3.pt*dim_2.pt*dim_1.pt*0.032/60)
 t0 = time()
 try:
     for kk in range(dim_3.pt): 
         sweep_dim_3(dim_3,dim_3.lin[kk])
-        sweep_dim_2(dim_2,dim_2.start)
+        d2val = sweep_dim_2(dim_2,dim_2.start)
         for jj in range(dim_2.pt):
-            sweep_dim_2(dim_2,dim_2.lin[jj])            
-
+            d2range[jj] = sweep_dim_2(dim_2,dim_2.lin[jj])            
+            
             sweep_dim_1(dim_1,dim_1.start)
             #up sweep
             for ii in range(dim_1.pt):
