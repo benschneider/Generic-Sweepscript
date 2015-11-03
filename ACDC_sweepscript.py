@@ -12,7 +12,13 @@ from ramp_mod import ramp
 # thisfile = getfile(currentframe())
 thisfile = __file__
 
-filen_0 = 'S1_618' # 0.203120,  466.836
+
+## Put Galvanic isolation:
+## 1. Amp bias 
+## 2. Yoko1 (magnet), Yoko2 (Ib), SRS Amp
+## 3. Keithley Voltmeter
+
+filen_0 = 'S1_708' # 0.203120,  466.836
 folder = 'data\\'
 
 # Drivers
@@ -27,18 +33,18 @@ vm = key2000('GPIB0::29::INSTR')
 
 iBias = yoko('GPIB0::13::INSTR',
            name = 'Yoko V R=(998.83+14.24)KOhm',
-           start = 6,
-           stop = -6, 
-           pt = 601,
+           start = -6,
+           stop = 6, 
+           pt = 151,
            sstep = 0.1, #def max voltage steps it can take
-           stime = 0.1) 
+           stime = 0) 
 iBias.prepare_v(vrange = 5)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
 
 vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
-            start = -280e-3,
-            stop = 360e-3, 
-            pt = 321,
+            start = -110e-3,
+            stop = -110e-3, 
+            pt = 21,
             sstep = 5e-3,
             stime = 1e-6) #'Yoko M' 
 vMag.prepare_v(vrange = 4)
@@ -64,8 +70,8 @@ vMag.sweep_par = 'v'
 dim_1= iBias
 def sweep_dim_1(obj,value):
     #obj.set_v2(value)
-    obj.sweep_v(value, 5)
-    sleep(5.1)
+    obj.sweep_v(value, 3)
+    sleep(3.1)
     #sleep(1.1)
     #ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
 

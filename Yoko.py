@@ -111,7 +111,7 @@ class instrument():
     def prepare_v(self, vrange=3):
         self.set_mode(1)
         self.set_vrange(vrange) 
-        self.sweep_v(0.0,4)
-        sleep(4.1)
+        self.sweep_v(0.0,3)
+        sleep(3.1)
         self.output(1)
         sleep(0.2)

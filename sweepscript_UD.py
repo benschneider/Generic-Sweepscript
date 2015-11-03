@@ -10,7 +10,7 @@ from parsers import copy_file
 from ramp_mod import ramp
 thisfile = __file__
 
-filen_0 = 'S1_618'
+filen_0 = 'S1_701'
 folder = 'data\\'
 
 # Driver
@@ -35,7 +35,7 @@ vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
             start = -280e-3,
             stop = 360e-3,
-            pt = 321,
+            pt = 81,
             sstep = 5e-3,
             stime = 1e-6)
 vMag.prepare_v(vrange = 4)
