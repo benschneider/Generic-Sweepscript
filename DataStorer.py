@@ -19,13 +19,13 @@ class DataStoreSP():
     def ask_overwrite(self):
         ask_overwrite(self._folder+self._filen_1)
 
-    def prepare_data_save(self, folder,
-                          filen_0, dim_1, dim_2, dim_3, colour_name):
+    def prepare_data_save(self, folder, filen_0, dim_1, dim_2, dim_3, colour_name):
         self._folder = folder
-        self._filen_1 = filen_0 + '_voltage' + '.mtx'
+        self._filen_1 = filen_0 + '.mtx'
         self._head_1 = make_header(dim_1, dim_2, dim_3, colour_name)
         self._matrix3d_1 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         if dim_1.UD is True:
+            self._filen_2 = filen_0 + '_2' + '.mtx'
             self.UD = True
             self._matrix3d_2 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
 
@@ -40,7 +40,7 @@ class DataStoreSP():
                 self._matrix3d_1,
                 header=self._head_1)
         if self.UD is True:
-            savemtx(self._folder + self._filen_1 + '_2',
+            savemtx(self._folder + self._filen_2,
                     self._matrix3d_2,
                     header=self._head_1)
 

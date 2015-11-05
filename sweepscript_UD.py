@@ -10,14 +10,14 @@ from parsers import copy_file
 from ramp_mod import ramp
 thisfile = __file__
 
-filen_0 = 'S1_701'
+filen_0 = 'S1_901'
 folder = 'data\\'
 
 # Driver
 from dummydriver import instrument as dummy
 from keithley2000 import instrument as key2000
 from Yoko import instrument as yoko
-from DataStorer import DataStoreSP as DS
+from DataStorer import DataStoreSP
 
 vm = key2000('GPIB0::29::INSTR')
 
@@ -25,7 +25,7 @@ iBias = yoko('GPIB0::13::INSTR',
            name = 'Yoko V R=(998.83+14.24)KOhm',
            start = -6,
            stop = 6,
-           pt = 601,
+           pt = 301,
            sstep = 0.1, # def max voltage steps it can take
            stime = 0.1)
 iBias.prepare_v(vrange = 5)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
@@ -33,9 +33,9 @@ iBias.UD = True
 
 vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
-            start = -280e-3,
-            stop = 360e-3,
-            pt = 81,
+            start = -500e-3,
+            stop = 500e-3,
+            pt = 101,
             sstep = 5e-3,
             stime = 1e-6)
 vMag.prepare_v(vrange = 4)
@@ -53,8 +53,9 @@ vMag.sweep_par = 'v'
 
 dim_1= iBias
 def sweep_dim_1(obj,value):
-    obj.sweep_v(value, 5)
-    sleep(5.1)
+    ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
+    #obj.sweep_v(value, 5)
+    #sleep(5.1)
 
 dim_2= vMag
 def sweep_dim_2(obj,value):
@@ -64,6 +65,7 @@ dim_3= PSG
 def sweep_dim_3(obj,value):
     pass
 
+DS = DataStoreSP()
 DS.prepare_data_save(folder, filen_0, dim_1, dim_2, dim_3, 'Voltage (V) x1000')
 DS.ask_overwrite()
 

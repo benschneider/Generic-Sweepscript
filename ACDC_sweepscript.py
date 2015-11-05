@@ -18,7 +18,7 @@ thisfile = __file__
 ## 2. Yoko1 (magnet), Yoko2 (Ib), SRS Amp
 ## 3. Keithley Voltmeter
 
-filen_0 = 'S1_708' # 0.203120,  466.836
+filen_0 = 's1_7' # 0.203120,  466.836
 folder = 'data\\'
 
 # Drivers
@@ -33,18 +33,18 @@ vm = key2000('GPIB0::29::INSTR')
 
 iBias = yoko('GPIB0::13::INSTR',
            name = 'Yoko V R=(998.83+14.24)KOhm',
-           start = -6,
-           stop = 6, 
-           pt = 151,
-           sstep = 0.1, #def max voltage steps it can take
+           start = -4,
+           stop = 4, 
+           pt = 201,
+           sstep = 0.2, #def max voltage steps it can take
            stime = 0) 
-iBias.prepare_v(vrange = 5)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
+iBias.prepare_v(vrange = 6)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
 
 vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
-            start = -110e-3,
-            stop = -110e-3, 
-            pt = 21,
+            start = -280e-3,
+            stop = -190e-3, 
+            pt = 20,
             sstep = 5e-3,
             stime = 1e-6) #'Yoko M' 
 vMag.prepare_v(vrange = 4)
@@ -79,6 +79,7 @@ dim_2= vMag
 def sweep_dim_2(obj,value):
     # obj.set_v2(value)
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
+    pass 
 
 dim_3= PSG
 def sweep_dim_3(obj,value):

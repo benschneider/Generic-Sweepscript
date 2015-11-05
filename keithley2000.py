@@ -67,7 +67,7 @@ class instrument():
 #Data storage stuff
     def prepare_data_save(self, folder, filen_0, dim_1, dim_2, dim_3, colour_name):
         self._folder = folder
-        self._filen_1 = filen_0 + '_voltage'  + '.mtx'
+        self._filen_1 = filen_0 + '.mtx'
         self._head_1 = make_header(dim_1, dim_2, dim_3, colour_name)
         self._matrix3d_1 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
                 
