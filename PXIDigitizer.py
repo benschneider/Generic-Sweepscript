@@ -28,7 +28,7 @@ class afDigitizer_BS(InstrumentDriver.InstrumentWorker):
             self.cAvgSignal2 = None
             self.cTrace = None
             self.vPTrace = None
-            self.vPowerMeanUnAvg = None
+            self.vPowerMeanUnAvg = None♠
             self.MeanMag = None
             self.MeanPhas = None
             self.vMeanUnAvg = None
