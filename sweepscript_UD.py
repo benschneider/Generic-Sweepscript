@@ -10,7 +10,7 @@ from parsers import copy_file
 from ramp_mod import ramp
 thisfile = __file__
 
-filen_0 = 'S1_901'
+filen_0 = 'S1_905'
 folder = 'data\\'
 
 # Driver
@@ -23,9 +23,9 @@ vm = key2000('GPIB0::29::INSTR')
 
 iBias = yoko('GPIB0::13::INSTR',
            name = 'Yoko V R=(998.83+14.24)KOhm',
-           start = -6,
-           stop = 6,
-           pt = 301,
+           start = -9,
+           stop = 9,
+           pt = 901,
            sstep = 0.1, # def max voltage steps it can take
            stime = 0.1)
 iBias.prepare_v(vrange = 5)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
@@ -35,8 +35,8 @@ vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
             start = -500e-3,
             stop = 500e-3,
-            pt = 101,
-            sstep = 5e-3,
+            pt = 501,
+            sstep = 10e-3,
             stime = 1e-6)
 vMag.prepare_v(vrange = 4)
 
@@ -81,11 +81,14 @@ try:
             sweep_dim_2(dim_2,dim_2.lin[jj])
             sweep_dim_1(dim_1,dim_1.start)
             if dim_1.UD is True:
+                print 'Up Trace'
                 for ii in range(dim_1.pt):
                     dim_1.set_v2(dim_1.lin[ii])
                     vdata = vm.get_val()
                     DS.record_data(vdata,kk,jj,ii)
-
+                
+                sweep_dim_1(dim_1,dim_1.stop)
+                print 'Down Trace'
                 for ii in range((dim_1.pt-1),-1,-1):
                     dim_1.set_v2(dim_1.lin[ii])
                     vdata = vm.get_val()
