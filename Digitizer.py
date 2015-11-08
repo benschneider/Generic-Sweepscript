@@ -2,6 +2,7 @@ from time import sleep
 import numpy as np
 import sys
 import PXIDigitizer_wrapper
+from cmath import rect  # to get polar coordinates..
 
 # Digitizer.boot_instrument('PXI7::15::INSTR', 'PXI6::10::INSTR')
 # Digitizer.boot_instrument('3011D1', '3036D1')
@@ -27,7 +28,7 @@ class instrument():
         self.removeDCoff = 1
         self.LoPos = 1              # Lo Above (1) or Below (0)
         self.freq = 5e9
-        self.nSamples = 50e3        # Samples taken/trigger
+        self.nSamples = int(50e3)   # Samples taken/trigger
         self.Overload = 3           # to test the overload code
         self.LoRef = 0              # 0=ocxo, 1=int 2=extDaisy, 3=extTerminated
         self.trig_source = 8        # 8=Star, 32=SW, 35=internal
@@ -98,6 +99,9 @@ class instrument():
     def set_freq(self, freq):
         self.digitizer.rf_centre_frequency_set(freq)
 
+    def get_freq(self):
+        return self.digitizer.rf_centre_frequency_get()
+
     def set_inputLevel(self, value):
         self.digitizer.rf_rf_input_level_set(value)
 
@@ -142,7 +146,7 @@ class instrument():
             self.checkADCOverload()
             # wait for external trigger signal
             while self.digitizer.data_capture_complete_get() is False:
-                self.thread().msleep(1)
+                sleep(5e-3)
                 self.checkADCOverload()
                 (lI, lQ) = self.digitizer.capture_iq_capt_mem(self.nSamples)
         else:
@@ -150,33 +154,33 @@ class instrument():
                 (lI, lQ) = self.digitizer.capture_iq_capt_mem(self.nSamples)
 
         # scale data to Volt / sqrt(1Ohm)
-        scaledI = (np.array(lI)
+        self.scaledI = (np.array(lI)
                    * np.power(10.0, dLevelCorrection/20.0)
                    / np.sqrt(1000))
-        scaledQ = (np.array(lQ)
+        self.scaledQ = (np.array(lQ)
                    * np.power(10.0, dLevelCorrection/20.0)
                    / np.sqrt(1000))
-        crep = scaledI + 1j*scaledQ
+        crep = self.scaledI + 1j*self.scaledQ
 
         # We add the aquired data to the vI and vQ arrays
-        vI = vI + np.mean(scaledI, axis=0)
-        vQ = vQ + np.mean(scaledQ, axis=0)
-        vI2 = vI2 + np.mean(scaledI**2, axis=0)
-        vQ2 = vQ2 + np.mean(scaledQ**2, axis=0)
+        vI = vI + np.mean(self.scaledI, axis=0)
+        vQ = vQ + np.mean(self.scaledQ, axis=0)
+        vI2 = vI2 + np.mean(self.scaledI**2, axis=0)
+        vQ2 = vQ2 + np.mean(self.scaledQ**2, axis=0)
 
         # Result data being stored
-        self.vPowerMean = (np.mean(scaledI**2, axis=1)
-                           + np.mean(scaledQ**2, axis=1))
-        self.vIMean = np.mean(scaledI, axis=1)
-        self.vQMean = np.mean(scaledQ, axis=1)
-        self.MeanMag = np.mean(np.absolute(crep), axis=1)
-        self.MeanPhase = np.mean(np.angle(crep), axis=1)
+        self.vPowerMean = (np.mean(self.scaledI**2)
+                           + np.mean(self.scaledQ**2))
+        self.vIMean = np.mean(self.scaledI)
+        self.vQMean = np.mean(self.scaledQ)
+        self.MeanMag = np.mean(np.absolute(crep))
+        self.MeanPhase = np.mean(np.angle(crep))
 
         self.vMeanUnAvg = vIMean+1j*vQMean
         self.cTrace = vI+1j*vQ
         self.vPTrace = (vI2+vQ2)
         self.cAvgSignal = np.average(vI)+1j*np.average(vQ)
-        self.cAvgSignal2 = np.rect(self.MeanMag, self.MeanPhas)
+        self.cAvgSignal2 = rect(self.MeanMag, self.MeanPhase)
         self.dPower = np.average(vI2)+np.average(vQ2)
 
     def get_Vcorr(self):
