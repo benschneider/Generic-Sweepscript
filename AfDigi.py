@@ -37,7 +37,7 @@ class instrument():
         self.removeDCoff = 1
         self.LoPos = LoPosAB          # Lo Above (1) or Below (0)
         self.freq = cfreq
-        self.nSamples = int(50e3)   # Samples taken/trigger
+        self.nSamples = int(nSample)   # Samples taken/trigger
         self.inputLvl = -10
         self.Overload = 4           # to test the overload code
         self.LoRef = LoRef          # 0=ocxo, 1=int 2=extDaisy, 3=extTerminated
@@ -136,7 +136,7 @@ class instrument():
         vQ = self.scaledQ
         self.scaledI = None
         self.scaledQ = None
-        return vI, vQ
+        return np.array(vI), np.array(vQ)
 
     def get_AvgMagPhs(self):
         ''' Returns the average Magnitude and Phase '''
@@ -146,7 +146,7 @@ class instrument():
         AvgPhase = self.AvgPhase
         self.AvgMag = None
         self.AvgPhase = None
-        return AvgMag, AvgPhase   
+        return np.array(AvgMag), np.array(AvgPhase)   
       
     def get_vAvgMagPhs(self):
         ''' Returns the voltage averaged Magnitude and Phase '''
@@ -156,7 +156,7 @@ class instrument():
         vAvgPh = self.vAvgPh
         self.vAvgMag = None
         self.vAvgPh = None
-        return vAvgMag, vAvgPh
+        return np.array(vAvgMag), np.array(vAvgPh)
     
     def get_AvgPower(self):
         ''' Returns the Averaged Power '''
@@ -164,7 +164,7 @@ class instrument():
             self.sampleAndAverage()
         vAvgPow = self.vAvgPow
         self.vAvgPow = None
-        return vAvgPow
+        return np.array(vAvgPow)
                
     def sampleAndAverage(self):
         '''# Sample the signal, calc I+j*Q theta

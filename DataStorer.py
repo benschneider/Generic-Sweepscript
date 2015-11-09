@@ -18,6 +18,7 @@ class DataStoreSP():
         self._filen_1 = filen_0 + '.mtx'
         self._head_1 = make_header(dim_1, dim_2, dim_3, colour_name)
         self._matrix3d_1 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
+        self.UD = False
         if dim_1.UD is True:
             self._filen_2 = filen_0 + '_2' + '.mtx'
             self.UD = True
@@ -106,7 +107,7 @@ class DataStore2Vec():
         ask_overwrite(self._folder+self._filen_1)
 
     def record_data(self, mag, phase, kk, jj, ii=1):
-        if mag.shape[0] == 1:
+        if len([mag]) == 1:
             self._matrix3d_3[kk, jj, ii] = mag
             self._matrix3d_4[kk, jj, ii] = phase
         else:
@@ -160,16 +161,16 @@ class DataStore10Vec():
         ask_overwrite(self._folder+self._filen_1)
 
     def record_data(self, data, kk, jj, ii):
-        self._matrix3d_1[:, jj, ii] = data[0,:]
-        self._matrix3d_2[:, jj, ii] = data[1,:]
-        self._matrix3d_3[:, jj, ii] = data[2,:]
-        self._matrix3d_4[:, jj, ii] = data[3,:]
-        self._matrix3d_5[:, jj, ii] = data[4,:]
-        self._matrix3d_6[:, jj, ii] = data[5,:]
-        self._matrix3d_7[:, jj, ii] = data[6,:]
-        self._matrix3d_8[:, jj, ii] = data[7,:]
-        self._matrix3d_9[:, jj, ii] = data[8,:]
-        self._matrix3d_10[:, jj, ii] = data[9,:]
+        self._matrix3d_0[:, jj, ii] = data[0,:]
+        self._matrix3d_1[:, jj, ii] = data[1,:]
+        self._matrix3d_2[:, jj, ii] = data[2,:]
+        self._matrix3d_3[:, jj, ii] = data[3,:]
+        self._matrix3d_4[:, jj, ii] = data[4,:]
+        self._matrix3d_5[:, jj, ii] = data[5,:]
+        self._matrix3d_6[:, jj, ii] = data[6,:]
+        self._matrix3d_7[:, jj, ii] = data[7,:]
+        self._matrix3d_8[:, jj, ii] = data[8,:]
+        self._matrix3d_9[:, jj, ii] = data[9,:]
 
     def save_data(self):
         savemtx(self._folder + self._filen_1,
