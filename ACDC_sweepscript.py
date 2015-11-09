@@ -81,10 +81,10 @@ def sweep_dim_2(obj,value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
     pass 
 
-dim_3= PSG
+dim_1= PSG
 def sweep_dim_3(obj,value):
-    pass
-    # obj.set_power(value)
+    # pass
+    obj.set_power(value)
     # ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
 
 # Keithley data recording

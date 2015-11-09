@@ -294,7 +294,7 @@ class afDigitizer_BS():
     def check_error(self, error=0):
         """If error occurred, get error message and raise error"""
         if error:
-            raise self.error_message_get()
+            raise Exception(self.error_message_get())
 
     def rf_level_correction_get(self):
         obj = getDllObject('afDigitizerDll_RF_LevelCorrection_Get',
