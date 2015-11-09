@@ -13,14 +13,14 @@ from parsers import savemtx, make_header, ask_overwrite
 
 class DataStoreSP():
     
-    def __init__(self, folder, filen_0, dim_1, dim_2, dim_3, colour_name):
+    def __init__(self, folder, filen_0, dim_1, dim_2, dim_3, label = '_', colour_name):
         self._folder = folder
-        self._filen_1 = filen_0 + '.mtx'
+        self._filen_1 = filen_0 + label + '.mtx'
         self._head_1 = make_header(dim_1, dim_2, dim_3, colour_name)
         self._matrix3d_1 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self.UD = False
         if dim_1.UD is True:
-            self._filen_2 = filen_0 + '_2' + '.mtx'
+            self._filen_2 = filen_0 + label + '_2' + '.mtx'
             self.UD = True
             self._matrix3d_2 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
             

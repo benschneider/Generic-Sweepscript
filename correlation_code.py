@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 from time import time
 
 lags = 25
-points = int(1e6)
-triggers = 5
+points = int(1e4)
+triggers = 100
 
 NoiseRatio1 = np.float64(10)
 NoiseRatio2 = np.float64(10)

@@ -13,7 +13,7 @@ from covfunc import getCovMatrix
 import numpy as np
 thisfile = __file__
 
-filen_0 = 'S1_911'
+filen_0 = 'S1_927'
 folder = 'data\\'
 
 # Driver
@@ -67,18 +67,18 @@ iBias.sweep_v(iBias.start, 1)  # sweep Ibias to its position
 
 vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
-            start = -200e-3,
-            stop = 200e-3,
-            pt = 101,
+            start = -300e-3,
+            stop = 300e-3,
+            pt = 151,
             sstep = 10e-3,
             stime = 1e-6)
 vMag.prepare_v(vrange = 4)
 
 PSG = aPSG('GPIB0::11::INSTR',
            name = 'RF - Power (V)',
-           start = 250e-3,
+           start = 400e-3,
            stop = 0,
-           pt = 126,
+           pt = 201,
            sstep = 20e-3,
            stime = 1e-3)
            
@@ -116,13 +116,14 @@ dim_3 = nothing
 def sweep_dim_3(obj,value):
     pass
 
-DSP = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Voltage (V) x1000')
+DSP = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, label='V', 'Voltage x1000')
 DSP.ask_overwrite()
-DS2vD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_2, 'D1vAvg')
-DS2mD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_2, 'D1mAvg')
-DS2vD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_2, 'D2vAvg')
-DS2mD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_2, 'D2mAvg')
-DS10 = DataStore10Vec(folder, filen_0, dim_1, dim_2, D1, 'CovMat')
+DS2vD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1vAvg')
+DS2mD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1mAvg')
+DSP_PD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, label='D1Pow', 'Watts')
+#DS2vD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2vAvg')
+#DS2mD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
+#DS10 = DataStore10Vec(folder, filen_0, dim_1, dim_2, D1, 'CovMat')
 # DS10.ask_overwrite()
 
 copy_file(thisfile, filen_0, folder) #backup this script
@@ -166,35 +167,46 @@ try:
                     D2vMa = np.float(0.0)
                     D2vPha =  np.float(0.0)                    
                     covAvgMat = np.zeros([10,lags*2-1])
+                    D1aPow = np.float(0.0)
                     
                     t0conv = time()
                     for cz in range(corrAvg):                        
+                        '''
                         I1, Q1 = D1.get_rawIQ()
                         I2, Q2 = D2.get_rawIQ()
                         covMat = getCovMatrix(I1, Q1, I2, Q2, lags)
                         covAvgMat = covAvgMat + covMat
-
+                        '''
+                        
                         D1M, D1Ph = D1.get_AvgMagPhs()
-                        D2M, D2Ph = D2.get_AvgMagPhs()
-                        D1vM, D1vPh = D1.get_vAvgMagPhs()
-                        D2vM, D2vPh = D2.get_vAvgMagPhs()
                         D1Ma = D1Ma + D1M
                         D1Pha = D1Pha + D1Ph
-                        D2Ma = D2Ma + D1M
-                        D2Pha = D2Pha + D2Ph
+
+                        D1vM, D1vPh = D1.get_vAvgMagPhs()
                         D1vMa = D1vMa + D1vM
                         D1vPha = D1vPha + D1vPh
+
+                        D1Pow = D1.get_AvgPower()
+                        D1aPow = D1aPow + D1Pow
+                        '''
+                        D2M, D2Ph = D2.get_AvgMagPhs()
+                        D2Ma = D2Ma + D1M
+                        D2Pha = D2Pha + D2Ph
+                        D2vM, D2vPh = D2.get_vAvgMagPhs()
                         D2vMa = D2vMa + D2vM
                         D2vPha = D2vPha + D2vPh
-
+                        '''
+                        
                     print time()-t0conv                    
-                    DS10.record_data(covAvgMat/np.float(corrAvg),kk,jj,ii)                    
+                    #DS10.record_data(covAvgMat/np.float(corrAvg),kk,jj,ii)                    
 
                     DS2mD1.record_data(D1Ma/np.float(corrAvg), D1Pha/np.float(corrAvg), kk, jj, ii)                 
+                    DS2vD1.record_data(D1vMa/np.float(corrAvg), D1vPha/np.float(corrAvg) ,kk, jj, ii)
+                    DSP_PD1.record_data((D1aPow/np.float(corrAvg)) ,kk, jj, ii)
+                    '''
                     DS2mD2.record_data(D2Ma/np.float(corrAvg), D2Pha/np.float(corrAvg) ,kk,  jj,ii)                   
-                    DS2vD1.record_data(D1vMa/np.float(corrAvg), D1vPha/np.float(corrAvg) ,kk, jj, ii)               
                     DS2vD2.record_data(D2vMa/np.float(corrAvg), D2vPha/np.float(corrAvg) ,kk ,jj ,ii)
-                    
+                    '''
                     # D1Levelcorr = D1.get_Levelcorr()
                     # D2Levelcorr = D2.get_Levelcorr()
                    
