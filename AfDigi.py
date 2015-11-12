@@ -27,6 +27,7 @@ class instrument():
                  LoRef=0, 
                  name='D',
                  cfreq = 4.57e9,
+                 inputlvl = 0,
                  start=4.43e9, 
                  stop=0, 
                  pt=1, 
@@ -38,7 +39,7 @@ class instrument():
         self.LoPos = LoPosAB          # Lo Above (1) or Below (0)
         self.freq = cfreq
         self.nSamples = int(nSample)   # Samples taken/trigger
-        self.inputLvl = -10
+        self.inputLvl = inputlvl
         self.Overload = 4           # to test the overload code
         self.LoRef = LoRef          # 0=ocxo, 1=int 2=extDaisy, 3=extTerminated
         self.trig_source = 8        # 8=Star, 32=SW, 35=internal
@@ -55,8 +56,8 @@ class instrument():
             self.digitizer.boot_instrument(adressLo, adressDigi)
             self.prep_data()
             self.set_settings()
-            print self.digitizer.ref_is_locked()  # print Lo locked confirmation
-            print 'Digitizer started'        
+            # self.digitizer.ref_is_locked()  # print Lo locked confirmation
+            print 'Digitizer ',self.name ,' started'        
         except PXIDigitizer_wrapper.Error as e:
             print "Digitizer start failed"
             raise Exception(e)
@@ -123,6 +124,7 @@ class instrument():
         capture has been taken.
         """
         if self.vAvgIQ is None:
+            self.init_trigger()
             self.sampleAndAverage()
         vAvgIQ = self.vAvgIQ
         self.vAvgIQ = None
@@ -131,6 +133,8 @@ class instrument():
     def get_rawIQ(self):
         ''' Returns the unaveraged (vI,vQ) Data '''
         if self.scaledI is None or self.scaledQ is None:
+            print 'retrigger rawIQ'
+            self.init_trigger()
             self.sampleAndAverage()
         vI = self.scaledI
         vQ = self.scaledQ
@@ -141,6 +145,8 @@ class instrument():
     def get_AvgMagPhs(self):
         ''' Returns the average Magnitude and Phase '''
         if self.AvgMag is None or self.AvgPhase is None:
+            print 'retrigger MagPhs'
+            self.init_trigger()
             self.sampleAndAverage()
         AvgMag = self.AvgMag
         AvgPhase = self.AvgPhase
@@ -151,6 +157,8 @@ class instrument():
     def get_vAvgMagPhs(self):
         ''' Returns the voltage averaged Magnitude and Phase '''
         if self.vAvgMag is None or self.vAvgPh is None:
+            print 'retrigger vMagPhs'
+            self.init_trigger()
             self.sampleAndAverage()
         vAvgMag = self.vAvgMag
         vAvgPh = self.vAvgPh
@@ -161,45 +169,56 @@ class instrument():
     def get_AvgPower(self):
         ''' Returns the Averaged Power '''
         if self.vAvgPow is None:
+            print 'retrigger Power'
+            self.init_trigger()
             self.sampleAndAverage()
         vAvgPow = self.vAvgPow
         self.vAvgPow = None
         return np.array(vAvgPow)
-               
-    def sampleAndAverage(self):
+ 
+    def init_trigger(self):
+        self.digitizer.trigger_arm_set(self.nSamples*2)
+
+    def wait_capture_complete(self):
+        while self.digitizer.data_capture_complete_get() is False: 
+            sleep(5e-3)
+        pass
+        
+    def downl_data(self):
+        '''grabs the biggest chunks of data and does not update the Level correction value'''
+        self.wait_capture_complete()
+        self.scaledI = np.zeros(self.nSamples)
+        self.scaledQ = np.zeros(self.nSamples)
+        self.checkADCOverload()
+        (self.scaled1I, self.scaledQ) = self.digitizer.capture_iq_capt_mem(self.nSamples)
+
+    def get_newdata(self):
+        ''' This one Triggers, waits till capture is complete
+            Downloads Data, Downloads Lvl Correction and processes the data 
+            such that it can be grabed with the other functions '''
+        self.init_trigger()
+        self.downl_data()
+        self.levelcorr = self.digitizer.rf_level_correction_get()
+        self.process_data()
+             
+    def process_data(self):
         '''# Sample the signal, calc I+j*Q theta
         # and store it in the driver object
         # of each triger there are x samples... which can be averaged...
         '''
-        TriggerSourceValue = self.digitizer.trigger_source_get()
-        dLevelCorrection = self.digitizer.rf_level_correction_get()
-        self.digitizer.trigger_arm_set(self.nSamples*2)
-        self.checkADCOverload()
+        self.scaledI = (np.array(self.scaledI) 
+                        * np.power(10.0, self.levelcorr/20.0)
+                        / np.sqrt(1000))
+        self.scaledQ = (np.array(self.scaledQ)
+                        * np.power(10.0, self.levelcorr/20.0)
+                        / np.sqrt(1000))
+
         vI = np.zeros(1)
         vQ = np.zeros(1)
         vI2 = np.zeros(1)
         vQ2 = np.zeros(1)
 
-        # TriggersourceValue 32 = SW trigger
-        if TriggerSourceValue is not 32:
-            self.digitizer.trigger_arm_set(self.nSamples*2)
-            self.checkADCOverload()
-            # wait for external trigger signal
-            while self.digitizer.data_capture_complete_get() is False:
-                sleep(5e-3)
-                self.checkADCOverload()
-                (lI, lQ) = self.digitizer.capture_iq_capt_mem(self.nSamples)
-        else:
-                self.checkADCOverload()
-                (lI, lQ) = self.digitizer.capture_iq_capt_mem(self.nSamples)
-
         # scale data to Volt / sqrt(1Ohm)
-        self.scaledI = (np.array(lI) 
-                        * np.power(10.0, dLevelCorrection/20.0)
-                        / np.sqrt(1000))
-        self.scaledQ = (np.array(lQ)
-                        * np.power(10.0, dLevelCorrection/20.0)
-                        / np.sqrt(1000))
         # Average I and Q voltages
         vI = np.mean(self.scaledI, axis=0)
         vQ = np.mean(self.scaledQ, axis=0)
