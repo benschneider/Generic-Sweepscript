@@ -13,10 +13,10 @@ from parsers import savemtx, make_header, ask_overwrite
 
 class DataStoreSP():
     
-    def __init__(self, folder, filen_0, dim_1, dim_2, dim_3, label = '_', colour_name):
+    def __init__(self, folder, filen_0, dim_1, dim_2, dim_3, label = '_', cname='Voltage x1k'):
         self._folder = folder
         self._filen_1 = filen_0 + label + '.mtx'
-        self._head_1 = make_header(dim_1, dim_2, dim_3, colour_name)
+        self._head_1 = make_header(dim_1, dim_2, dim_3, cname)
         self._matrix3d_1 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self.UD = False
         if dim_1.UD is True:
@@ -122,7 +122,7 @@ class DataStore2Vec():
                 self._matrix3d_4,
                 header=self._head_4)
                 
-class DataStore10Vec():
+class DataStore11Vec():
 
     def __init__(self, folder, filen_0, dim_1, dim_2, dim_3, label = '_'):
         self._folder = folder
@@ -136,6 +136,7 @@ class DataStore10Vec():
         self._filen_8 = filen_0 + label + '_cQ1Q2' + '.mtx'
         self._filen_9 = filen_0 + label + '_cI1Q2' + '.mtx'
         self._filen_10 = filen_0 + label + '_cQ1I2' + '.mtx'
+        self._filen_11 = filen_0 + label + '_Squeezing' + '.mtx'
         self._head_0 = make_header(dim_1, dim_2, dim_3, 'cCov')
         self._head_1 = make_header(dim_1, dim_2, dim_3, 'cCov')
         self._head_2 = make_header(dim_1, dim_2, dim_3, 'cCov')
@@ -146,6 +147,7 @@ class DataStore10Vec():
         self._head_7 = make_header(dim_1, dim_2, dim_3, 'cCov')
         self._head_8 = make_header(dim_1, dim_2, dim_3, 'cCov')
         self._head_9 = make_header(dim_1, dim_2, dim_3, 'cCov')
+        self._head_10 = make_header(dim_1, dim_2, dim_3, 'Squeezing')
         self._matrix3d_0 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_1 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_2 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
@@ -156,6 +158,7 @@ class DataStore10Vec():
         self._matrix3d_7 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_8 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_9 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
+        self._matrix3d_10 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
 
     def ask_overwrite(self):
         ask_overwrite(self._folder+self._filen_1)
@@ -171,6 +174,7 @@ class DataStore10Vec():
         self._matrix3d_7[:, jj, ii] = data[7,:]
         self._matrix3d_8[:, jj, ii] = data[8,:]
         self._matrix3d_9[:, jj, ii] = data[9,:]
+        self._matrix3d_10[:, jj, ii] = data[10,:]
 
     def save_data(self):
         savemtx(self._folder + self._filen_1,
@@ -203,3 +207,6 @@ class DataStore10Vec():
         savemtx(self._folder + self._filen_10,
                 self._matrix3d_9,
                 header=self._head_9)
+        savemtx(self._folder + self._filen_11,
+                self._matrix3d_10,
+                header=self._head_10)
