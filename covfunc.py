@@ -6,7 +6,8 @@ Created on Sun Nov 08 23:40:43 2015
 """
 import scipy.signal as signal
 import numpy as np
-#from threading import Thread
+# from threading import Thread
+# import thread
 
 def covConv(a,b, lags=20):
     ''' returns fft convolution result 
@@ -33,6 +34,8 @@ def getCovMatrix(I1, Q1, I2, Q2, lags=20, extended = True):
     if extended is True :
         # these should simply show a single peak 
         # with a height of its covariance
+        # CovMat[0,:] = thread.start_new_thread( covConv, (I1, I1, lags) )
+        # thread.start_new_thread( print_time, ("Thread-2", 4, ) )
         CovMat[0,:] = covConv(I1, I1, lags)                 
         CovMat[1,:] = covConv(Q1, Q1, lags)
         CovMat[2,:] = covConv(I2, I2, lags)
@@ -46,6 +49,6 @@ def getCovMatrix(I1, Q1, I2, Q2, lags=20, extended = True):
     CovMat[7,:]= covConv(Q1, Q2, lags)
     CovMat[8,:]= covConv(I1, Q2, lags)
     CovMat[9,:]= covConv(Q1, I2, lags)
-    CovMat[10,:] = (CovMat[6,:] - CovMat[7,:]) + (CovMat[8,:]+CovMat[9,:])
+    CovMat[10,:] = abs(1j*(CovMat[8,:]+CovMat[9,:]) + (CovMat[6,:] - CovMat[7,:]))
     return CovMat
     

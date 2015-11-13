@@ -14,7 +14,7 @@ import numpy as np
 
 thisfile = __file__
 
-filen_0 = 'S1_943_G80mV_SN'
+filen_0 = 'S1_946_G80mV_Corr'
 folder = 'data\\'
 
 # Driver
@@ -26,10 +26,10 @@ from AfDigi import instrument as AfDig
 
 vm = key2000('GPIB0::29::INSTR')
 
-lsamples = 1e3
-lags = 100  # in points
+lsamples = 1e6
+lags = 25  # in points
 BW = 1e5
-corrAvg = 100
+corrAvg = 1
 
 D1 = AfDig(adressDigi='3036D1', 
            adressLo='3011D1', 
@@ -37,7 +37,7 @@ D1 = AfDig(adressDigi='3036D1',
            LoRef=0, 
            name='D1 Lags (sec)',
            cfreq = 4.1e9,
-           inputlvl = -12,
+           inputlvl = -13,
            start=(-lags/BW), 
            stop=(lags/BW), 
            pt=(lags*2-1),
@@ -50,7 +50,7 @@ D2 = AfDig(adressDigi='3036D2',
            LoRef=2, 
            name='D2 Lags (sec)',
            cfreq = 4.8e9,
-           inputlvl = -12,
+           inputlvl = -13,
            start=(-lags/BW), 
            stop=(lags/BW), 
            pt=(lags*2-1),
@@ -59,29 +59,29 @@ D2 = AfDig(adressDigi='3036D2',
 
 iBias = yoko('GPIB0::13::INSTR',
            name = 'Yoko V R=(998.83+14.24)KOhm',
-           start = -21,
-           stop = 21,
-           pt = 2101,
+           start = -2e-3,
+           stop = -2e-3,
+           pt = 1,
            sstep = 0.1, # def max voltage steps it can take
            stime = 0.1)
-iBias.prepare_v(vrange = 6)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
+iBias.prepare_v(vrange = 2)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
 iBias.UD = False
 iBias.sweep_v(iBias.start, 6)  # sweep Ibias to its position
 
 vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
-            start = 80e-3,  # -300e-3,
-            stop = 80e-3,  # 300e-3,
-            pt = 10,
+            start = 50e-3,  # -300e-3,
+            stop = 50e-3,  # 300e-3,
+            pt = 11,
             sstep = 10e-3,
             stime = 1e-6)
 vMag.prepare_v(vrange = 4)
 
 PSG = aPSG('GPIB0::11::INSTR',
            name = 'RF - Power (V)',
-           start = 40e-9,# 406e-3+40e-9,
-           stop = 40e-9,
-           pt = 1,
+           start = 450e-3,# 406e-3+40e-9,
+           stop = 0,
+           pt = 411,
            sstep = 20e-3,
            stime = 1e-3)
            
@@ -89,7 +89,7 @@ PSG.set_powUnit('V')
 # PSG.set_freq(12.9e9)  # 1GHz gives 2uV steps
 # PSG.set_freq(12.2e9)
 PSG.set_freq(8.9e9)
-PSG.set_output(0)
+PSG.set_output(1)
 
 iBias.sweep_par = 'v'
 vMag.sweep_par = 'v'
@@ -104,14 +104,14 @@ nothing = dummy('GPIB0::11::INSTR',
            stime = 1e-3)
 
 
-dim_1= iBias
-# dim_1 = PSG
+# dim_1= iBias
+dim_1 = PSG
 dim_1.UD = False
 def sweep_dim_1(obj,value):
-    ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
-    #obj.sweep_v(value, 5)
-    #sleep(5.1)
-    #PSG.set_power(value)
+    # ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
+    # obj.sweep_v(value, 5)
+    # sleep(5.1)
+    PSG.set_power(value)
 
 dim_2 = vMag
 def sweep_dim_2(obj,value):
@@ -138,7 +138,7 @@ DS2mD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
 
 copy_file(thisfile, filen_0, folder) #backup this script
 print 'Executing sweep'
-print 'Est. req time (min):'+str(dim_3.pt*dim_2.pt*dim_1.pt*0.032/60)
+print 'Est. req time (min):'+str(corrAvg*lsamples/BW*dim_3.pt*dim_2.pt*dim_1.pt*0.032/60)
 t0 = time()
 try:
     for kk in range(dim_3.pt):
@@ -147,8 +147,8 @@ try:
         for jj in range(dim_2.pt):
             sweep_dim_2(dim_2,dim_2.lin[jj])
             sweep_dim_1(dim_1,dim_1.start)
-            D1.get_newdata()  # run one test and update lvl correction
-            D2.get_newdata()  # run one test and update lvl correction 
+            D1.get_newdata()   # run one test and update lvl correction
+            D2.get_newdata()   # run one test and update lvl correction
             
             if dim_1.UD is True:
                 print 'Up Trace'
@@ -165,8 +165,10 @@ try:
                     DSP.record_data2(vdata,kk,jj,ii)
             else:
                 for ii in range(dim_1.pt):
-                    dim_1.set_v2(dim_1.lin[ii])
-                    # sweep_dim_1(dim_1, dim_1.lin[ii])
+                    # dim_1.set_v2(dim_1.lin[ii])
+                    sweep_dim_1(dim_1, dim_1.lin[ii])
+                    # D1.get_newdata()  # run one test and update lvl correction
+                    # D2.get_newdata()  # run one test and update lvl correction 
 
                     vdata = np.float(0.0)
                     D1Ma = np.float(0.0)
@@ -182,25 +184,21 @@ try:
                     covAvgMat = np.zeros([11,lags*2-1])
                     D1aPow = np.float(0.0)
                     D2aPow = np.float(0.0)
+                    D1.init_trigger()
+                    D2.init_trigger()
 
                     t0conv = time()
                     for cz in range(int(corrAvg)):                        
                         # Digitizers take data now @ same/sim time
 
-                        D1.init_trigger()
-                        D2.init_trigger()
-
-                        # D1.wait_capture_complete()
-                        # D2.wait_capture_complete()
+                        D1.wait_capture_complete()
+                        D2.wait_capture_complete()
                         
                         D1.downl_data()
                         D2.downl_data()
                         
                         D1.process_data()
                         D2.process_data()
-                        # I1, Q1 = D1.get_rawIQ()
-                        # I2, Q2 = D2.get_rawIQ()
-                        # covAvgMat = covAvgMat +  getCovMatrix(I1, Q1, I2, Q2, lags)
                         
                         # Digitizer 1 Values
                         D1M, D1Ph = D1.get_AvgMagPhs()
@@ -223,13 +221,22 @@ try:
                         D2vMa = D2vMa + D2vM
                         D2vPha = D2vPha + D2vPh
                         vdata = vdata + vm.get_val()
+                        
+                        # I1 = D1.scaledI
+                        # Q1 = D1.scaledQ
+                        # I2 = D2.scaledI
+                        # Q2 = D2.scaledQ
+                        D1.init_trigger()
+                        D2.init_trigger()
+                        # covAvgMat = covAvgMat +  getCovMatrix(I1, Q1, I2, Q2, lags)
+                                               
                         # D1Lvl = D1Lvl + D1.levelcorr
                         # D2Lvl = D2Lvl + D2.levelcorr
                         
                     print cz, time()-t0conv 
                     
                     # Recording data in Memory
-                    # DS11.record_data(covAvgMat/np.float(corrAvg),kk,jj,ii) 
+                    DS11.record_data(covAvgMat/np.float(corrAvg),kk,jj,ii) 
                     DSP.record_data(vdata/np.float(corrAvg),kk,jj,ii)
                 
                     DSP_LD1.record_data(D1.levelcorr,kk, jj, ii)
@@ -243,7 +250,7 @@ try:
                     DSP_PD2.record_data((D2aPow/np.float(corrAvg)) ,kk, jj, ii)
 
                     DSP.save_data()
-                    # DS11.save_data()        
+                    DS11.save_data()        
                     DSP_PD1.save_data()        
                     DSP_PD2.save_data()
 
