@@ -112,7 +112,8 @@ class instrument():
         self.digitizer.rf_rf_input_level_set(value)
 
     def get_Levelcorr(self):
-        return self.digitizer.rf_level_correction_get()
+        self.levelcorr = self.digitizer.rf_level_correction_get()
+        return self.levelcorr
 
     def set_LoAboveBelow(self, val):
         ''' below(0), above(1) '''
@@ -181,16 +182,17 @@ class instrument():
 
     def wait_capture_complete(self):
         while self.digitizer.data_capture_complete_get() is False: 
-            sleep(5e-3)
+            sleep(10e-3)
         pass
         
     def downl_data(self):
         '''grabs the biggest chunks of data and does not update the Level correction value'''
-        self.wait_capture_complete()
+        # self.wait_capture_complete()
         self.scaledI = np.zeros(self.nSamples)
         self.scaledQ = np.zeros(self.nSamples)
         self.checkADCOverload()
-        (self.scaled1I, self.scaledQ) = self.digitizer.capture_iq_capt_mem(self.nSamples)
+        (self.scaledI, self.scaledQ) = self.digitizer.capture_iq_capt_mem(self.nSamples)
+        # self.levelcorr = self.digitizer.rf_level_correction_get()
 
     def get_newdata(self):
         ''' This one Triggers, waits till capture is complete
@@ -246,6 +248,7 @@ class instrument():
     def checkADCOverload(self):
         if self.digitizer.check_ADCOverload():
             self.Overload = self.Overload + 1
+            print 'Overload number:', self.Overload
             sleep(0.2)
             if self.Overload > 3:
                 self.digitizer.rf_rf_input_level_set(30)
