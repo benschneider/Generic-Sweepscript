@@ -14,7 +14,7 @@ import numpy as np
 
 thisfile = __file__
 
-filen_0 = 'S1_946_G80mV_Corr'
+filen_0 = 'S1_946_G27mV_P'
 folder = 'data\\'
 
 # Driver
@@ -29,7 +29,7 @@ vm = key2000('GPIB0::29::INSTR')
 lsamples = 1e6
 lags = 25  # in points
 BW = 1e5
-corrAvg = 1
+corrAvg = 10
 
 D1 = AfDig(adressDigi='3036D1', 
            adressLo='3011D1', 
@@ -70,8 +70,8 @@ iBias.sweep_v(iBias.start, 6)  # sweep Ibias to its position
 
 vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
-            start = 50e-3,  # -300e-3,
-            stop = 50e-3,  # 300e-3,
+            start = 27e-3,  # -300e-3,
+            stop = 27e-3,  # 300e-3,
             pt = 11,
             sstep = 10e-3,
             stime = 1e-6)
@@ -79,9 +79,9 @@ vMag.prepare_v(vrange = 4)
 
 PSG = aPSG('GPIB0::11::INSTR',
            name = 'RF - Power (V)',
-           start = 450e-3,# 406e-3+40e-9,
+           start = 100e-3,# 406e-3+40e-9,
            stop = 0,
-           pt = 411,
+           pt = 101,
            sstep = 20e-3,
            stime = 1e-3)
            
