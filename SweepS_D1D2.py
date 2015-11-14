@@ -9,7 +9,7 @@ from time import time, sleep
 from parsers import copy_file
 from ramp_mod import ramp
 from DataStorer import DataStoreSP, DataStore2Vec, DataStore11Vec
-from covfunc import getCovMatrix
+# from covfunc import getCovMatrix
 import numpy as np
 
 thisfile = __file__
@@ -194,6 +194,9 @@ try:
                         D1.wait_capture_complete()
                         D2.wait_capture_complete()
                         
+                        D1.init_trigger()
+                        D2.init_trigger()
+
                         D1.downl_data()
                         D2.downl_data()
                         
@@ -226,8 +229,6 @@ try:
                         # Q1 = D1.scaledQ
                         # I2 = D2.scaledI
                         # Q2 = D2.scaledQ
-                        D1.init_trigger()
-                        D2.init_trigger()
                         # covAvgMat = covAvgMat +  getCovMatrix(I1, Q1, I2, Q2, lags)
                                                
                         # D1Lvl = D1Lvl + D1.levelcorr
@@ -236,7 +237,7 @@ try:
                     print cz, time()-t0conv 
                     
                     # Recording data in Memory
-                    DS11.record_data(covAvgMat/np.float(corrAvg),kk,jj,ii) 
+                    # DS11.record_data(covAvgMat/np.float(corrAvg),kk,jj,ii) 
                     DSP.record_data(vdata/np.float(corrAvg),kk,jj,ii)
                 
                     DSP_LD1.record_data(D1.levelcorr,kk, jj, ii)
@@ -250,7 +251,7 @@ try:
                     DSP_PD2.record_data((D2aPow/np.float(corrAvg)) ,kk, jj, ii)
 
                     DSP.save_data()
-                    DS11.save_data()        
+                    # DS11.save_data()        
                     DSP_PD1.save_data()        
                     DSP_PD2.save_data()
 
