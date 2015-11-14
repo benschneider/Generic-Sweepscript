@@ -14,7 +14,7 @@ import numpy as np
 
 thisfile = __file__
 
-filen_0 = 'S1_946_G27mV_P'
+filen_0 = 'S1_947_G27mV_P'
 folder = 'data\\'
 
 # Driver
@@ -194,11 +194,11 @@ try:
                         D1.wait_capture_complete()
                         D2.wait_capture_complete()
                         
-                        D1.init_trigger()
-                        D2.init_trigger()
-
                         D1.downl_data()
                         D2.downl_data()
+
+                        D1.init_trigger()
+                        D2.init_trigger()
                         
                         D1.process_data()
                         D2.process_data()
