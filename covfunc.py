@@ -6,8 +6,57 @@ Created on Sun Nov 08 23:40:43 2015
 """
 import scipy.signal as signal
 import numpy as np
+from scipy.fftpack import (fft, ifft, ifftshift, fft2, ifft2, fftn,
+                           ifftn, fftfreq)
+from numpy.fft import rfftn, irfftn
 # from threading import Thread
 # import thread
+def newConv(I1, Q1, I2, Q2, lags=20):
+    ''' By Defining the number of lags one defines an interrest 
+    of region meaning any effect should happen on that oder of
+    time scale; thus lower frequency effects cannot be displayed on
+    that scale and can be discarded from the convolution.    '''
+    
+    
+    I1 = asarray(I1)
+    Q1 = asarray(Q1)
+
+    if in1.ndim == in2.ndim == 0:  # scalar inputs
+        return in1 * in2
+    elif not in1.ndim == in2.ndim:
+        raise ValueError("in1 and in2 should have the same dimensionality")
+    elif in1.size == 0 or in2.size == 0:  # empty arrays
+        return array([])
+
+    s1 = array(in1.shape)
+    s2 = array(in2.shape)
+    complex_result = (np.issubdtype(in1.dtype, np.complex) or
+                      np.issubdtype(in2.dtype, np.complex))
+    shape = s1 + s2 - 1
+
+    # Speed up FFT by padding to optimal size for FFTPACK
+    fshape = [_next_regular(int(d)) for d in shape]
+    fslice = tuple([slice(0, int(sz)) for sz in shape])
+    # Pre-1.9 NumPy FFT routines are not threadsafe.  For older NumPys, make
+    # sure we only call rfftn/irfftn from one thread at a time.
+    if not complex_result and (_rfft_mt_safe or _rfft_lock.acquire(False)):
+        try:
+            ret = irfftn(rfftn(in1, fshape) *
+                         rfftn(in2, fshape), fshape)[fslice].copy()
+        finally:
+            if not _rfft_mt_safe:
+                _rfft_lock.release()
+    else:
+        # If we're here, it's either because we need a complex result, or we
+        # failed to acquire _rfft_lock (meaning rfftn isn't threadsafe and
+        # is already in use by another thread).  In either case, use the
+        # (threadsafe but slower) SciPy complex-FFT routines instead.
+        ret = ifftn(fftn(in1, fshape) * fftn(in2, fshape))[fslice].copy()
+        if not complex_result:
+            ret = ret.real
+
+    return ret
+
 
 def covConv(a,b, lags=20):
     ''' returns fft convolution result 
