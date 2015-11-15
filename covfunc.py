@@ -12,7 +12,7 @@ from numpy.fft import rfftn, irfftn
 _rfft_lock = threading.Lock()
 
 
-def getCovMatrix2(I1, Q1, I2, Q2, lags=20):
+def getCovMatrix(I1, Q1, I2, Q2, lags=20):
     '''
     This function was adaped from scipy.signal.fft.convolve.
     By Defining the number of lags one defines an interrest
@@ -21,6 +21,17 @@ def getCovMatrix2(I1, Q1, I2, Q2, lags=20):
     that scale and can be discarded from the convolution.
     All input shapes need to be the same.
     requires an updated numpy version (1.9.0 +).
+    # 0: <I1I1>
+    # 1: <Q1Q1>
+    # 2: <I2I2>
+    # 3: <Q2Q2>
+    # 4: <I1Q1>
+    # 5: <I2Q2>
+    # 6: <I1I2>
+    # 7: <Q1Q2>
+    # 8: <I1Q2>
+    # 9: <Q1I2>
+    # 10: <Squeezing>
     '''
 
     lags = int(lags)
@@ -50,7 +61,7 @@ def getCovMatrix2(I1, Q1, I2, Q2, lags=20):
         try:
             fftI1 = rfftn(I1, fshape)
             fftQ1 = rfftn(Q1, fshape)
-            fftI2 = rfftn(I1, fshape)
+            fftI2 = rfftn(I2, fshape)
             fftQ2 = rfftn(Q2, fshape)
 
             rfftI1 = rfftn(I1[::-1], fshape)
@@ -70,26 +81,37 @@ def getCovMatrix2(I1, Q1, I2, Q2, lags=20):
             rfftI2 = np.concatenate((np.zeros(HPfilt), rfftI2[HPfilt:]))
             rfftQ2 = np.concatenate((np.zeros(HPfilt), rfftQ2[HPfilt:]))
 
+            # 0: <I1I1>
             CovMat[0, :] = (irfftn((fftI1*rfftI1))[fslice].copy()[start:stop]
                             / len(fftI1))
+            # 1: <Q1Q1>
             CovMat[1, :] = (irfftn((fftQ1*rfftQ1))[fslice].copy()[start:stop]
                             / len(fftI1))
+            # 2: <I2I2>
             CovMat[2, :] = (irfftn((fftI2*rfftI2))[fslice].copy()[start:stop]
                             / len(fftI1))
+            # 3: <Q2Q2>
             CovMat[3, :] = (irfftn((fftQ2*rfftQ2))[fslice].copy()[start:stop]
                             / len(fftI1))
+            # 4: <I1Q1>
             CovMat[4, :] = (irfftn((fftI1*rfftQ1))[fslice].copy()[start:stop]
                             / len(fftI1))
+            # 5: <I2Q2>
             CovMat[5, :] = (irfftn((fftI2*rfftQ2))[fslice].copy()[start:stop]
                             / len(fftI1))
+            # 6: <I1I2>
             CovMat[6, :] = (irfftn((fftI1*rfftI2))[fslice].copy()[start:stop]
                             / len(fftI1))
+            # 7: <Q1Q2>
             CovMat[7, :] = (irfftn((fftQ1*rfftQ2))[fslice].copy()[start:stop]
                             / len(fftI1))
+            # 8: <I1Q2>
             CovMat[8, :] = (irfftn((fftI1*rfftQ2))[fslice].copy()[start:stop]
                             / len(fftI1))
+            # 9: <Q1I2>
             CovMat[9, :] = (irfftn((fftQ1*rfftI2))[fslice].copy()[start:stop]
                             / len(fftI1))
+            # 10: <Squeezing>
             CovMat[10, :] = (abs(1j*(CovMat[8, :]+CovMat[9, :])
                                  + (CovMat[6, :] - CovMat[7, :])))
             return CovMat
@@ -121,7 +143,7 @@ def covConv(a, b, lags=20):
     return result[start:stop]
 
 
-def getCovMatrix(I1, Q1, I2, Q2, lags=20, extended=True):
+def getCovMatrix_old(I1, Q1, I2, Q2, lags=20, extended=True):
     ''' # Matrix index as follows:
     # 0: <I1I1>
     # 1: <Q1Q1>
