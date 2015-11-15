@@ -126,6 +126,17 @@ class DataStore11Vec():
 
     def __init__(self, folder, filen_0, dim_1, dim_2, dim_3, label = '_'):
         self._folder = folder
+        # 0: <I1I1>
+        # 1: <Q1Q1>
+        # 2: <I2I2>
+        # 3: <Q2Q2>
+        # 4: <I1Q1>
+        # 5: <I2Q2>
+        # 6: <I1I2>
+        # 7: <Q1Q2>
+        # 8: <I1Q2>
+        # 9: <Q1I2>
+        # 10: <Squeezing>
         self._filen_1 = filen_0 + label + '_cI1I1' + '.mtx'
         self._filen_2 = filen_0 + label + '_cQ1Q1' + '.mtx'
         self._filen_3 = filen_0 + label + '_cI2I2' + '.mtx'
