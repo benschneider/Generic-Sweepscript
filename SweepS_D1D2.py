@@ -9,12 +9,12 @@ from time import time, sleep
 from parsers import copy_file
 from ramp_mod import ramp
 from DataStorer import DataStoreSP, DataStore2Vec, DataStore11Vec
-# from covfunc import getCovMatrix
+from covfunc import getCovMatrix
 import numpy as np
 
 thisfile = __file__
 
-filen_0 = 'S1_947_G27mV_P'
+filen_0 = 'S1_952_G50mV_SN_P_I2corrected'
 folder = 'data\\'
 
 # Driver
@@ -26,7 +26,7 @@ from AfDigi import instrument as AfDig
 
 vm = key2000('GPIB0::29::INSTR')
 
-lsamples = 1e6
+lsamples = 1e5
 lags = 25  # in points
 BW = 1e5
 corrAvg = 10
@@ -59,29 +59,30 @@ D2 = AfDig(adressDigi='3036D2',
 
 iBias = yoko('GPIB0::13::INSTR',
            name = 'Yoko V R=(998.83+14.24)KOhm',
-           start = -2e-3,
-           stop = -2e-3,
-           pt = 1,
+           start = -21,
+           stop = 21,
+           pt = 421,
            sstep = 0.1, # def max voltage steps it can take
            stime = 0.1)
-iBias.prepare_v(vrange = 2)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
+iBias.prepare_v(vrange = 6)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
 iBias.UD = False
 iBias.sweep_v(iBias.start, 6)  # sweep Ibias to its position
 
 vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
-            start = 27e-3,  # -300e-3,
-            stop = 27e-3,  # 300e-3,
-            pt = 11,
+            start = 50e-3,  # -300e-3,
+            stop = 50e-3,  # 300e-3,
+            pt = 1,
             sstep = 10e-3,
             stime = 1e-6)
 vMag.prepare_v(vrange = 4)
+vMag.sweep_v(vMag.start, 2)
 
 PSG = aPSG('GPIB0::11::INSTR',
            name = 'RF - Power (V)',
-           start = 100e-3,# 406e-3+40e-9,
-           stop = 0,
-           pt = 101,
+           start = 0,  # 406e-3+40e-9,
+           stop = 230e-3,  # 230e-3,
+           pt = 9,
            sstep = 20e-3,
            stime = 1e-3)
            
@@ -104,18 +105,19 @@ nothing = dummy('GPIB0::11::INSTR',
            stime = 1e-3)
 
 
-# dim_1= iBias
-dim_1 = PSG
+dim_1= iBias
 dim_1.UD = False
 def sweep_dim_1(obj,value):
-    # ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
+    ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
     # obj.sweep_v(value, 5)
     # sleep(5.1)
-    PSG.set_power(value)
+    # PSG.set_power(value)
 
-dim_2 = vMag
+# dim_2 = vMag
+dim_2 = PSG
 def sweep_dim_2(obj,value):
-    ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
+    PSG.set_power(value)
+    # ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
 
 dim_3 = nothing
 def sweep_dim_3(obj,value):
@@ -225,11 +227,11 @@ try:
                         D2vPha = D2vPha + D2vPh
                         vdata = vdata + vm.get_val()
                         
-                        # I1 = D1.scaledI
-                        # Q1 = D1.scaledQ
-                        # I2 = D2.scaledI
-                        # Q2 = D2.scaledQ
-                        # covAvgMat = covAvgMat +  getCovMatrix(I1, Q1, I2, Q2, lags)
+                        I1 = D1.scaledI
+                        Q1 = D1.scaledQ
+                        I2 = D2.scaledI
+                        Q2 = D2.scaledQ
+                        covAvgMat = covAvgMat +  getCovMatrix(I1, Q1, I2, Q2, lags)
                                                
                         # D1Lvl = D1Lvl + D1.levelcorr
                         # D2Lvl = D2Lvl + D2.levelcorr
@@ -237,7 +239,7 @@ try:
                     print cz, time()-t0conv 
                     
                     # Recording data in Memory
-                    # DS11.record_data(covAvgMat/np.float(corrAvg),kk,jj,ii) 
+                    DS11.record_data(covAvgMat/np.float(corrAvg),kk,jj,ii) 
                     DSP.record_data(vdata/np.float(corrAvg),kk,jj,ii)
                 
                     DSP_LD1.record_data(D1.levelcorr,kk, jj, ii)
@@ -251,7 +253,7 @@ try:
                     DSP_PD2.record_data((D2aPow/np.float(corrAvg)) ,kk, jj, ii)
 
                     DSP.save_data()
-                    # DS11.save_data()        
+                    DS11.save_data()        
                     DSP_PD1.save_data()        
                     DSP_PD2.save_data()
 
@@ -266,7 +268,7 @@ try:
             Q2 = None            
             
             DSP.save_data()
-            # DS11.save_data()
+            DS11.save_data()
 
             DS2vD1.save_data()
             DS2mD1.save_data()
@@ -298,6 +300,6 @@ finally:
     iBias.output(0)
     vMag.output(0)
     PSG.set_output(0)
-    # D1.performClose()
-    # D2.performClose()
+    D1.performClose()
+    D2.performClose()
     print  'done'

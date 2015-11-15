@@ -43,7 +43,7 @@ class instrument():
         i.e. turn all non-essentials off
         '''
         self.w('*RST')                    #reset keithley
-        self.w(':VOLT:DC:NPLC 180')        #set nplc to 20ms (50Hz) 'If you can't beat noise go with it!'
+        self.w(':VOLT:DC:NPLC 340')        #set nplc to 20ms (50Hz) 'If you can't beat the noise go with it!'
         self.w(':DISP:ENAB 0')                               #turn display off
         self.w('SENSe:FUNCtion "VOLTage:DC"') #'obvious'
         self.w(':FORM:ELEM READ')             #just getting the values nothing else.. :)
