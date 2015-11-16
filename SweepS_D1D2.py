@@ -14,7 +14,7 @@ import numpy as np
 
 thisfile = __file__
 
-filen_0 = 'S1_952_G50mV_SN_P_I2corrected'
+filen_0 = 'S1_953_G50mV_SN_P_I2corrected'
 folder = 'data\\'
 
 # Driver
@@ -26,7 +26,7 @@ from AfDigi import instrument as AfDig
 
 vm = key2000('GPIB0::29::INSTR')
 
-lsamples = 1e5
+lsamples = 1e4
 lags = 25  # in points
 BW = 1e5
 corrAvg = 10
@@ -59,13 +59,14 @@ D2 = AfDig(adressDigi='3036D2',
 
 iBias = yoko('GPIB0::13::INSTR',
            name = 'Yoko V R=(998.83+14.24)KOhm',
-           start = -21,
-           stop = 21,
-           pt = 421,
+           start = -2e-3,
+           stop = 4e-3,
+           pt = 3,
            sstep = 0.1, # def max voltage steps it can take
            stime = 0.1)
-iBias.prepare_v(vrange = 6)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
+iBias.prepare_v(vrange = 5)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
 iBias.UD = False
+iBias.sweep_v(-6, 6)
 iBias.sweep_v(iBias.start, 6)  # sweep Ibias to its position
 
 vMag = yoko('GPIB0::10::INSTR',
@@ -82,7 +83,7 @@ PSG = aPSG('GPIB0::11::INSTR',
            name = 'RF - Power (V)',
            start = 0,  # 406e-3+40e-9,
            stop = 230e-3,  # 230e-3,
-           pt = 9,
+           pt = 47,
            sstep = 20e-3,
            stime = 1e-3)
            
@@ -105,19 +106,19 @@ nothing = dummy('GPIB0::11::INSTR',
            stime = 1e-3)
 
 
-dim_1= iBias
+# dim_2 = vMag
+dim_1 = PSG
 dim_1.UD = False
 def sweep_dim_1(obj,value):
+    PSG.set_power(value)
+    # ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
+
+dim_2= iBias
+def sweep_dim_2(obj,value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
     # obj.sweep_v(value, 5)
     # sleep(5.1)
     # PSG.set_power(value)
-
-# dim_2 = vMag
-dim_2 = PSG
-def sweep_dim_2(obj,value):
-    PSG.set_power(value)
-    # ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
 
 dim_3 = nothing
 def sweep_dim_3(obj,value):
@@ -140,7 +141,8 @@ DS2mD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
 
 copy_file(thisfile, filen_0, folder) #backup this script
 print 'Executing sweep'
-print 'Est. req time (min):'+str(corrAvg*lsamples/BW*dim_3.pt*dim_2.pt*dim_1.pt*0.032/60)
+# print 'Est. req time (min):'+str(corrAvg*lsamples/BW*dim_3.pt*dim_2.pt*dim_1.pt*0.032/60)  # this involves only DC measurements
+print '2nd Est. req time (h):' +str(corrAvg*lsamples/BW*1.1*dim_3.pt*dim_2.pt*dim_1.pt/3600)  # Involving both DC, AC and Correlations..
 t0 = time()
 try:
     for kk in range(dim_3.pt):
