@@ -14,7 +14,7 @@ import numpy as np
 
 thisfile = __file__
 
-filen_0 = 'S1_953_G50mV_SN_P_I2corrected'
+filen_0 = 'S1_959_G27mV_P80mOnOff'
 folder = 'data\\'
 
 # Driver
@@ -26,7 +26,7 @@ from AfDigi import instrument as AfDig
 
 vm = key2000('GPIB0::29::INSTR')
 
-lsamples = 1e4
+lsamples = 1e6
 lags = 25  # in points
 BW = 1e5
 corrAvg = 10
@@ -37,7 +37,7 @@ D1 = AfDig(adressDigi='3036D1',
            LoRef=0, 
            name='D1 Lags (sec)',
            cfreq = 4.1e9,
-           inputlvl = -13,
+           inputlvl = -15,
            start=(-lags/BW), 
            stop=(lags/BW), 
            pt=(lags*2-1),
@@ -50,7 +50,7 @@ D2 = AfDig(adressDigi='3036D2',
            LoRef=2, 
            name='D2 Lags (sec)',
            cfreq = 4.8e9,
-           inputlvl = -13,
+           inputlvl = -15,
            start=(-lags/BW), 
            stop=(lags/BW), 
            pt=(lags*2-1),
@@ -59,31 +59,32 @@ D2 = AfDig(adressDigi='3036D2',
 
 iBias = yoko('GPIB0::13::INSTR',
            name = 'Yoko V R=(998.83+14.24)KOhm',
-           start = -2e-3,
-           stop = 4e-3,
-           pt = 3,
+           start = -1-2e-3,
+           stop = 1-2e-3,
+           pt = 5,
            sstep = 0.1, # def max voltage steps it can take
-           stime = 0.1)
-iBias.prepare_v(vrange = 5)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
+           stime = 0.05)
+iBias.prepare_v(vrange = 6)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
 iBias.UD = False
-iBias.sweep_v(-6, 6)
-iBias.sweep_v(iBias.start, 6)  # sweep Ibias to its position
+#iBias.sweep_v(-6, 6)
+iBias.sweep_v(iBias.start, 10)  # sweep Ibias to its position
 
 vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
-            start = 50e-3,  # -300e-3,
-            stop = 50e-3,  # 300e-3,
+            start = 27e-3,  # -300e-3,
+            stop = 27e-3,  # 300e-3,
             pt = 1,
             sstep = 10e-3,
             stime = 1e-6)
 vMag.prepare_v(vrange = 4)
 vMag.sweep_v(vMag.start, 2)
+sleep (7)
 
 PSG = aPSG('GPIB0::11::INSTR',
            name = 'RF - Power (V)',
-           start = 0,  # 406e-3+40e-9,
-           stop = 230e-3,  # 230e-3,
-           pt = 47,
+           start = 60.0e-3,  # 406e-3+40e-9,
+           stop = 60.0e-3,  # 230e-3,
+           pt = 2,
            sstep = 20e-3,
            stime = 1e-3)
            
@@ -92,6 +93,7 @@ PSG.set_powUnit('V')
 # PSG.set_freq(12.2e9)
 PSG.set_freq(8.9e9)
 PSG.set_output(1)
+PSG.set_power(PSG.start)
 
 iBias.sweep_par = 'v'
 vMag.sweep_par = 'v'
@@ -105,23 +107,36 @@ nothing = dummy('GPIB0::11::INSTR',
            sstep = 20e-3,
            stime = 1e-3)
 
-
 # dim_2 = vMag
-dim_1 = PSG
-dim_1.UD = False
-def sweep_dim_1(obj,value):
-    PSG.set_power(value)
-    # ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
 
+dim_1 = PSG
 dim_2= iBias
-def sweep_dim_2(obj,value):
+dim_3 = nothing
+dim_1.UD = False
+
+def sweep_dim_1(obj,index):
+    # value = obj.lin[int(index)]
+    if index == 0 :  # check for even number
+        PSG.set_output(1)
+    elif index == 1:
+        PSG.set_output(0)
+    else:
+        PSG.set_output(0)
+    # PSG.set_power(value)
+    # ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
+    # PSG.set_output(1)
+    pass
+
+
+def sweep_dim_2(obj,index):
+    value = obj.lin[int(index)]
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
     # obj.sweep_v(value, 5)
     # sleep(5.1)
     # PSG.set_power(value)
 
-dim_3 = nothing
-def sweep_dim_3(obj,value):
+def sweep_dim_3(obj,index):
+    # value = obj.lin[int(index)]
     pass
 
 DSP = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, label='V', cname='Voltage x1k')
@@ -146,11 +161,11 @@ print '2nd Est. req time (h):' +str(corrAvg*lsamples/BW*1.1*dim_3.pt*dim_2.pt*di
 t0 = time()
 try:
     for kk in range(dim_3.pt):
-        sweep_dim_3(dim_3,dim_3.lin[kk])
-        sweep_dim_2(dim_2,dim_2.start)
+        sweep_dim_3(dim_3, kk)
+        sweep_dim_2(dim_2, 0)
         for jj in range(dim_2.pt):
-            sweep_dim_2(dim_2,dim_2.lin[jj])
-            sweep_dim_1(dim_1,dim_1.start)
+            sweep_dim_2(dim_2, jj)
+            sweep_dim_1(dim_1, 0)
             D1.get_newdata()   # run one test and update lvl correction
             D2.get_newdata()   # run one test and update lvl correction
             
@@ -170,7 +185,7 @@ try:
             else:
                 for ii in range(dim_1.pt):
                     # dim_1.set_v2(dim_1.lin[ii])
-                    sweep_dim_1(dim_1, dim_1.lin[ii])
+                    sweep_dim_1(dim_1, ii)
                     # D1.get_newdata()  # run one test and update lvl correction
                     # D2.get_newdata()  # run one test and update lvl correction 
 
@@ -200,9 +215,10 @@ try:
                         
                         D1.downl_data()
                         D2.downl_data()
-
-                        D1.init_trigger()
-                        D2.init_trigger()
+                        
+                        if (cz+1) < corrAvg:
+                            D1.init_trigger()
+                            D2.init_trigger()
                         
                         D1.process_data()
                         D2.process_data()
@@ -238,7 +254,7 @@ try:
                         # D1Lvl = D1Lvl + D1.levelcorr
                         # D2Lvl = D2Lvl + D2.levelcorr
                         
-                    print cz, time()-t0conv 
+                    # print cz, time()-t0conv 
                     
                     # Recording data in Memory
                     DS11.record_data(covAvgMat/np.float(corrAvg),kk,jj,ii) 
