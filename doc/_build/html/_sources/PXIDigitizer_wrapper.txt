@@ -1,0 +1,7 @@
+PXIDigitizer_wrapper module
+===========================
+
+.. automodule:: PXIDigitizer_wrapper
+    :members:
+    :undoc-members:
+    :show-inheritance:

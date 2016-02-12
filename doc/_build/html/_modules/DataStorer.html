@@ -1,0 +1,310 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>DataStorer &mdash; Generic Sweeper 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Generic Sweeper 1.0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for DataStorer</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">This file</span>
+<span class="sd">- Prepare matricies to store data into</span>
+<span class="sd">- write result matrix to file using the parser file</span>
+
+<span class="sd">Ben</span>
+<span class="sd">2015-10-21</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="c1"># from time import time, sleep</span>
+<span class="kn">from</span> <span class="nn">parsers</span> <span class="kn">import</span> <span class="n">savemtx</span><span class="p">,</span> <span class="n">make_header</span><span class="p">,</span> <span class="n">ask_overwrite</span>
+
+
+<div class="viewcode-block" id="DataStoreSP"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStoreSP">[docs]</a><span class="k">class</span> <span class="nc">DataStoreSP</span><span class="p">():</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">,</span> <span class="n">filen_0</span><span class="p">,</span> <span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="n">cname</span><span class="o">=</span><span class="s1">&#39;Voltage x1k&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">=</span> <span class="n">folder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_1</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_1</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="n">cname</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">UD</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">UD</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_filen_2</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;_2&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">UD</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+            
+<div class="viewcode-block" id="DataStoreSP.ask_overwrite"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStoreSP.ask_overwrite">[docs]</a>    <span class="k">def</span> <span class="nf">ask_overwrite</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ask_overwrite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_filen_1</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="DataStoreSP.record_data"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStoreSP.record_data">[docs]</a>    <span class="k">def</span> <span class="nf">record_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vdata</span><span class="p">,</span> <span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">vdata</span>
+</div>
+<div class="viewcode-block" id="DataStoreSP.record_data2"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStoreSP.record_data2">[docs]</a>    <span class="k">def</span> <span class="nf">record_data2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vdata</span><span class="p">,</span> <span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_2</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">vdata</span>
+</div>
+<div class="viewcode-block" id="DataStoreSP.save_data"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStoreSP.save_data">[docs]</a>    <span class="k">def</span> <span class="nf">save_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_1</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">UD</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_2</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_2</span><span class="p">,</span>
+                    <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_1</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="DataStore4Vec"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStore4Vec">[docs]</a><span class="k">class</span> <span class="nc">DataStore4Vec</span><span class="p">():</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">,</span> <span class="n">filen_0</span><span class="p">,</span> <span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">=</span> <span class="n">folder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_1</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="s1">&#39;_real&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_2</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="s1">&#39;_imag&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_3</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="s1">&#39;_mag&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_4</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="s1">&#39;_phase&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_1</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;S11 _real&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_2</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;S11 _imag&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_3</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;S11 _mag&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_4</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;S11 _phase&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+
+<div class="viewcode-block" id="DataStore4Vec.ask_overwrite"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStore4Vec.ask_overwrite">[docs]</a>    <span class="k">def</span> <span class="nf">ask_overwrite</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ask_overwrite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_filen_1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DataStore4Vec.record_data"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStore4Vec.record_data">[docs]</a>    <span class="k">def</span> <span class="nf">record_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vnadata</span><span class="p">,</span> <span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_phase_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">vnadata</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vnadata</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">vnadata</span><span class="o">.</span><span class="n">real</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_2</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">vnadata</span><span class="o">.</span><span class="n">imag</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_3</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">vnadata</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_4</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_phase_data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="n">vnadata</span><span class="o">.</span><span class="n">real</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_2</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="n">vnadata</span><span class="o">.</span><span class="n">imag</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_3</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">vnadata</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_4</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unwrap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_phase_data</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DataStore4Vec.save_data"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStore4Vec.save_data">[docs]</a>    <span class="k">def</span> <span class="nf">save_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_1</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_1</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_2</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_2</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_2</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_3</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_3</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_3</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_4</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_4</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_4</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="DataStore2Vec"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStore2Vec">[docs]</a><span class="k">class</span> <span class="nc">DataStore2Vec</span><span class="p">():</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">,</span> <span class="n">filen_0</span><span class="p">,</span> <span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">=</span> <span class="n">folder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_3</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;_mag&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_4</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;_phase&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_3</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;S11 _mag&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_4</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;S11 _phase&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        
+<div class="viewcode-block" id="DataStore2Vec.ask_overwrite"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStore2Vec.ask_overwrite">[docs]</a>    <span class="k">def</span> <span class="nf">ask_overwrite</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ask_overwrite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_filen_1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DataStore2Vec.record_data"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStore2Vec.record_data">[docs]</a>    <span class="k">def</span> <span class="nf">record_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mag</span><span class="p">,</span> <span class="n">phase</span><span class="p">,</span> <span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">([</span><span class="n">mag</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_3</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">mag</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_4</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">phase</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_3</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="n">mag</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_4</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unwrap</span><span class="p">(</span><span class="n">phase</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DataStore2Vec.save_data"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStore2Vec.save_data">[docs]</a>    <span class="k">def</span> <span class="nf">save_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_3</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_3</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_3</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_4</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_4</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_4</span><span class="p">)</span>
+                </div></div>
+<div class="viewcode-block" id="DataStore11Vec"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStore11Vec">[docs]</a><span class="k">class</span> <span class="nc">DataStore11Vec</span><span class="p">():</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">,</span> <span class="n">filen_0</span><span class="p">,</span> <span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">=</span> <span class="n">folder</span>
+        <span class="c1"># 0: &lt;I1I1&gt;</span>
+        <span class="c1"># 1: &lt;Q1Q1&gt;</span>
+        <span class="c1"># 2: &lt;I2I2&gt;</span>
+        <span class="c1"># 3: &lt;Q2Q2&gt;</span>
+        <span class="c1"># 4: &lt;I1Q1&gt;</span>
+        <span class="c1"># 5: &lt;I2Q2&gt;</span>
+        <span class="c1"># 6: &lt;I1I2&gt;</span>
+        <span class="c1"># 7: &lt;Q1Q2&gt;</span>
+        <span class="c1"># 8: &lt;I1Q2&gt;</span>
+        <span class="c1"># 9: &lt;Q1I2&gt;</span>
+        <span class="c1"># 10: &lt;Squeezing&gt;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_1</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;_cI1I1&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_2</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;_cQ1Q1&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_3</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;_cI2I2&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_4</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;_cQ2Q2&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_5</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;_cI1Q1&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_6</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;_cI2Q2&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_7</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;_cI1I2&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_8</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;_cQ1Q2&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_9</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;_cI1Q2&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_10</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;_cQ1I2&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_11</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;_Squeezing&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_0</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;cCov&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_1</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;cCov&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_2</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;cCov&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_3</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;cCov&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_4</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;cCov&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_5</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;cCov&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_6</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;cCov&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_7</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;cCov&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_8</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;cCov&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_9</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;cCov&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_10</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;Squeezing&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_6</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_7</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_8</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_9</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_10</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+
+<div class="viewcode-block" id="DataStore11Vec.ask_overwrite"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStore11Vec.ask_overwrite">[docs]</a>    <span class="k">def</span> <span class="nf">ask_overwrite</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ask_overwrite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_filen_1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DataStore11Vec.record_data"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStore11Vec.record_data">[docs]</a>    <span class="k">def</span> <span class="nf">record_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">kk</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_0</span><span class="p">[:,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span><span class="p">[:,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">,:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_2</span><span class="p">[:,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">,:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_3</span><span class="p">[:,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">,:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_4</span><span class="p">[:,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">,:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_5</span><span class="p">[:,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">5</span><span class="p">,:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_6</span><span class="p">[:,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">6</span><span class="p">,:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_7</span><span class="p">[:,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">7</span><span class="p">,:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_8</span><span class="p">[:,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">8</span><span class="p">,:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_9</span><span class="p">[:,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">9</span><span class="p">,:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_10</span><span class="p">[:,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">10</span><span class="p">,:]</span>
+</div>
+<div class="viewcode-block" id="DataStore11Vec.save_data"><a class="viewcode-back" href="../DataStorer.html#DataStorer.DataStore11Vec.save_data">[docs]</a>    <span class="k">def</span> <span class="nf">save_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_1</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_0</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_0</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_2</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_1</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_3</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_2</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_2</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_4</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_3</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_3</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_5</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_4</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_4</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_6</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_5</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_5</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_7</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_6</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_6</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_8</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_7</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_7</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_9</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_8</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_8</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_10</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_9</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_9</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_11</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_10</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_10</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Ben Schneider.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

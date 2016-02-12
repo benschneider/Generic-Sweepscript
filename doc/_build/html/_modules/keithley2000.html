@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>keithley2000 &mdash; Generic Sweeper 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Generic Sweeper 1.0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for keithley2000</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">23/6/2015</span>
+<span class="sd">-B</span>
+
+<span class="sd">Keithley 2000 driver</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">visa</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span><span class="p">,</span> <span class="n">sleep</span>
+<span class="kn">from</span> <span class="nn">parsers</span> <span class="kn">import</span> <span class="n">savemtx</span><span class="p">,</span> <span class="n">make_header</span><span class="p">,</span> <span class="n">ask_overwrite</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="instrument"><a class="viewcode-back" href="../keithley2000.html#keithley2000.instrument">[docs]</a><span class="k">class</span> <span class="nc">instrument</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    vm2000 = instrument(&#39;GPIB0::29::INSTR&#39;)</span>
+<span class="sd">    w write</span>
+<span class="sd">    r read</span>
+<span class="sd">    a ask</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adress</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span> <span class="s1">&#39;Keithley 2000 Voltmeter&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_adress</span> <span class="o">=</span> <span class="n">adress</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_visainstrument</span> <span class="o">=</span> <span class="n">visa</span><span class="o">.</span><span class="n">instrument</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adress</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimise</span><span class="p">()</span>
+        <span class="n">sleep</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">testspeed</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">testspeed</span><span class="p">()</span>
+
+<div class="viewcode-block" id="instrument.w"><a class="viewcode-back" href="../keithley2000.html#keithley2000.instrument.w">[docs]</a>    <span class="k">def</span> <span class="nf">w</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">write_cmd</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_visainstrument</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">write_cmd</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="instrument.r"><a class="viewcode-back" href="../keithley2000.html#keithley2000.instrument.r">[docs]</a>    <span class="k">def</span> <span class="nf">r</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visainstrument</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="instrument.a"><a class="viewcode-back" href="../keithley2000.html#keithley2000.instrument.a">[docs]</a>    <span class="k">def</span> <span class="nf">a</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ask_cmd</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visainstrument</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="n">ask_cmd</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="instrument.optimise"><a class="viewcode-back" href="../keithley2000.html#keithley2000.instrument.optimise">[docs]</a>    <span class="k">def</span> <span class="nf">optimise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;prepare keithley for fast measurements ~&lt; 50ms pp</span>
+<span class="sd">        i.e. turn all non-essentials off</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;*RST&#39;</span><span class="p">)</span>                    <span class="c1">#reset keithley</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;:VOLT:DC:NPLC 340&#39;</span><span class="p">)</span>        <span class="c1">#set nplc to 20ms (50Hz) &#39;If you can&#39;t beat the noise go with it!&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;:DISP:ENAB 0&#39;</span><span class="p">)</span>                               <span class="c1">#turn display off</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;SENSe:FUNCtion &quot;VOLTage:DC&quot;&#39;</span><span class="p">)</span> <span class="c1">#&#39;obvious&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;:FORM:ELEM READ&#39;</span><span class="p">)</span>             <span class="c1">#just getting the values nothing else.. :)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;INITiate:CONTinuous OFF;:ABORt&#39;</span><span class="p">)</span>      <span class="c1">#self.set_trigger_continuous(False)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;SYSTem:AZERo:STATe OFF&#39;</span><span class="p">)</span>               <span class="c1">#Turn autozero off for speed (will result in voltage offsets over time!!)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;SENSe:VOLTage:DC:AVERage:STATe OFF&#39;</span><span class="p">)</span>  <span class="c1">#Turn off filter for speed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;SENSe:VOLTage:DC:RANGe 10&#39;</span><span class="p">)</span>          <span class="c1">#give it a fixed range to max speed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;TRIG:DEL:AUTO OFF&#39;</span><span class="p">)</span>                   <span class="c1">#set triger delay to manual</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;TRIG:DEL 0&#39;</span><span class="p">)</span>                          <span class="c1">#TRIGger:DELay to 0 sec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;TRIGger:COUNt 1&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="instrument.get_val"><a class="viewcode-back" href="../keithley2000.html#keithley2000.instrument.get_val">[docs]</a>    <span class="k">def</span> <span class="nf">get_val</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="s1">&#39;READ?&#39;</span><span class="p">))</span>
+    </div>
+<div class="viewcode-block" id="instrument.testspeed"><a class="viewcode-back" href="../keithley2000.html#keithley2000.instrument.testspeed">[docs]</a>    <span class="k">def</span> <span class="nf">testspeed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t00</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_val</span><span class="p">()</span>
+        <span class="n">t01</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+        <span class="k">print</span> <span class="s1">&#39;less than 32ms is good, &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">t01</span><span class="o">-</span><span class="n">t00</span><span class="p">)</span> <span class="o">+</span><span class="s1">&#39;s&#39;</span>
+
+<span class="c1">#Data storage stuff</span></div>
+<div class="viewcode-block" id="instrument.prepare_data_save"><a class="viewcode-back" href="../keithley2000.html#keithley2000.instrument.prepare_data_save">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_data_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">,</span> <span class="n">filen_0</span><span class="p">,</span> <span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="n">colour_name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">=</span> <span class="n">folder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_1</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_1</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="n">colour_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+                </div>
+<div class="viewcode-block" id="instrument.record_data"><a class="viewcode-back" href="../keithley2000.html#keithley2000.instrument.record_data">[docs]</a>    <span class="k">def</span> <span class="nf">record_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">vdata</span><span class="p">,</span><span class="n">kk</span><span class="p">,</span><span class="n">jj</span><span class="p">,</span><span class="n">ii</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span><span class="n">jj</span><span class="p">,</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">vdata</span>
+        </div>
+<div class="viewcode-block" id="instrument.save_data"><a class="viewcode-back" href="../keithley2000.html#keithley2000.instrument.save_data">[docs]</a>    <span class="k">def</span> <span class="nf">save_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_head_1</span><span class="p">)</span>
+                </div>
+<div class="viewcode-block" id="instrument.ask_overwrite"><a class="viewcode-back" href="../keithley2000.html#keithley2000.instrument.ask_overwrite">[docs]</a>    <span class="k">def</span> <span class="nf">ask_overwrite</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ask_overwrite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_filen_1</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Ben Schneider.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>RSZNB20 &mdash; Generic Sweeper 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Generic Sweeper 1.0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for RSZNB20</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Python driver for:</span>
+<span class="sd">Rohde &amp; Schwartz</span>
+<span class="sd">ZNB20</span>
+<span class="sd">Vector Network Analyzer</span>
+<span class="sd">100kHz - 20Ghz</span>
+
+
+<span class="sd">22/06/2015</span>
+<span class="sd">- B</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">struct</span> <span class="kn">import</span> <span class="n">unpack</span> <span class="c1">#, pack</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
+<span class="kn">import</span> <span class="nn">visa</span>
+<span class="kn">from</span> <span class="nn">parsers</span> <span class="kn">import</span> <span class="n">savemtx</span><span class="p">,</span> <span class="n">make_header</span><span class="p">,</span> <span class="n">ask_overwrite</span>
+
+<div class="viewcode-block" id="instrument"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument">[docs]</a><span class="k">class</span> <span class="nc">instrument</span><span class="p">():</span>
+    <span class="c1">#name = &#39;ZNB20&#39;</span>
+    <span class="c1">#start = -30e-3 </span>
+    <span class="c1">#stop = 30e-3</span>
+    <span class="c1">#pt = 1001 # number of points</span>
+    <span class="c1">#power = -30 #rf power</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    vna = instrument1(&#39;TCPIP::169.254.107.192::INSTR&#39;)</span>
+<span class="sd">    w write</span>
+<span class="sd">    r read</span>
+<span class="sd">    a ask</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adress</span><span class="p">,</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;ZNB20&#39;</span><span class="p">,</span><span class="n">start</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pt</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_adress</span> <span class="o">=</span> <span class="n">adress</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_visainstrument</span> <span class="o">=</span> <span class="n">visa</span><span class="o">.</span><span class="n">instrument</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adress</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tempdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tempdata</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>   
+        <span class="bp">self</span><span class="o">.</span><span class="n">sweeptime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sweeptime</span><span class="p">()</span><span class="o">+</span><span class="mf">0.1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span> <span class="o">=</span> <span class="n">stop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">pt</span><span class="p">)</span>
+        
+<div class="viewcode-block" id="instrument.w"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.w">[docs]</a>    <span class="k">def</span> <span class="nf">w</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">write_cmd</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_visainstrument</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">write_cmd</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="instrument.r"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.r">[docs]</a>    <span class="k">def</span> <span class="nf">r</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visainstrument</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="instrument.a"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.a">[docs]</a>    <span class="k">def</span> <span class="nf">a</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ask_cmd</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visainstrument</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="n">ask_cmd</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="instrument.init_sweep"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.init_sweep">[docs]</a>    <span class="k">def</span> <span class="nf">init_sweep</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;:INIT:IMM;*OPC&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="instrument.abort"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.abort">[docs]</a>    <span class="k">def</span> <span class="nf">abort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;:ABOR;:INIT:CONT OFF&#39;</span><span class="p">)</span> <span class="c1">#abort current sweep</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;:SENS:AVER:CLE&#39;</span><span class="p">)</span> <span class="c1">#clear prev averages</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;:SENS:SWE:COUN 1&#39;</span><span class="p">)</span> <span class="c1">#set counts to 1</span>
+</div>
+<div class="viewcode-block" id="instrument.set_power"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.set_power">[docs]</a>    <span class="k">def</span> <span class="nf">set_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">power</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;:SOUR:POW &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">power</span><span class="p">))</span></div>
+<div class="viewcode-block" id="instrument.get_power"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.get_power">[docs]</a>    <span class="k">def</span> <span class="nf">get_power</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="s1">&#39;:SOUR:POW?&#39;</span><span class="p">)</span></div>
+<div class="viewcode-block" id="instrument.get_error"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.get_error">[docs]</a>    <span class="k">def</span> <span class="nf">get_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="s1">&#39;SYST:ERR:ALL?&#39;</span><span class="p">)</span></div>
+<div class="viewcode-block" id="instrument.get_sweeptime"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.get_sweeptime">[docs]</a>    <span class="k">def</span> <span class="nf">get_sweeptime</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="s1">&#39;SWE:TIME?&#39;</span><span class="p">))</span></div>
+<div class="viewcode-block" id="instrument.get_freq"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.get_freq">[docs]</a>    <span class="k">def</span> <span class="nf">get_freq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="s1">&#39;FREQ?&#39;</span><span class="p">))</span></div>
+<div class="viewcode-block" id="instrument.set_freq_cw"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.set_freq_cw">[docs]</a>    <span class="k">def</span> <span class="nf">set_freq_cw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;FREQ:CW &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="instrument.get_data"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.get_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; involves some error handling</span>
+<span class="sd">        if an error occures it returns &#39;Error&#39;</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sData</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="s1">&#39;:FORM REAL,32;CALC:DATA? SDATA&#39;</span><span class="p">)</span> <span class="c1">#grab data from VNA</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s1">&#39;Waiting for VNA&#39;</span>
+            <span class="n">sleep</span> <span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="c1">#poss. asked to early for data (for now just sleep 10 sec)</span>
+            <span class="n">sData</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="s1">&#39;:FORM REAL,32;CALC:DATA? SDATA&#39;</span><span class="p">)</span> <span class="c1">#try once more after 5 seconds</span>
+        <span class="n">i0</span> <span class="o">=</span> <span class="n">sData</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">)</span>
+        <span class="n">nDig</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sData</span><span class="p">[</span><span class="n">i0</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">nByte</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sData</span><span class="p">[</span><span class="n">i0</span><span class="o">+</span><span class="mi">2</span><span class="p">:</span><span class="n">i0</span><span class="o">+</span><span class="mi">2</span><span class="o">+</span><span class="n">nDig</span><span class="p">])</span>
+        <span class="n">nData</span> <span class="o">=</span> <span class="n">nByte</span><span class="o">/</span><span class="mi">4</span>
+        <span class="n">nPts</span> <span class="o">=</span> <span class="n">nData</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">data32</span> <span class="o">=</span> <span class="n">sData</span><span class="p">[(</span><span class="n">i0</span><span class="o">+</span><span class="mi">2</span><span class="o">+</span><span class="n">nDig</span><span class="p">):(</span><span class="n">i0</span><span class="o">+</span><span class="mi">2</span><span class="o">+</span><span class="n">nDig</span><span class="o">+</span><span class="n">nByte</span><span class="p">)]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">vData</span> <span class="o">=</span> <span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;!&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">nData</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="n">data32</span><span class="p">)</span>
+            <span class="n">vData</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vData</span><span class="p">)</span>
+            <span class="n">mC</span> <span class="o">=</span> <span class="n">vData</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nPts</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> <span class="c1"># data is in I0,Q0,I1,Q1,I2,Q2,.. format, convert to complex</span>
+            <span class="n">vComplex</span> <span class="o">=</span> <span class="n">mC</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1j</span><span class="o">*</span><span class="n">mC</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s1">&#39;problem with unpack likely bad data from VNA&#39;</span>
+            <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_error</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;*CLS&#39;</span><span class="p">)</span> <span class="c1">#CLear Status</span>
+            <span class="k">return</span> <span class="s1">&#39;Error&#39;</span>            
+        <span class="k">return</span> <span class="n">vComplex</span> 
+        </div>
+<div class="viewcode-block" id="instrument.get_data2"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.get_data2">[docs]</a>    <span class="k">def</span> <span class="nf">get_data2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vnadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span> <span class="c1"># np.array(real+ i* imag)</span>
+        <span class="k">if</span> <span class="n">vnadata</span> <span class="o">==</span> <span class="s1">&#39;Error&#39;</span><span class="p">:</span>
+            <span class="n">sleep</span><span class="p">(</span><span class="mf">0.03</span><span class="p">)</span>
+            <span class="n">vnadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data2</span><span class="p">()</span>
+            <span class="k">print</span> <span class="s1">&#39;retake VNA Data&#39;</span>
+        <span class="k">return</span> <span class="n">vnadata</span>
+</div>
+<div class="viewcode-block" id="instrument.prepare_data_save"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.prepare_data_save">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_data_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">,</span> <span class="n">filen_0</span><span class="p">,</span> <span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">=</span> <span class="n">folder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_1</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="s1">&#39;_real&#39;</span>  <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_2</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="s1">&#39;_imag&#39;</span>  <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_3</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="s1">&#39;_mag&#39;</span>   <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filen_4</span> <span class="o">=</span> <span class="n">filen_0</span> <span class="o">+</span> <span class="s1">&#39;_phase&#39;</span> <span class="o">+</span> <span class="s1">&#39;.mtx&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_1</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;S21 _real&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_2</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;S21 _imag&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_3</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;S21 _mag&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_4</span> <span class="o">=</span> <span class="n">make_header</span><span class="p">(</span><span class="n">dim_1</span><span class="p">,</span> <span class="n">dim_2</span><span class="p">,</span> <span class="n">dim_3</span><span class="p">,</span> <span class="s1">&#39;S21 _phase&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim_3</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_2</span><span class="o">.</span><span class="n">pt</span><span class="p">,</span> <span class="n">dim_1</span><span class="o">.</span><span class="n">pt</span><span class="p">))</span>
+                </div>
+<div class="viewcode-block" id="instrument.record_data"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.record_data">[docs]</a>    <span class="k">def</span> <span class="nf">record_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">vnadata</span><span class="p">,</span><span class="n">kk</span><span class="p">,</span><span class="n">jj</span><span class="p">,</span><span class="n">ii</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_phase_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">vnadata</span><span class="p">)</span>        
+        <span class="k">if</span> <span class="n">vnadata</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span><span class="n">jj</span><span class="p">,</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">vnadata</span><span class="o">.</span><span class="n">real</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_2</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span><span class="n">jj</span><span class="p">,</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">vnadata</span><span class="o">.</span><span class="n">imag</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_3</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span><span class="n">jj</span><span class="p">,</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">vnadata</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_4</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span><span class="n">jj</span><span class="p">,</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_phase_data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span><span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="n">vnadata</span><span class="o">.</span><span class="n">real</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_2</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span><span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="n">vnadata</span><span class="o">.</span><span class="n">imag</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_3</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span><span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">vnadata</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_4</span><span class="p">[</span><span class="n">kk</span><span class="p">,</span><span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unwrap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_phase_data</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="instrument.save_data"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.save_data">[docs]</a>    <span class="k">def</span> <span class="nf">save_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_1</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_head_1</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_2</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_head_2</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_3</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_head_3</span><span class="p">)</span>
+        <span class="n">savemtx</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filen_4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrix3d_4</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_head_4</span><span class="p">)</span>
+                </div>
+<div class="viewcode-block" id="instrument.ask_overwrite"><a class="viewcode-back" href="../RSZNB20.html#RSZNB20.instrument.ask_overwrite">[docs]</a>    <span class="k">def</span> <span class="nf">ask_overwrite</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ask_overwrite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_filen_1</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Ben Schneider.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

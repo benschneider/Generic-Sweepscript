@@ -1,0 +1,173 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>AgilentPSG &mdash; Generic Sweeper 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Generic Sweeper 1.0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for AgilentPSG</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Python driver for:</span>
+<span class="sd">Agilent Technologies</span>
+<span class="sd">E8257D</span>
+<span class="sd">PSG Analog Signal Generator</span>
+<span class="sd">250kHz - 20Ghz</span>
+
+<span class="sd">17/07/2015</span>
+<span class="sd">- B</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">visa</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="c1">#from struct import unpack #, pack</span>
+<span class="c1">#from time import sleep</span>
+<span class="c1">#from parsers import savemtx, make_header, ask_overwrite</span>
+
+<div class="viewcode-block" id="instrument"><a class="viewcode-back" href="../AgilentPSG.html#AgilentPSG.instrument">[docs]</a><span class="k">class</span> <span class="nc">instrument</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    PSG = instrument(&#39;GPIB0::11::INSTR&#39;)</span>
+<span class="sd">    w write</span>
+<span class="sd">    r read</span>
+<span class="sd">    a ask</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adress</span><span class="p">,</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;PSG&#39;</span><span class="p">,</span><span class="n">start</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pt</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sstep</span> <span class="o">=</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="n">stime</span> <span class="o">=</span> <span class="mf">1e-3</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_adress</span> <span class="o">=</span> <span class="n">adress</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_visainstrument</span> <span class="o">=</span> <span class="n">visa</span><span class="o">.</span><span class="n">instrument</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adress</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span> <span class="o">=</span> <span class="n">stop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pt</span> <span class="o">=</span> <span class="n">pt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">pt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powUnit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="s1">&#39;:UNIT:POW?&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ALC</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="s1">&#39;:POW:ALC?&#39;</span><span class="p">)</span>
+        <span class="c1">#self.output = self.get_power()</span>
+        <span class="c1">#self.phaseOffset = self.get_phaseOffset()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sstep</span> <span class="o">=</span> <span class="n">sstep</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stime</span> <span class="o">=</span> <span class="n">stime</span>
+
+
+<div class="viewcode-block" id="instrument.w"><a class="viewcode-back" href="../AgilentPSG.html#AgilentPSG.instrument.w">[docs]</a>    <span class="k">def</span> <span class="nf">w</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">write_cmd</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_visainstrument</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">write_cmd</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="instrument.r"><a class="viewcode-back" href="../AgilentPSG.html#AgilentPSG.instrument.r">[docs]</a>    <span class="k">def</span> <span class="nf">r</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visainstrument</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="instrument.a"><a class="viewcode-back" href="../AgilentPSG.html#AgilentPSG.instrument.a">[docs]</a>    <span class="k">def</span> <span class="nf">a</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ask_cmd</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visainstrument</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="n">ask_cmd</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="instrument.get_freq"><a class="viewcode-back" href="../AgilentPSG.html#AgilentPSG.instrument.get_freq">[docs]</a>    <span class="k">def</span> <span class="nf">get_freq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="s1">&#39;FREQ?&#39;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="instrument.set_freq"><a class="viewcode-back" href="../AgilentPSG.html#AgilentPSG.instrument.set_freq">[docs]</a>    <span class="k">def</span> <span class="nf">set_freq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;:SOUR:FREQ &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">freq</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="instrument.set_powUnit"><a class="viewcode-back" href="../AgilentPSG.html#AgilentPSG.instrument.set_powUnit">[docs]</a>    <span class="k">def</span> <span class="nf">set_powUnit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="s1">&#39;DBM&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; value DBM or V&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;:UNIT:POW &#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">powUnit</span> <span class="o">=</span> <span class="n">value</span>
+</div>
+<div class="viewcode-block" id="instrument.set_power"><a class="viewcode-back" href="../AgilentPSG.html#AgilentPSG.instrument.set_power">[docs]</a>    <span class="k">def</span> <span class="nf">set_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">power</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">powUnit</span> <span class="o">==</span> <span class="s1">&#39;V&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">power</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">power</span> <span class="o">=</span> <span class="mf">39.7635e-9</span> <span class="c1">#this is the smallest the Pgen can output</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;:SOUR:POW:IMM:AMPL &#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">power</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">powUnit</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pow</span> <span class="o">=</span> <span class="n">power</span>
+</div>
+<div class="viewcode-block" id="instrument.get_power"><a class="viewcode-back" href="../AgilentPSG.html#AgilentPSG.instrument.get_power">[docs]</a>    <span class="k">def</span> <span class="nf">get_power</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+        <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="s1">&#39;:SOUR:POW:IMM:AMPL?&#39;</span><span class="p">))</span>
+             </div>
+<div class="viewcode-block" id="instrument.set_ALC"><a class="viewcode-back" href="../AgilentPSG.html#AgilentPSG.instrument.set_ALC">[docs]</a>    <span class="k">def</span> <span class="nf">set_ALC</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">boolval</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; ALC : Automatic levelling control&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;:POW:ALC &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">boolval</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ALC</span> <span class="o">=</span> <span class="n">boolval</span>
+</div>
+<div class="viewcode-block" id="instrument.set_output"><a class="viewcode-back" href="../AgilentPSG.html#AgilentPSG.instrument.set_output">[docs]</a>    <span class="k">def</span> <span class="nf">set_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">boolval</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;:OUTP &#39;</span> <span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">boolval</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">boolval</span>
+</div>
+<div class="viewcode-block" id="instrument.set_phaseOffset"><a class="viewcode-back" href="../AgilentPSG.html#AgilentPSG.instrument.set_phaseOffset">[docs]</a>    <span class="k">def</span> <span class="nf">set_phaseOffset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">phaseOffs</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">phaseOffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">phaseOffs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">(</span><span class="s1">&#39;:SOUR:PHAS:ADJ &#39;</span> <span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">phaseOffs</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phaseOffset</span> <span class="o">=</span> <span class="n">phaseOffs</span></div>
+<div class="viewcode-block" id="instrument.get_phaseOffset"><a class="viewcode-back" href="../AgilentPSG.html#AgilentPSG.instrument.get_phaseOffset">[docs]</a>    <span class="k">def</span> <span class="nf">get_phaseOffset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">phaseOffs</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="s1">&#39;:SOUR:PHAS:ADJ?&#39;</span><span class="p">))</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Ben Schneider.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

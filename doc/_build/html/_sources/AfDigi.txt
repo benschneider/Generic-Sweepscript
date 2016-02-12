@@ -1,0 +1,7 @@
+AfDigi module
+=============
+
+.. automodule:: AfDigi
+    :members:
+    :undoc-members:
+    :show-inheritance:

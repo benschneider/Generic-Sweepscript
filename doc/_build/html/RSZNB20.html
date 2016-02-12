@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>RSZNB20 module &mdash; Generic Sweeper 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Generic Sweeper 1.0 documentation" href="index.html" />
+    <link rel="next" title="Yoko module" href="Yoko.html" />
+    <link rel="prev" title="PXIDigitizer_wrapper module" href="PXIDigitizer_wrapper.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-RSZNB20">
+<span id="rsznb20-module"></span><h1>RSZNB20 module<a class="headerlink" href="#module-RSZNB20" title="Permalink to this headline">¶</a></h1>
+<p>Python driver for:
+Rohde &amp; Schwartz
+ZNB20
+Vector Network Analyzer
+100kHz - 20Ghz</p>
+<p>22/06/2015
+- B</p>
+<dl class="class">
+<dt id="RSZNB20.instrument">
+<em class="property">class </em><code class="descclassname">RSZNB20.</code><code class="descname">instrument</code><span class="sig-paren">(</span><em>adress</em>, <em>name='ZNB20'</em>, <em>start=0</em>, <em>stop=0</em>, <em>pt=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument" title="Permalink to this definition">¶</a></dt>
+<dd><p>vna = instrument1(&#8216;TCPIP::169.254.107.192::INSTR&#8217;)
+w write
+r read
+a ask</p>
+<dl class="method">
+<dt id="RSZNB20.instrument.a">
+<code class="descname">a</code><span class="sig-paren">(</span><em>ask_cmd</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.a"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.a" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="RSZNB20.instrument.abort">
+<code class="descname">abort</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.abort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.abort" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="RSZNB20.instrument.ask_overwrite">
+<code class="descname">ask_overwrite</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.ask_overwrite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.ask_overwrite" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="RSZNB20.instrument.get_data">
+<code class="descname">get_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.get_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.get_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>involves some error handling
+if an error occures it returns &#8216;Error&#8217;</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="RSZNB20.instrument.get_data2">
+<code class="descname">get_data2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.get_data2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.get_data2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="RSZNB20.instrument.get_error">
+<code class="descname">get_error</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.get_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.get_error" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="RSZNB20.instrument.get_freq">
+<code class="descname">get_freq</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.get_freq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.get_freq" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="RSZNB20.instrument.get_power">
+<code class="descname">get_power</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.get_power"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.get_power" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="RSZNB20.instrument.get_sweeptime">
+<code class="descname">get_sweeptime</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.get_sweeptime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.get_sweeptime" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="RSZNB20.instrument.init_sweep">
+<code class="descname">init_sweep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.init_sweep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.init_sweep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="RSZNB20.instrument.prepare_data_save">
+<code class="descname">prepare_data_save</code><span class="sig-paren">(</span><em>folder</em>, <em>filen_0</em>, <em>dim_1</em>, <em>dim_2</em>, <em>dim_3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.prepare_data_save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.prepare_data_save" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="RSZNB20.instrument.r">
+<code class="descname">r</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.r"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.r" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="RSZNB20.instrument.record_data">
+<code class="descname">record_data</code><span class="sig-paren">(</span><em>vnadata</em>, <em>kk</em>, <em>jj</em>, <em>ii=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.record_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.record_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="RSZNB20.instrument.save_data">
+<code class="descname">save_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.save_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.save_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="RSZNB20.instrument.set_freq_cw">
+<code class="descname">set_freq_cw</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.set_freq_cw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.set_freq_cw" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="RSZNB20.instrument.set_power">
+<code class="descname">set_power</code><span class="sig-paren">(</span><em>power</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.set_power"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.set_power" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="RSZNB20.instrument.w">
+<code class="descname">w</code><span class="sig-paren">(</span><em>write_cmd</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSZNB20.html#instrument.w"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSZNB20.instrument.w" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="PXIDigitizer_wrapper.html" title="previous chapter">PXIDigitizer_wrapper module</a></li>
+      <li>Next: <a href="Yoko.html" title="next chapter">Yoko module</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/RSZNB20.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Ben Schneider.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/RSZNB20.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

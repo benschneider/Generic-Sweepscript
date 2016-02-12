@@ -1,0 +1,7 @@
+PXIDigitizer module
+===================
+
+.. automodule:: PXIDigitizer
+    :members:
+    :undoc-members:
+    :show-inheritance:

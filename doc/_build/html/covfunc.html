@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>covfunc module &mdash; Generic Sweeper 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Generic Sweeper 1.0 documentation" href="index.html" />
+    <link rel="next" title="dummydriver module" href="dummydriver.html" />
+    <link rel="prev" title="correlation_code module" href="correlation_code.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-covfunc">
+<span id="covfunc-module"></span><h1>covfunc module<a class="headerlink" href="#module-covfunc" title="Permalink to this headline">¶</a></h1>
+<p>Created on Sun Nov 08 23:40:43 2015</p>
+<p>&#64;author: Ben</p>
+<dl class="function">
+<dt id="covfunc.covConv">
+<code class="descclassname">covfunc.</code><code class="descname">covConv</code><span class="sig-paren">(</span><em>a</em>, <em>b</em>, <em>lags=20</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/covfunc.html#covConv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#covfunc.covConv" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns fft convolution result
+assumes a, b to be same length 1-d numpy arrays</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="covfunc.getCovMatrix">
+<code class="descclassname">covfunc.</code><code class="descname">getCovMatrix</code><span class="sig-paren">(</span><em>I1</em>, <em>Q1</em>, <em>I2</em>, <em>Q2</em>, <em>lags=20</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/covfunc.html#getCovMatrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#covfunc.getCovMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function was adaped from scipy.signal.fft.convolve.
+By Defining the number of lags one defines an interrest
+of region meaning any effect should happen on that oder of
+time scale; thus lower frequency effects cannot be displayed on
+that scale and can be discarded from the convolution.
+All input shapes need to be the same.
+requires an updated numpy version (1.9.0 +).
+# 0: &lt;I1I1&gt;
+# 1: &lt;Q1Q1&gt;
+# 2: &lt;I2I2&gt;
+# 3: &lt;Q2Q2&gt;
+# 4: &lt;I1Q1&gt;
+# 5: &lt;I2Q2&gt;
+# 6: &lt;I1I2&gt;
+# 7: &lt;Q1Q2&gt;
+# 8: &lt;I1Q2&gt;
+# 9: &lt;Q1I2&gt;
+# 10: &lt;Squeezing&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="covfunc.getCovMatrix_old">
+<code class="descclassname">covfunc.</code><code class="descname">getCovMatrix_old</code><span class="sig-paren">(</span><em>I1</em>, <em>Q1</em>, <em>I2</em>, <em>Q2</em>, <em>lags=20</em>, <em>extended=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/covfunc.html#getCovMatrix_old"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#covfunc.getCovMatrix_old" title="Permalink to this definition">¶</a></dt>
+<dd><p># Matrix index as follows:
+# 0: &lt;I1I1&gt;
+# 1: &lt;Q1Q1&gt;
+# 2: &lt;I2I2&gt;
+# 3: &lt;Q2Q2&gt;
+# 4: &lt;I1Q1&gt;
+# 5: &lt;I2Q2&gt;
+# 6: &lt;I1I2&gt;
+# 7: &lt;Q1Q2&gt;
+# 8: &lt;I1Q2&gt;
+# 9: &lt;Q1I2&gt;
+# 10: &lt;Squeezing&gt;</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="correlation_code.html" title="previous chapter">correlation_code module</a></li>
+      <li>Next: <a href="dummydriver.html" title="next chapter">dummydriver module</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/covfunc.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Ben Schneider.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/covfunc.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

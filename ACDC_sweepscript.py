@@ -14,11 +14,11 @@ thisfile = __file__
 
 
 ## Put Galvanic isolation:
-## 1. Amp bias 
+## 1. Amp bias
 ## 2. Yoko1 (magnet), Yoko2 (Ib), SRS Amp
 ## 3. Keithley Voltmeter
 
-filen_0 = 's1_7' # 0.203120,  466.836
+filen_0 = 'test' # 0.203120,  466.836
 folder = 'data\\'
 
 # Drivers
@@ -34,19 +34,19 @@ vm = key2000('GPIB0::29::INSTR')
 iBias = yoko('GPIB0::13::INSTR',
            name = 'Yoko V R=(998.83+14.24)KOhm',
            start = -4,
-           stop = 4, 
+           stop = 4,
            pt = 201,
            sstep = 0.2, #def max voltage steps it can take
-           stime = 0) 
+           stime = 0)
 iBias.prepare_v(vrange = 6)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
 
 vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
             start = -280e-3,
-            stop = -190e-3, 
+            stop = -190e-3,
             pt = 20,
             sstep = 5e-3,
-            stime = 1e-6) #'Yoko M' 
+            stime = 1e-6) #'Yoko M'
 vMag.prepare_v(vrange = 4)
 
 # PSG = APSG('GPIB0::11::INSTR',
@@ -56,35 +56,36 @@ PSG = dummy('GPIB0::11::INSTR',
            stop = 0,
            pt = 1,
            sstep = 20e-3,
-           stime = 1e-3) 
+           stime = 1e-3)
 
 # PSG.set_powUnit('V')
 # PSG.set_freq(11.7e9)  # 1GHz gives 2 uV steps
 # PSG.set_output(1)
 
 #define what is to be swept i.e. get_v(..) /set_v(..) would be 'v'
-iBias.sweep_par = 'v' 
+iBias.sweep_par = 'v'
 vMag.sweep_par = 'v'
 # PSG.sweep_par = 'power'
 
 dim_1= iBias
 def sweep_dim_1(obj,value):
     #obj.set_v2(value)
-    obj.sweep_v(value, 3)
-    sleep(3.1)
+    #obj.sweep_v(value, 3)
+    # sleep(3.1)
     #sleep(1.1)
     #ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
+    pass
 
 dim_2= vMag
 def sweep_dim_2(obj,value):
     # obj.set_v2(value)
-    ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
-    pass 
+    # ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
+    pass
 
-dim_1= PSG
+dim_3= PSG
 def sweep_dim_3(obj,value):
-    # pass
-    obj.set_power(value)
+    pass
+    # obj.set_power(value)
     # ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
 
 # Keithley data recording
@@ -95,20 +96,20 @@ print 'Executing sweep'
 print 'req time (min):'+str(dim_3.pt*dim_2.pt*dim_1.pt*0.032/60)
 t0 = time()
 try:
-    for kk in range(dim_3.pt): 
+    for kk in range(dim_3.pt):
         sweep_dim_3(dim_3,dim_3.lin[kk])
         sweep_dim_2(dim_2,dim_2.start)
         for jj in range(dim_2.pt):
-            sweep_dim_2(dim_2,dim_2.lin[jj])            
-            
+            sweep_dim_2(dim_2,dim_2.lin[jj])
+
             sweep_dim_1(dim_1,dim_1.start)
             for ii in range(dim_1.pt):
                 dim_1.set_v2(dim_1.lin[ii])
                 #sweep_dim_1(dim_1,dim_1.lin[ii])
                 vdata = vm.get_val()
                 vm.record_data(vdata,kk,jj,ii)
-                       
-            vm.save_data()            
+
+            vm.save_data()
             t1 = time()
             remaining_time = ((t1-t0)/(jj+1)*dim_2.pt*dim_3.pt - (t1-t0))
             print 'req time (h):'+str(remaining_time/3600)
@@ -116,7 +117,7 @@ try:
 
 except (KeyboardInterrupt):
     print '***** Keyboart Interupt *****'
-    
+
 finally:
     print 'Time used min:' +str((time()-t0)/60)
     print 'Yokos -> zero and switch off'

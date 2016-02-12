@@ -7,12 +7,13 @@ Voltage / Current source
 - B
 '''
 
-#import numpy as np
+# import numpy as np
 import visa
 from time import sleep
 import numpy as np
 import sys
 from ramp_mod import ramp
+
 
 class instrument():
     '''
@@ -22,7 +23,10 @@ class instrument():
     a ask
     '''
 
-    def __init__(self, adress, name = 'Yokogawa IV source', start = 0, stop = 0, pt = 1, sstep = 1e-3, stime = 1e-3):
+
+    def __init__(self, adress, name='Yokogawa IV source',
+                 start = 0, stop = 0, pt = 1,
+                 sstep = 1e-3, stime = 1e-3):
         self._adress = adress
         self._visainstrument = visa.instrument(self._adress)
         self.v = 0
@@ -48,7 +52,7 @@ class instrument():
         return self._visainstrument.ask(ask_cmd)
 
     def set_mode(self,option):
-        ''' option = 
+        ''' option =
         1 -- Voltage mode,
         5 -- Current mode
         '''
@@ -63,7 +67,7 @@ class instrument():
         6 -- 30V
         '''
         self.w('R' + str(vrange) + ' E')
-        
+
         # catch error before it arrives at the Instrument
         if vrange == 2:
             if np.abs(self.start) > 12e-3:
@@ -91,12 +95,15 @@ class instrument():
         '''
         value, sweeptime
         '''
-        self.w('M1 PI'+str(sweeptime)+' SW'+str(sweeptime)+' PRS S'+str(value)+' PRE RU2')
-        
+        self.w('M1 PI'+str(sweeptime)
+               +' SW'+str(sweeptime)
+               +' PRS S'+str(value)
+               +' PRE RU2')
+
     def set_v(self, value):
         self.w('S'+str(value)+' E')
         self.v = value
-    
+
     def get_v(self):
         eval(self.a('H0 OD'))
         self.v = eval(self.a('H0 OD'))
@@ -104,14 +111,14 @@ class instrument():
 
     def set_v2(self, value):
         if self.linstep < self.sstep:
-            self.set_v(value) #set value immideatly without check
+            self.set_v(value)  # set value immideatly without check
         else:
             ramp(self, self.sweep_par, value, self.sstep, self.stime)
-        
+
     def prepare_v(self, vrange=3):
         self.set_mode(1)
-        self.set_vrange(vrange) 
-        self.sweep_v(0.0,3)
+        self.set_vrange(vrange)
+        self.sweep_v(0.0, 3)
         sleep(3.1)
         self.output(1)
         sleep(0.2)

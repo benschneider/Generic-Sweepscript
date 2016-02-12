@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>parsers module &mdash; Generic Sweeper 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Generic Sweeper 1.0 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-parsers">
+<span id="parsers-module"></span><h1>parsers module<a class="headerlink" href="#module-parsers" title="Permalink to this headline">¶</a></h1>
+<p>MTX - file parser</p>
+<p>for now you can load it with &#8216;execfile(&#8216;mtx_parser.py)&#8217;
+it will add the following content.</p>
+<dl class="docutils">
+<dt>content:</dt>
+<dd>loaddat : load an ASCII data file ( loaddat(&#8216;file.dat&#8217;) )
+savedat : save an ASCII data file ( savedat(&#8216;file.dat&#8217;) )
+loadmtx : load a binary data file ( loadmtx(&#8216;file.mtx&#8217;) )
+savemtx : save a binary data file ( savemtx(&#8216;file.mtx&#8217;, 3d_numpy_array))</dd>
+</dl>
+<p>missing:
+-   requires a default header when saving MTX
+-   additional descriptions
+-   Change into an importable thingy</p>
+<ul class="simple">
+<li>B</li>
+</ul>
+<dl class="function">
+<dt id="parsers.ask_overwrite">
+<code class="descclassname">parsers.</code><code class="descname">ask_overwrite</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/parsers.html#ask_overwrite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parsers.ask_overwrite" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="parsers.copy_file">
+<code class="descclassname">parsers.</code><code class="descname">copy_file</code><span class="sig-paren">(</span><em>thisfile</em>, <em>file_add</em>, <em>folder=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/parsers.html#copy_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parsers.copy_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>folder = &#8220;somefolder&#8221;
+i.e.
+thisfile = &#8216;__filename__&#8217;
+copy_file(thisfile, &#8216;bla&#8217;,&#8217;data&#8217;)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="parsers.copy_file_interminal">
+<code class="descclassname">parsers.</code><code class="descname">copy_file_interminal</code><span class="sig-paren">(</span><em>thisfile</em>, <em>file_add</em>, <em>folder=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/parsers.html#copy_file_interminal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parsers.copy_file_interminal" title="Permalink to this definition">¶</a></dt>
+<dd><p>folder = &#8220;somefolder&#8221;
+i.e.
+thisfile = &#8216;__filename__&#8217;
+copy_file(thisfile, &#8216;bla&#8217;,&#8217;data&#8217;)</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parsers.dim">
+<em class="property">class </em><code class="descclassname">parsers.</code><code class="descname">dim</code><span class="sig-paren">(</span><em>name='void'</em>, <em>start=0</em>, <em>stop=0</em>, <em>pt=1</em>, <em>scale=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/parsers.html#dim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parsers.dim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="parsers.loadcsv">
+<code class="descclassname">parsers.</code><code class="descname">loadcsv</code><span class="sig-paren">(</span><em>filename</em>, <em>delim=';'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/parsers.html#loadcsv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parsers.loadcsv" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="parsers.loaddat">
+<code class="descclassname">parsers.</code><code class="descname">loaddat</code><span class="sig-paren">(</span><em>*inputs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/parsers.html#loaddat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parsers.loaddat" title="Permalink to this definition">¶</a></dt>
+<dd><p>This simply uses the numpy.genfromtxt function to
+load a data containing file in ascii
+(It rotates the output such that each colum can be accessed easily)</p>
+<p>example:
+in the directory:
+1.dat:</p>
+<blockquote>
+<div>1   2   a
+3   b   4
+c   5   6
+7   8   d</div></blockquote>
+<p>&gt;&gt; A = loaddat(&#8216;1.dat&#8217;)
+&gt;&gt; A[0]
+(1,3,c,7)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="parsers.loadmtx">
+<code class="descclassname">parsers.</code><code class="descname">loadmtx</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/parsers.html#loadmtx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parsers.loadmtx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads an mtx file (binary compressed file)
+(first two lines of the MTX contain information of the data shape and
+what units, limits are present)
+i.e.:</p>
+<p>mtx, header = loadmtx(&#8216;filename.mtx&#8217;)</p>
+<p>mtx     :   will contain a 3d numpy array of the data
+header  :   will contain information on the labels and limits</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="parsers.make_header">
+<code class="descclassname">parsers.</code><code class="descname">make_header</code><span class="sig-paren">(</span><em>dim_1</em>, <em>dim_2</em>, <em>dim_3</em>, <em>meas_data='ufo'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/parsers.html#make_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parsers.make_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>def your sweep axis/name, start and stop
+values = Measured Voltage (V)
+dim_1.name = Current (A)
+dim_1.start = 0
+dim_1.stop = 1
+dim_2.name = Voltage (V)
+...
+dim_3.name = RF Power (dB)
+returns a text string used as 1st line of an mtx file</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="parsers.savedat">
+<code class="descclassname">parsers.</code><code class="descname">savedat</code><span class="sig-paren">(</span><em>filename1</em>, <em>data1</em>, <em>**quarks</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/parsers.html#savedat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parsers.savedat" title="Permalink to this definition">¶</a></dt>
+<dd><p>filename, data, arguments
+simply uses numpy.savetext with a
+delimiter = &#8216;,&#8217;</p>
+<p>np.savetxt(&#8220;QsQr.dat&#8221;,stuff ,delimiter =&#8217;,&#8217;)
+default: delimiter = &#8216;      &#8216;  (works best with gnuplot even with excel)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="parsers.savemtx">
+<code class="descclassname">parsers.</code><code class="descname">savemtx</code><span class="sig-paren">(</span><em>filename</em>, <em>data</em>, <em>header='Units</em>, <em>ufo</em>, <em>d1</em>, <em>0</em>, <em>1</em>, <em>d2</em>, <em>0</em>, <em>1</em>, <em>d3</em>, <em>0</em>, <em>1'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/parsers.html#savemtx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parsers.savemtx" title="Permalink to this definition">¶</a></dt>
+<dd><p>MTX - file parser by Ben Schneider
+stores to the file:
+Units, Dataset name, xname, xmin, xmax, yname, ymin, ymax, zname, zmin, zmax
+nx ny nz length
+[binary data....]</p>
+<p>the first line is the header i.e. with
+myheader = &#8216;Units, S11, Magnet (T), -1, 1, Volt (V), -10, 10, Freqeuency (Hz), 1, 10&#8217;
+savemtx(&#8216;myfile.mtx&#8217;,my-3d-np-array, header = myheader)</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/parsers.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Ben Schneider.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/parsers.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

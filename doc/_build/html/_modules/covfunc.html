@@ -1,0 +1,268 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>covfunc &mdash; Generic Sweeper 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Generic Sweeper 1.0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for covfunc</h1><div class="highlight"><pre>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Sun Nov 08 23:40:43 2015</span>
+
+<span class="sd">@author: Ben</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">scipy.signal</span> <span class="kn">as</span> <span class="nn">signal</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">from</span> <span class="nn">scipy.signal.signaltools</span> <span class="kn">import</span> <span class="n">_next_regular</span>
+<span class="kn">from</span> <span class="nn">numpy.fft</span> <span class="kn">import</span> <span class="n">rfftn</span><span class="p">,</span> <span class="n">irfftn</span>
+<span class="n">_rfft_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="getCovMatrix"><a class="viewcode-back" href="../covfunc.html#covfunc.getCovMatrix">[docs]</a><span class="k">def</span> <span class="nf">getCovMatrix</span><span class="p">(</span><span class="n">I1</span><span class="p">,</span> <span class="n">Q1</span><span class="p">,</span> <span class="n">I2</span><span class="p">,</span> <span class="n">Q2</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This function was adaped from scipy.signal.fft.convolve.</span>
+<span class="sd">    By Defining the number of lags one defines an interrest</span>
+<span class="sd">    of region meaning any effect should happen on that oder of</span>
+<span class="sd">    time scale; thus lower frequency effects cannot be displayed on</span>
+<span class="sd">    that scale and can be discarded from the convolution.</span>
+<span class="sd">    All input shapes need to be the same.</span>
+<span class="sd">    requires an updated numpy version (1.9.0 +).</span>
+<span class="sd">    # 0: &lt;I1I1&gt;</span>
+<span class="sd">    # 1: &lt;Q1Q1&gt;</span>
+<span class="sd">    # 2: &lt;I2I2&gt;</span>
+<span class="sd">    # 3: &lt;Q2Q2&gt;</span>
+<span class="sd">    # 4: &lt;I1Q1&gt;</span>
+<span class="sd">    # 5: &lt;I2Q2&gt;</span>
+<span class="sd">    # 6: &lt;I1I2&gt;</span>
+<span class="sd">    # 7: &lt;Q1Q2&gt;</span>
+<span class="sd">    # 8: &lt;I1Q2&gt;</span>
+<span class="sd">    # 9: &lt;Q1I2&gt;</span>
+<span class="sd">    # 10: &lt;Squeezing&gt;</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">lags</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lags</span><span class="p">)</span>
+    <span class="n">I1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">I1</span><span class="p">)</span>
+    <span class="n">Q1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Q1</span><span class="p">)</span>
+    <span class="n">I2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">I2</span><span class="p">)</span>
+    <span class="n">Q2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Q2</span><span class="p">)</span>
+    <span class="n">CovMat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">11</span><span class="p">,</span> <span class="n">lags</span><span class="o">*</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">I1</span><span class="o">*</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">-</span><span class="n">lags</span>
+    <span class="n">stop</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">I1</span><span class="o">*</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="o">+</span><span class="n">lags</span>
+
+    <span class="c1"># assume I1 Q1 have the same shape</span>
+    <span class="n">sI1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">I1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">sQ2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Q2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">complex_result</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">I1</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">)</span> <span class="ow">or</span>
+                      <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">Q2</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">))</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">sI1</span> <span class="o">+</span> <span class="n">sQ2</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">HPfilt</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">sI1</span><span class="o">/</span><span class="p">(</span><span class="n">lags</span><span class="o">*</span><span class="mi">4</span><span class="p">)))</span>  <span class="c1"># smallest features visible is lamda/4</span>
+
+    <span class="c1"># Speed up FFT by padding to optimal size for FFTPACK</span>
+    <span class="n">fshape</span> <span class="o">=</span> <span class="p">[</span><span class="n">_next_regular</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">))</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">shape</span><span class="p">]</span>
+    <span class="n">fslice</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">sz</span><span class="p">))</span> <span class="k">for</span> <span class="n">sz</span> <span class="ow">in</span> <span class="n">shape</span><span class="p">])</span>
+    <span class="c1"># Pre-1.9 NumPy FFT routines are not threadsafe.  For older NumPys, make</span>
+    <span class="c1"># sure we only call rfftn/irfftn from one thread at a time.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">complex_result</span> <span class="ow">and</span> <span class="n">_rfft_lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">(</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">fftI1</span> <span class="o">=</span> <span class="n">rfftn</span><span class="p">(</span><span class="n">I1</span><span class="p">,</span> <span class="n">fshape</span><span class="p">)</span>
+            <span class="n">fftQ1</span> <span class="o">=</span> <span class="n">rfftn</span><span class="p">(</span><span class="n">Q1</span><span class="p">,</span> <span class="n">fshape</span><span class="p">)</span>
+            <span class="n">fftI2</span> <span class="o">=</span> <span class="n">rfftn</span><span class="p">(</span><span class="n">I2</span><span class="p">,</span> <span class="n">fshape</span><span class="p">)</span>
+            <span class="n">fftQ2</span> <span class="o">=</span> <span class="n">rfftn</span><span class="p">(</span><span class="n">Q2</span><span class="p">,</span> <span class="n">fshape</span><span class="p">)</span>
+
+            <span class="n">rfftI1</span> <span class="o">=</span> <span class="n">rfftn</span><span class="p">(</span><span class="n">I1</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">fshape</span><span class="p">)</span>
+            <span class="n">rfftQ1</span> <span class="o">=</span> <span class="n">rfftn</span><span class="p">(</span><span class="n">Q1</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">fshape</span><span class="p">)</span>
+            <span class="n">rfftI2</span> <span class="o">=</span> <span class="n">rfftn</span><span class="p">(</span><span class="n">I2</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">fshape</span><span class="p">)</span>
+            <span class="n">rfftQ2</span> <span class="o">=</span> <span class="n">rfftn</span><span class="p">(</span><span class="n">Q2</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">fshape</span><span class="p">)</span>
+
+            <span class="c1"># filter frequencies outside the lags range</span>
+            <span class="n">fftI1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">HPfilt</span><span class="p">),</span> <span class="n">fftI1</span><span class="p">[</span><span class="n">HPfilt</span><span class="p">:]))</span>
+            <span class="n">fftQ1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">HPfilt</span><span class="p">),</span> <span class="n">fftQ1</span><span class="p">[</span><span class="n">HPfilt</span><span class="p">:]))</span>
+            <span class="n">fftI2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">HPfilt</span><span class="p">),</span> <span class="n">fftI2</span><span class="p">[</span><span class="n">HPfilt</span><span class="p">:]))</span>
+            <span class="n">fftQ2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">HPfilt</span><span class="p">),</span> <span class="n">fftQ2</span><span class="p">[</span><span class="n">HPfilt</span><span class="p">:]))</span>
+
+            <span class="c1"># filter frequencies outside the lags range</span>
+            <span class="n">rfftI1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">HPfilt</span><span class="p">),</span> <span class="n">rfftI1</span><span class="p">[</span><span class="n">HPfilt</span><span class="p">:]))</span>
+            <span class="n">rfftQ1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">HPfilt</span><span class="p">),</span> <span class="n">rfftQ1</span><span class="p">[</span><span class="n">HPfilt</span><span class="p">:]))</span>
+            <span class="n">rfftI2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">HPfilt</span><span class="p">),</span> <span class="n">rfftI2</span><span class="p">[</span><span class="n">HPfilt</span><span class="p">:]))</span>
+            <span class="n">rfftQ2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">HPfilt</span><span class="p">),</span> <span class="n">rfftQ2</span><span class="p">[</span><span class="n">HPfilt</span><span class="p">:]))</span>
+
+            <span class="c1"># 0: &lt;I1I1&gt;</span>
+            <span class="n">CovMat</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">irfftn</span><span class="p">((</span><span class="n">fftI1</span><span class="o">*</span><span class="n">rfftI1</span><span class="p">))[</span><span class="n">fslice</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
+                            <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">fftI1</span><span class="p">))</span>
+            <span class="c1"># 1: &lt;Q1Q1&gt;</span>
+            <span class="n">CovMat</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">irfftn</span><span class="p">((</span><span class="n">fftQ1</span><span class="o">*</span><span class="n">rfftQ1</span><span class="p">))[</span><span class="n">fslice</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
+                            <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">fftI1</span><span class="p">))</span>
+            <span class="c1"># 2: &lt;I2I2&gt;</span>
+            <span class="n">CovMat</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">irfftn</span><span class="p">((</span><span class="n">fftI2</span><span class="o">*</span><span class="n">rfftI2</span><span class="p">))[</span><span class="n">fslice</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
+                            <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">fftI1</span><span class="p">))</span>
+            <span class="c1"># 3: &lt;Q2Q2&gt;</span>
+            <span class="n">CovMat</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">irfftn</span><span class="p">((</span><span class="n">fftQ2</span><span class="o">*</span><span class="n">rfftQ2</span><span class="p">))[</span><span class="n">fslice</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
+                            <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">fftI1</span><span class="p">))</span>
+            <span class="c1"># 4: &lt;I1Q1&gt;</span>
+            <span class="n">CovMat</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">irfftn</span><span class="p">((</span><span class="n">fftI1</span><span class="o">*</span><span class="n">rfftQ1</span><span class="p">))[</span><span class="n">fslice</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
+                            <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">fftI1</span><span class="p">))</span>
+            <span class="c1"># 5: &lt;I2Q2&gt;</span>
+            <span class="n">CovMat</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">irfftn</span><span class="p">((</span><span class="n">fftI2</span><span class="o">*</span><span class="n">rfftQ2</span><span class="p">))[</span><span class="n">fslice</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
+                            <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">fftI1</span><span class="p">))</span>
+            <span class="c1"># 6: &lt;I1I2&gt;</span>
+            <span class="n">CovMat</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">irfftn</span><span class="p">((</span><span class="n">fftI1</span><span class="o">*</span><span class="n">rfftI2</span><span class="p">))[</span><span class="n">fslice</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
+                            <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">fftI1</span><span class="p">))</span>
+            <span class="c1"># 7: &lt;Q1Q2&gt;</span>
+            <span class="n">CovMat</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">irfftn</span><span class="p">((</span><span class="n">fftQ1</span><span class="o">*</span><span class="n">rfftQ2</span><span class="p">))[</span><span class="n">fslice</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
+                            <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">fftI1</span><span class="p">))</span>
+            <span class="c1"># 8: &lt;I1Q2&gt;</span>
+            <span class="n">CovMat</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">irfftn</span><span class="p">((</span><span class="n">fftI1</span><span class="o">*</span><span class="n">rfftQ2</span><span class="p">))[</span><span class="n">fslice</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
+                            <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">fftI1</span><span class="p">))</span>
+            <span class="c1"># 9: &lt;Q1I2&gt;</span>
+            <span class="n">CovMat</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">irfftn</span><span class="p">((</span><span class="n">fftQ1</span><span class="o">*</span><span class="n">rfftI2</span><span class="p">))[</span><span class="n">fslice</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
+                            <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">fftI1</span><span class="p">))</span>
+            <span class="c1"># 10: &lt;Squeezing&gt;</span>
+            <span class="n">CovMat</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="mi">1j</span><span class="o">*</span><span class="p">(</span><span class="n">CovMat</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="p">:]</span><span class="o">+</span><span class="n">CovMat</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="p">:])</span>
+                                 <span class="o">+</span> <span class="p">(</span><span class="n">CovMat</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">CovMat</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="p">:])))</span>
+            <span class="k">return</span> <span class="n">CovMat</span>
+
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">_rfft_lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># If we&#39;re here, it&#39;s either because we need a complex result, or we</span>
+        <span class="c1"># failed to acquire _rfft_lock (meaning rfftn isn&#39;t threadsafe and</span>
+        <span class="c1"># is already in use by another thread).  In either case, use the</span>
+        <span class="c1"># (threadsafe but slower) SciPy complex-FFT routines instead.</span>
+        <span class="c1"># ret = ifftn(fftn(in1, fshape) * fftn(in2, fshape))[fslice].copy()</span>
+        <span class="k">print</span> <span class="s1">&#39;Abort, reason:complex input or Multithreaded FFT not available&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">complex_result</span><span class="p">:</span>
+            <span class="k">pass</span>  <span class="c1"># ret = ret.real</span>
+
+    <span class="k">return</span> <span class="n">CovMat</span>
+
+</div>
+<div class="viewcode-block" id="covConv"><a class="viewcode-back" href="../covfunc.html#covfunc.covConv">[docs]</a><span class="k">def</span> <span class="nf">covConv</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; returns fft convolution result</span>
+<span class="sd">    assumes a, b to be same length 1-d numpy arrays</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">fftconvolve</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;full&#39;</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">-</span><span class="n">lags</span>
+    <span class="n">stop</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="o">+</span><span class="n">lags</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="getCovMatrix_old"><a class="viewcode-back" href="../covfunc.html#covfunc.getCovMatrix_old">[docs]</a><span class="k">def</span> <span class="nf">getCovMatrix_old</span><span class="p">(</span><span class="n">I1</span><span class="p">,</span> <span class="n">Q1</span><span class="p">,</span> <span class="n">I2</span><span class="p">,</span> <span class="n">Q2</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">extended</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; # Matrix index as follows:</span>
+<span class="sd">    # 0: &lt;I1I1&gt;</span>
+<span class="sd">    # 1: &lt;Q1Q1&gt;</span>
+<span class="sd">    # 2: &lt;I2I2&gt;</span>
+<span class="sd">    # 3: &lt;Q2Q2&gt;</span>
+<span class="sd">    # 4: &lt;I1Q1&gt;</span>
+<span class="sd">    # 5: &lt;I2Q2&gt;</span>
+<span class="sd">    # 6: &lt;I1I2&gt;</span>
+<span class="sd">    # 7: &lt;Q1Q2&gt;</span>
+<span class="sd">    # 8: &lt;I1Q2&gt;</span>
+<span class="sd">    # 9: &lt;Q1I2&gt;</span>
+<span class="sd">    # 10: &lt;Squeezing&gt; &#39;&#39;&#39;</span>
+
+    <span class="n">CovMat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">11</span><span class="p">,</span> <span class="n">lags</span><span class="o">*</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">extended</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="c1"># these should simply show a single peak</span>
+        <span class="c1"># with a height of its covariance</span>
+        <span class="c1"># CovMat[0,:] = thread.start_new_thread( covConv, (I1, I1, lags) )</span>
+        <span class="c1"># thread.start_new_thread( print_time, (&quot;Thread-2&quot;, 4, ) )</span>
+        <span class="n">CovMat</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">covConv</span><span class="p">(</span><span class="n">I1</span><span class="p">,</span> <span class="n">I1</span><span class="p">,</span> <span class="n">lags</span><span class="p">)</span>
+        <span class="n">CovMat</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">covConv</span><span class="p">(</span><span class="n">Q1</span><span class="p">,</span> <span class="n">Q1</span><span class="p">,</span> <span class="n">lags</span><span class="p">)</span>
+        <span class="n">CovMat</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">covConv</span><span class="p">(</span><span class="n">I2</span><span class="p">,</span> <span class="n">I2</span><span class="p">,</span> <span class="n">lags</span><span class="p">)</span>
+        <span class="n">CovMat</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">covConv</span><span class="p">(</span><span class="n">Q2</span><span class="p">,</span> <span class="n">Q2</span><span class="p">,</span> <span class="n">lags</span><span class="p">)</span>
+
+    <span class="c1"># and these one go to zero for non singlemode squeezed states</span>
+    <span class="n">CovMat</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">covConv</span><span class="p">(</span><span class="n">I1</span><span class="p">,</span> <span class="n">Q1</span><span class="p">,</span> <span class="n">lags</span><span class="p">)</span>
+    <span class="n">CovMat</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">covConv</span><span class="p">(</span><span class="n">I2</span><span class="p">,</span> <span class="n">Q2</span><span class="p">,</span> <span class="n">lags</span><span class="p">)</span>
+    <span class="c1"># these ones are relevant for 2 mode squeezing</span>
+    <span class="n">CovMat</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">covConv</span><span class="p">(</span><span class="n">I1</span><span class="p">,</span> <span class="n">I2</span><span class="p">,</span> <span class="n">lags</span><span class="p">)</span>
+    <span class="n">CovMat</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">covConv</span><span class="p">(</span><span class="n">Q1</span><span class="p">,</span> <span class="n">Q2</span><span class="p">,</span> <span class="n">lags</span><span class="p">)</span>
+    <span class="n">CovMat</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">covConv</span><span class="p">(</span><span class="n">I1</span><span class="p">,</span> <span class="n">Q2</span><span class="p">,</span> <span class="n">lags</span><span class="p">)</span>
+    <span class="n">CovMat</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">covConv</span><span class="p">(</span><span class="n">Q1</span><span class="p">,</span> <span class="n">I2</span><span class="p">,</span> <span class="n">lags</span><span class="p">)</span>
+    <span class="n">CovMat</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="mi">1j</span><span class="o">*</span><span class="p">(</span><span class="n">CovMat</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="p">:]</span><span class="o">+</span><span class="n">CovMat</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="p">:])</span>
+                        <span class="o">+</span> <span class="p">(</span><span class="n">CovMat</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">CovMat</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="p">:]))</span>
+    <span class="k">return</span> <span class="n">CovMat</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Ben Schneider.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
