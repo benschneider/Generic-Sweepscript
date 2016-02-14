@@ -23,9 +23,9 @@ vm = key2000('GPIB0::29::INSTR')
 
 iBias = yoko('GPIB0::13::INSTR',
            name = 'Yoko V R=(998.83+14.24)KOhm',
-           start = -1,
-           stop = 1,
-           pt = 9,
+           start = -8,
+           stop = 8,
+           pt = 1601,
            sstep = 0.1, # def max voltage steps it can take
            stime = 0.1)
 iBias.prepare_v(vrange = 5)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
@@ -33,9 +33,9 @@ iBias.UD = True
 
 vMag = yoko('GPIB0::10::INSTR',
             name = 'Magnet V R=2.19KOhm',
-            start = -5e-3,
-            stop = 5e-3,
-            pt = 5,
+            start = -500e-3,
+            stop = 500e-3,
+            pt = 501,
             sstep = 10e-3,
             stime = 1e-6)
 vMag.prepare_v(vrange = 4)
