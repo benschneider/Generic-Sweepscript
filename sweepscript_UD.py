@@ -10,7 +10,7 @@ from parsers import copy_file
 from ramp_mod import ramp
 thisfile = __file__
 
-filen_0 = 'S1_905'
+filen_0 = 'S1_1001'
 folder = 'data\\'
 
 # Driver
@@ -23,9 +23,9 @@ vm = key2000('GPIB0::29::INSTR')
 
 iBias = yoko('GPIB0::13::INSTR',
            name = 'Yoko V R=(998.83+14.24)KOhm',
-           start = -9,
-           stop = 9,
-           pt = 901,
+           start = -8,
+           stop = 8,
+           pt = 1601,
            sstep = 0.1, # def max voltage steps it can take
            stime = 0.1)
 iBias.prepare_v(vrange = 5)  # vrange =2 -- 10mV, 3 -- 100mV, 4 -- 1V, 5 -- 10V, 6 -- 30V
@@ -41,7 +41,7 @@ vMag = yoko('GPIB0::10::INSTR',
 vMag.prepare_v(vrange = 4)
 
 PSG = dummy('GPIB0::11::INSTR',
-           name = 'RF - Power (V)',
+           name = 'none',
            start = 0,
            stop = 0,
            pt = 1,
@@ -65,9 +65,11 @@ dim_3= PSG
 def sweep_dim_3(obj,value):
     pass
 
-DS = DataStoreSP()
-DS.prepare_data_save(folder, filen_0, dim_1, dim_2, dim_3, 'Voltage (V) x1000')
+# DS = DataStoreSP()
+DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Voltage (V) x1k')
+# DS.prepare_data_save(folder, filen_0, dim_1, dim_2, dim_3, 'Voltage (V) x1000')
 DS.ask_overwrite()
+
 
 copy_file(thisfile, filen_0, folder) #backup this script
 print 'Executing sweep'
