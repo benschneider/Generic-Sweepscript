@@ -10,6 +10,7 @@ import visa
 from time import time, sleep
 from parsers import savemtx, make_header, ask_overwrite
 import numpy as np
+rm = visa.ResourceManager()
 
 class instrument():
     '''
@@ -22,7 +23,7 @@ class instrument():
     def __init__(self, adress, name= 'Keithley 2000 Voltmeter'):
         self.name = name
         self._adress = adress
-        self._visainstrument = visa.instrument(self._adress)
+        self._visainstrument = rm.open_resource(self._adress)
         self.optimise()
         sleep(0.3)
         self.testspeed()
@@ -43,7 +44,7 @@ class instrument():
         i.e. turn all non-essentials off
         '''
         self.w('*RST')                    #reset keithley
-        self.w(':VOLT:DC:NPLC 340')        #set nplc to 20ms (50Hz) 'If you can't beat the noise go with it!'
+        self.w(':VOLT:DC:NPLC 340')        #set nplc to 20ms (50Hz) 'If you can't beat the noise ..'
         self.w(':DISP:ENAB 0')                               #turn display off
         self.w('SENSe:FUNCtion "VOLTage:DC"') #'obvious'
         self.w(':FORM:ELEM READ')             #just getting the values nothing else.. :)
