@@ -40,7 +40,7 @@ class instrument():
         self.stime = stime
         if self.pt > 1 :
             self.linstep = np.abs(self.lin[1]-self.lin[0])
-        self.sweep_par = 'v'
+        self.sweep_par = 'iv'  # xx, ramper will use get_xx and set_xx 
 
     def w(self,write_cmd):
         self._visainstrument.write(write_cmd)

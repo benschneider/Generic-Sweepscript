@@ -10,71 +10,81 @@ from parsers import copy_file
 from ramp_mod import ramp
 thisfile = __file__
 
-filen_0 = 'S1_1008'
+filen_0 = 'sim_test'
 folder = 'data\\'
-'''
-Sweeping in I mode
-Noticed that this changed my LP filtering
-'''
 
-# Driver
+
+# Drivers
 from dummydriver import instrument as dummy
 from keithley2000 import instrument as key2000
-# from Yoko import instrument as yoko
-from SRsim import instrument as sim900
+from SRsim import instrument as sim900c
+from Sim928 import instrument as sim928c
 from DataStorer import DataStoreSP
+
 
 
 vm = key2000('GPIB0::29::INSTR')
 
-vbias = sim900('GPIB0::12::INSTR', 
-           name='vbias 1Mohm',
-           port = 2,
+sim900 = sim900c('GPIB0::12::INSTR')
+sim900.refresh()
+sim900.clearslot(2)
+sim900.clearslot(3)
+sim900.clearslot(4)
+
+vBias = sim928c(sim900, 
+           name='V 1Mohm',
+           slot = 2,
            start = -10,
            stop = 10,
-           pt = 2001,
-           sstep = 0.1e-6, # def max step it can take
-           stime = 1e-6)
-vbias.UD = True
+           pt = 201,
+           sstep = 0.1,
+           stime = 0.001)
 
-vMag = sim900('GPIB0::12::INSTR', 
+vMag = sim928c(sim900, 
            name='Magnet V R=2.19KOhm',
-           port = 3,
-           start = -600e-6,
-           stop = 600e-6,
-           pt = 101,
-           sstep = 0.1e-6, # def max step it can take
-           stime = 1e-6)
+           slot = 3,
+           start = -0.600,
+           stop = 0.600,
+           pt = 11,
+           sstep = 0.1, # def max step it can take
+           stime = 0.001)
 
 PSG = dummy('GPIB0::11::INSTR',
            name = 'none',
-           start = 0,
-           stop = 1,
+           start = 0.0,
+           stop = 1.0,
            pt = 1,
            sstep = 20e-3,
            stime = 1e-3)
 
-dim_1= iBias
+dim_1= vBias
+dim_1.UD = True
+dim_1.defval = 0.0
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
-    #obj.sweep_iv(value, 5)
-    #sleep(5.1)
 
 dim_2= vMag
+dim_2.defval = 0.0
 def sweep_dim_2(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
 
 dim_3= PSG
+dim_3.defval = 0.0
 def sweep_dim_3(obj, value):
     pass
 
-# DS = DataStoreSP()
-DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Voltage (V) x1k')
-# DS.prepare_data_save(folder, filen_0, dim_1, dim_2, dim_3, 'Voltage (V) x1000')
+DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Voltage (V) x100')
 DS.ask_overwrite()
-
-
 copy_file(thisfile, filen_0, folder) #backup this script
+
+# go to default value and activate output
+sweep_dim_1(dim_1, dim_1.defval)
+sweep_dim_2(dim_2, dim_2.defval)
+sweep_dim_3(dim_3, dim_3.defval)
+dim_1.output(1)
+dim_2.output(1)
+
+
 print 'Executing sweep'
 print 'req time (min):'+str(dim_3.pt*dim_2.pt*dim_1.pt*0.032/60)
 t0 = time()
@@ -90,7 +100,7 @@ try:
             if dim_1.UD is True:
                 print 'Up Trace'
                 for ii in range(dim_1.pt):
-                    dim_1.set_iv2(dim_1.lin[ii])
+                    sweep_dim_1(dim_1,dim_1.lin[ii])
                     vdata = vm.get_val()
                     DS.record_data(vdata,kk,jj,ii)
                 
@@ -98,12 +108,12 @@ try:
                 sleep(0.1)
                 print 'Down Trace'
                 for ii in range((dim_1.pt-1),-1,-1):
-                    dim_1.set_iv2(dim_1.lin[ii])
+                    sweep_dim_1(dim_1,dim_1.lin[ii])
                     vdata = vm.get_val()
                     DS.record_data2(vdata,kk,jj,ii)
             else:
                 for ii in range(dim_1.pt):
-                    dim_1.set_iv2(dim_1.lin[ii])
+                    sweep_dim_1(dim_1,dim_1.lin[ii])
                     vdata = vm.get_val()
                     DS.record_data(vdata,kk,jj,ii)
 
@@ -118,10 +128,10 @@ except (KeyboardInterrupt):
 
 finally:
     print 'Time used min:' +str((time()-t0)/60)
-    print 'Yokos -> zero and switch off'
-    iBias.sweep_iv(0, 5)
-    vMag.sweep_iv(0, 5)
-    sleep(5.2)
-    iBias.output(0)
-    vMag.output(0)
+    print 'Sweep back to default'
+    sweep_dim_1(dim_1, dim_1.defval)
+    sweep_dim_2(dim_2, dim_2.defval)
+    sweep_dim_3(dim_3, dim_3.defval)
+    dim_1.output(0)
+    dim_2.output(0)
     print  'done'

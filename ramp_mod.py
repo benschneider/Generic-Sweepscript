@@ -1,7 +1,7 @@
 import numpy as np
 from time import sleep #, time
 
-def ramp(instrument,parameter,value,step, wait):
+def ramp(instrument, parameter, value, step, wait):
     '''
     instrument -- actual variable where instrument is stored
     parameter -- (string) parameter to be ramped. Must have get and set.
@@ -29,6 +29,6 @@ def ramp(instrument,parameter,value,step, wait):
             set_v(v)
             if wait > 0.0:
                 sleep(wait)
-            # print time() - tt00
-            
+            # print time() - tt00            
+
         set_v(value)

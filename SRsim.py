@@ -1,18 +1,20 @@
 '''
 Python driver for:
-SRS
-Voltage / Current source
+SRS sim 900 rack
 
-23/06/2015
+26/03/2016
 - B
+
+SRS SIM900 rack
+The SRS rack class stores the information which instrumen it is 
+currently connected to.
+
+It handles changes to the selected port one wants to talk to.
+With this one communicates only to one instrument at a time.
 '''
 
-# from time import time, sleep
-# import sys
-# from ramp_mod import ramp
-
+from time import sleep
 import visa
-import numpy as np
 rm = visa.ResourceManager()
 
 class instrument():
@@ -24,67 +26,70 @@ class instrument():
     '''
 
 
-    def __init__(self, adress='GPIB0::12::INSTR', name='SIM 900', port=2,
-                 start = 0, stop = 0, pt = 1,
-                 sstep = 1e-3, stime = 1e-3):
+    def __init__(self, adress='GPIB0::12::INSTR', name='SIM 900'):
         '''
         Establish connection, create shorthand for read,r, write,w and ask, a
         store sweep parameters here
         '''
-        self.port = 2
+        self.slot = 2  # this keeps track which slot it is connected to
         self._visainstrument = rm.open_resource(adress)
         self.a = self._visainstrument.ask
         self.r = self._visainstrument.read
         self.w = self._visainstrument.write
-        self.iv = 0
         self.name = name
-        self.start = start
-        self.stop = stop
-        self.pt = pt
-        self.lin = np.linspace(self.start,self.stop,self.pt)
-        self.sstep = sstep
-        self.stime = stime
-        if self.pt > 1 :
-            self.linstep = np.abs(self.lin[1]-self.lin[0])
-        self.sweep_par = 'v'
-    
-    def _get_key(self, port):
-        return str(port)+'xY'+str(port)+'z'
-    
-    def conn(self, port):
-        self._port = port
-        key = self._get_key(port)
-        return self.w("CONN "+str(port)+", '"+ key +"'")
+        self.connection = False
         
-    def dconn(self):
-        key = self._get_key(self._port)
-        return self.w(key)
+    def _get_key(self, slot):
+        '''Creates a simple escape string for the connection'''
+        self.key = 'xY'+str(slot)+'zZ'
+    
+    def _conn(self, slot):
+        self.slot = slot
+        self._get_key(slot)
+        self.connection = True
+        # print 'connect ', self.key
+        return self.w("CONN "+str(slot)+", '"+ self.key +"'")
+        
+    def _dconn(self):
+        self.connection = False
+        # print 'disconnect ', self.key
+        return self.w(self.key)
 
-    def get_volt(self):
-        return float(self.a('VOLT?'))
-        
-    def set_volt(self, value):
-        self.w('VOLT '+str(value))
-        
+    def set_conn(self, slot):
+        ''' Activate connection to specified slot, 
+        returns: True if the connection was changed, (False if not)'''
+       
+        if self.connection is True:
+            if self.slot == slot:
+                return False
+            else:
+                self._dconn()
+                sleep(1)
+                
+        self._conn(slot)
+        sleep(1)
+        self.connection = True
+        return True
+ 
     def get_idn(self):
         print self.a('*IDN?')
 
-    def rest(self):
+    def reset(self):
         return self.w('*RST')
         
-    def set_output(self, boolval=False):
-        '''
-        Set output on/off True/False
-        '''
-        if boolval:
-            return self.w('OPON')
-        else:
-            return self.w('OPOF')
-            
-    def get_batts(self):
-        ''' returns the battery state'''
-        return self.a('BATS?')
+    def done(self):
+        return self.a('DONE?')
         
-    def set_cbatt(self):
-        ''' switches the Battery '''
-        return self.w('BCOR')
+    def refresh(self):
+        ''' RESET the sim and all instruments get them ready '''
+        self.w('FLOQ')
+        self.w('SRST')
+        self.w('*RST')
+        self.w('*CLS')
+
+    def clearslot(self, slot):
+        self.w('FLSI ' + str(slot))
+        self.w('FLSO ' + str(slot))
+        self.w('FLSH ' + str(slot))
+        
+        
