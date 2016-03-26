@@ -64,10 +64,10 @@ class instrument():
                 return False
             else:
                 self._dconn()
-                sleep(1)
+                sleep(0.5)
                 
         self._conn(slot)
-        sleep(1)
+        sleep(0.5)
         self.connection = True
         return True
  

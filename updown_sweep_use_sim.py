@@ -10,7 +10,7 @@ from parsers import copy_file
 from ramp_mod import ramp
 thisfile = __file__
 
-filen_0 = 'sim_test'
+filen_0 = 'S1_1010'
 folder = 'data\\'
 
 
@@ -36,8 +36,8 @@ vBias = sim928c(sim900,
            slot = 2,
            start = -10,
            stop = 10,
-           pt = 201,
-           sstep = 0.1,
+           pt = 1001,
+           sstep = 0.020,
            stime = 0.001)
 
 vMag = sim928c(sim900, 
@@ -45,9 +45,9 @@ vMag = sim928c(sim900,
            slot = 3,
            start = -0.600,
            stop = 0.600,
-           pt = 11,
-           sstep = 0.1, # def max step it can take
-           stime = 0.001)
+           pt = 5,
+           sstep = 0.050, # def max step it can take
+           stime = 0.010)
 
 PSG = dummy('GPIB0::11::INSTR',
            name = 'none',
@@ -134,4 +134,5 @@ finally:
     sweep_dim_3(dim_3, dim_3.defval)
     dim_1.output(0)
     dim_2.output(0)
+    sim900._dconn()
     print  'done'

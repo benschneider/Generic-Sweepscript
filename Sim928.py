@@ -72,7 +72,9 @@ class instrument():
         self.sim900.set_conn(self.slot)
         self.w('VOLT '+str(value))
         self._voltage = value
-        sleep(0.020)
+        sleep(0.010)
+        # if np.abs(value) < 0.01:
+        #     sleep(2)
         
     def get_batts(self):
         ''' returns the battery state'''
@@ -90,7 +92,10 @@ class instrument():
         '''
         self.sim900.set_conn(self.slot)
         if val is 1:
-            return self.w('OPON')
+            a = self.w('OPON')
+            sleep(0.02)
+            return a
         else:
-            return self.w('OPOF')
-            
+            a = self.w('OPOF')
+            sleep(0.02)
+            return a
