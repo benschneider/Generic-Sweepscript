@@ -42,7 +42,6 @@ class instrument():
             self.linstep = np.abs(self.lin[1]-self.lin[0])
         self.sweep_par = 'v'
 
-
     def w(self,write_cmd):
         self._visainstrument.write(write_cmd)
 
