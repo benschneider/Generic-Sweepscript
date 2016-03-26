@@ -89,12 +89,12 @@ class instrument():
             else:
                 print ('range set to 100mV')
 
-    def output(self, boolean):
+    def output(self, val):
         ''' boolean =
         1 -- ON,
         0 -- OFF
         '''
-        self.w('O' + str(boolean) + ' E')
+        self.w('O' + str(val) + ' E')
 
     def sweep_iv(self, value, sweeptime):
         '''
