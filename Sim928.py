@@ -46,7 +46,7 @@ class instrument():
             self.linstep = np.abs(self.lin[1]-self.lin[0])
         self._voltage = 0.0
         self.sweep_par = 'volt'  # xx, ramper will use get_xx and set_xx 
-        
+        self.w('PSTA ON')  # status register pulse only (instead of latch)
 
     def get_volt(self, update=False):
         ''' check if connection flag is True
@@ -57,7 +57,7 @@ class instrument():
         '''
         change = self.sim900.set_conn(self.slot)
         if update or change is True:
-            # sleep(1)
+            sleep(0.3)
             # print self.a('*IDN?')
             self._voltage = float(self.a('VOLT?'))
             return self._voltage
@@ -69,12 +69,11 @@ class instrument():
             if it isn't it creates a connection to the selected port
             then it sets the Voltage
         '''
-        self.sim900.set_conn(self.slot)
+        change = self.sim900.set_conn(self.slot)
+        if change is True:
+            sleep(0.3)
         self.w('VOLT '+str(value))
         self._voltage = value
-        sleep(0.010)
-        # if np.abs(value) < 0.01:
-        #     sleep(2)
         
     def get_batts(self):
         ''' returns the battery state'''

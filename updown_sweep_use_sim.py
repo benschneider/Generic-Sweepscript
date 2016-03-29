@@ -10,7 +10,7 @@ from parsers import copy_file
 from ramp_mod import ramp
 thisfile = __file__
 
-filen_0 = 'S1_1010'
+filen_0 = 'S1_1014'
 folder = 'data\\'
 
 
@@ -24,6 +24,7 @@ from DataStorer import DataStoreSP
 
 
 vm = key2000('GPIB0::29::INSTR')
+# vm.set_aver()
 
 sim900 = sim900c('GPIB0::12::INSTR')
 sim900.refresh()
@@ -34,19 +35,19 @@ sim900.clearslot(4)
 vBias = sim928c(sim900, 
            name='V 1Mohm',
            slot = 2,
-           start = -10,
-           stop = 10,
-           pt = 1001,
-           sstep = 0.020,
-           stime = 0.001)
+           start = -6.5,
+           stop = 6.5,
+           pt = 1301,
+           sstep = 0.100,
+           stime = 0.010)
 
 vMag = sim928c(sim900, 
            name='Magnet V R=2.19KOhm',
            slot = 3,
-           start = -0.600,
-           stop = 0.600,
-           pt = 5,
-           sstep = 0.050, # def max step it can take
+           start = -0.2,
+           stop = 0.5,
+           pt = 701,
+           sstep = 0.100, # def max step it can take
            stime = 0.010)
 
 PSG = dummy('GPIB0::11::INSTR',
@@ -73,7 +74,7 @@ dim_3.defval = 0.0
 def sweep_dim_3(obj, value):
     pass
 
-DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Voltage (V) x100')
+DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Vx2k')
 DS.ask_overwrite()
 copy_file(thisfile, filen_0, folder) #backup this script
 
@@ -86,7 +87,7 @@ dim_2.output(1)
 
 
 print 'Executing sweep'
-print 'req time (min):'+str(dim_3.pt*dim_2.pt*dim_1.pt*0.032/60)
+print 'req time (min):'+str(2.0*dim_3.pt*dim_2.pt*dim_1.pt*0.032/60)
 t0 = time()
 try:
     for kk in range(dim_3.pt):

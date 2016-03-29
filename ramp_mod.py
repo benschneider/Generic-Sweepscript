@@ -25,10 +25,8 @@ def ramp(instrument, parameter, value, step, wait):
     else:
         print str(instrument.name)+' '+str(np.arange(v_start,value,step))
         for v in np.arange(v_start,value,step):
-            # tt00 = time()
             set_v(v)
             if wait > 0.0:
                 sleep(wait)
-            # print time() - tt00            
 
         set_v(value)
