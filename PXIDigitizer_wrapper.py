@@ -11,8 +11,7 @@ Created on Tue Nov 03 16:52:38 2015
 # import visa
 # from parsers import savemtx, make_header, ask_overwrite
 
-from ctypes import c_int, c_long, c_float, c_double, c_ulong, POINTER
-from ctypes import byref, WinDLL, c_char_p
+from ctypes import c_int, c_long, c_float, c_double, c_ulong, POINTER, byref, WinDLL, c_char_p, Structure, c_void_p
 
 
 class Error(Exception):
@@ -26,7 +25,17 @@ AFBOOL = c_long
 
 # define variables
 afDigitizerInstance_t = c_long
+afDigitizerCaptureIQ_t = c_long
 
+class afDigitizerBufferIQ_t(Structure):
+    pass
+
+afDigitizerBufferIQ_t._fields_ = [
+        ('iBuffer', POINTER(c_float)),
+        ('qBuffer', POINTER(c_float)),
+        ('samples', c_ulong),
+        ('userData', c_void_p)]
+        
 # define dll function objects in python
 CreateObject = _lib.afDigitizerDll_CreateObject
 CreateObject.restype = c_long
@@ -59,6 +68,18 @@ class afDigitizer_BS():
         # create a session id
         self.session = afDigitizerInstance_t()
 
+    def capture_iq_issue_buffer(self, buffer_ref, capture_ref, timeout=1):
+        obj=getDllObject('afDigitizerDll_Capture_IQ_IssueBuffer',
+                          argtypes = [afDigitizerInstance_t, POINTER(afDigitizerBufferIQ_t), c_long, POINTER(afDigitizerCaptureIQ_t)])
+        error=obj(self.session, byref(buffer_ref), 1000*timeout, byref(capture_ref))
+        self.check_error(error)
+        
+    def capture_iq_reclaim_buffer(self, capture_ref, buffer_ref_pointer):
+        obj=getDllObject('afDigitizerDll_Capture_IQ_ReclaimBuffer',
+                          argtypes = [afDigitizerInstance_t, afDigitizerCaptureIQ_t, POINTER(POINTER(afDigitizerBufferIQ_t))])
+        error = obj(self.session, capture_ref, byref(buffer_ref_pointer))
+        self.check_error(error)  
+        
     def create_object(self):
         error = CreateObject(self.session)
         self.check_error(error)
