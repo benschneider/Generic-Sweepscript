@@ -25,7 +25,7 @@ class instrument():
         self._adress = adress
         self._visainstrument = rm.open_resource(self._adress)
         self.optimise()
-        sleep(0.3)
+        sleep(0.4)
         self.testspeed()
         self.testspeed()
 
@@ -44,7 +44,7 @@ class instrument():
         i.e. turn all non-essentials off
         '''
         self.w('*RST')                    #reset keithley
-        self.w(':VOLT:DC:NPLC 340')        #set nplc to 20ms (50Hz) 'If you can't beat the noise ..'
+        self.w(':VOLT:DC:NPLC 1')        #set nplc to 20ms (50Hz) 'If you can't beat the noise ..'
         self.w(':DISP:ENAB 0')                               #turn display off
         self.w('SENSe:FUNCtion "VOLTage:DC"') #'obvious'
         self.w(':FORM:ELEM READ')             #just getting the values nothing else.. :)
@@ -56,6 +56,17 @@ class instrument():
         self.w('TRIG:DEL 0')                          #TRIGger:DELay to 0 sec
         self.w('TRIGger:COUNt 1')
 
+
+    def set_aver(self):
+        self.w(':VOLT:DC:NPLC 0.1')
+        self.w('SENS:VOLT:DC:AVER:STAT ON')  # Turn Average on
+        self.w('SENS:VOLT:DC:AVER:TCON REP')
+        self.w('SENS:VOLT:DC:AVER:COUN 12')
+        print self.a('SENS:VOLT:DC:AVER:TCON?')
+        self.testspeed()
+        self.testspeed()
+
+       
     def get_val(self):
         return eval(self.a('READ?'))
     
