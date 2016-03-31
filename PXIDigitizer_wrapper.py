@@ -35,7 +35,7 @@ afDigitizerBufferIQ_t._fields_ = [
         ('qBuffer', POINTER(c_float)),
         ('samples', c_ulong),
         ('userData', c_void_p)]
-        
+
 # define dll function objects in python
 CreateObject = _lib.afDigitizerDll_CreateObject
 CreateObject.restype = c_long
@@ -73,13 +73,13 @@ class afDigitizer_BS():
                           argtypes = [afDigitizerInstance_t, POINTER(afDigitizerBufferIQ_t), c_long, POINTER(afDigitizerCaptureIQ_t)])
         error=obj(self.session, byref(buffer_ref), 1000*timeout, byref(capture_ref))
         self.check_error(error)
-        
+
     def capture_iq_reclaim_buffer(self, capture_ref, buffer_ref_pointer):
         obj=getDllObject('afDigitizerDll_Capture_IQ_ReclaimBuffer',
                           argtypes = [afDigitizerInstance_t, afDigitizerCaptureIQ_t, POINTER(POINTER(afDigitizerBufferIQ_t))])
         error = obj(self.session, capture_ref, byref(buffer_ref_pointer))
-        self.check_error(error)  
-        
+        self.check_error(error)
+
     def create_object(self):
         error = CreateObject(self.session)
         self.check_error(error)
@@ -195,7 +195,8 @@ class afDigitizer_BS():
         # pre-allocate memory
         lValueI = typeBuffer()
         lValueQ = typeBuffer()
-        error = obj(self.session, c_ulong(nSamples), byref(lValueI), byref(lValueQ))
+        error = obj(self.session, c_ulong(nSamples),
+                    byref(lValueI), byref(lValueQ))
         self.check_error(error)
         return (list(lValueI), list(lValueQ))
 
@@ -236,7 +237,6 @@ class afDigitizer_BS():
         error = obj(self.session, c_int(iOption))
         self.check_error(error)
 
-
     def modulation_mode_get(self):
         """Modes are [mmUMTS=0, mmGSM=1, mmCDMA20001x=2, mmEmu2319=4, mmGeneric=5]"""
         obj = getDllObject('afDigitizerDll_Modulation_Mode_Get',
@@ -249,6 +249,7 @@ class afDigitizer_BS():
     #Added 2014-02-22 by Philip
     #Detects whether Whether a trigger event has occurred after arming the
     #AF3070 trigger with the afRfDigitizerDll_Trigger_Arm method. Read-only
+
     def trigger_detected_get(self):
         obj = getDllObject('afRfDigitizerDll_Trigger_Detected_Get',
                            argtypes=[afDigitizerInstance_t, POINTER(AFBOOL)])
