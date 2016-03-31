@@ -31,28 +31,28 @@ lags = 25  # in points
 BW = 1e5
 corrAvg = 10
 
-D1 = AfDig(adressDigi='3036D1', 
-           adressLo='3011D1', 
-           LoPosAB=0, 
-           LoRef=0, 
+D1 = AfDig(adressDigi='3036D1',
+           adressLo='3011D1',
+           LoPosAB=0,
+           LoRef=0,
            name='D1 Lags (sec)',
            cfreq = 4.1e9,
            inputlvl = -15,
-           start=(-lags/BW), 
-           stop=(lags/BW), 
+           start=(-lags/BW),
+           stop=(lags/BW),
            pt=(lags*2-1),
            nSample=lsamples,
            sampFreq=BW)
 
-D2 = AfDig(adressDigi='3036D2', 
-           adressLo='3010D2', 
-           LoPosAB=1, 
-           LoRef=2, 
+D2 = AfDig(adressDigi='3036D2',
+           adressLo='3010D2',
+           LoPosAB=1,
+           LoRef=2,
            name='D2 Lags (sec)',
            cfreq = 4.8e9,
            inputlvl = -15,
-           start=(-lags/BW), 
-           stop=(lags/BW), 
+           start=(-lags/BW),
+           stop=(lags/BW),
            pt=(lags*2-1),
            nSample=lsamples,
            sampFreq=BW)
@@ -87,7 +87,7 @@ PSG = aPSG('GPIB0::11::INSTR',
            pt = 2,
            sstep = 20e-3,
            stime = 1e-3)
-           
+
 PSG.set_powUnit('V')
 # PSG.set_freq(12.9e9)  # 1GHz gives 2uV steps
 # PSG.set_freq(12.2e9)
@@ -168,14 +168,14 @@ try:
             sweep_dim_1(dim_1, 0)
             D1.get_newdata()   # run one test and update lvl correction
             D2.get_newdata()   # run one test and update lvl correction
-            
+
             if dim_1.UD is True:
                 print 'Up Trace'
                 for ii in range(dim_1.pt):
                     dim_1.set_v2(dim_1.lin[ii])
                     vdata = vm.get_val()
                     DSP.record_data(vdata,kk,jj,ii)
-                
+
                 sweep_dim_1(dim_1,dim_1.stop)
                 print 'Down Trace'
                 for ii in range((dim_1.pt-1),-1,-1):
@@ -187,7 +187,7 @@ try:
                     # dim_1.set_v2(dim_1.lin[ii])
                     sweep_dim_1(dim_1, ii)
                     # D1.get_newdata()  # run one test and update lvl correction
-                    # D2.get_newdata()  # run one test and update lvl correction 
+                    # D2.get_newdata()  # run one test and update lvl correction
 
                     vdata = np.float(0.0)
                     D1Ma = np.float(0.0)
@@ -196,7 +196,7 @@ try:
                     D1vPha =  np.float(0.0)
 
                     D2vMa = np.float(0.0)
-                    D2vPha =  np.float(0.0)                    
+                    D2vPha =  np.float(0.0)
                     D2Ma = np.float(0.0)
                     D2Pha =  np.float(0.0)
 
@@ -207,27 +207,27 @@ try:
                     D2.init_trigger()
 
                     t0conv = time()
-                    for cz in range(int(corrAvg)):                        
+                    for cz in range(int(corrAvg)):
                         # Digitizers take data now @ same/sim time
 
                         D1.wait_capture_complete()
                         D2.wait_capture_complete()
-                        
+
                         D1.downl_data()
                         D2.downl_data()
-                        
+
                         if (cz+1) < corrAvg:
                             D1.init_trigger()
                             D2.init_trigger()
-                        
+
                         D1.process_data()
                         D2.process_data()
-                        
+
                         # Digitizer 1 Values
                         D1M, D1Ph = D1.get_AvgMagPhs()
                         D1Ma = D1Ma + D1M
                         D1Pha = D1Pha + D1Ph
-                        
+
                         D1vM, D1vPh = D1.get_vAvgMagPhs()
                         D1vMa = D1vMa + D1vM
                         D1vPha = D1vPha + D1vPh
@@ -244,47 +244,47 @@ try:
                         D2vMa = D2vMa + D2vM
                         D2vPha = D2vPha + D2vPh
                         vdata = vdata + vm.get_val()
-                        
+
                         I1 = D1.scaledI
                         Q1 = D1.scaledQ
                         I2 = D2.scaledI
                         Q2 = D2.scaledQ
                         covAvgMat = covAvgMat +  getCovMatrix(I1, Q1, I2, Q2, lags)
-                                               
+
                         # D1Lvl = D1Lvl + D1.levelcorr
                         # D2Lvl = D2Lvl + D2.levelcorr
-                        
-                    # print cz, time()-t0conv 
-                    
+
+                    # print cz, time()-t0conv
+
                     # Recording data in Memory
-                    DS11.record_data(covAvgMat/np.float(corrAvg),kk,jj,ii) 
+                    DS11.record_data(covAvgMat/np.float(corrAvg),kk,jj,ii)
                     DSP.record_data(vdata/np.float(corrAvg),kk,jj,ii)
-                
+
                     DSP_LD1.record_data(D1.levelcorr,kk, jj, ii)
-                    DS2mD1.record_data(D1Ma/np.float(corrAvg), D1Pha/np.float(corrAvg), kk, jj, ii)                 
+                    DS2mD1.record_data(D1Ma/np.float(corrAvg), D1Pha/np.float(corrAvg), kk, jj, ii)
                     DS2vD1.record_data(D1vMa/np.float(corrAvg), D1vPha/np.float(corrAvg) ,kk, jj, ii)
                     DSP_PD1.record_data((D1aPow/np.float(corrAvg)) ,kk, jj, ii)
-                    
+
                     DSP_LD2.record_data(D2.levelcorr, kk, jj, ii)
-                    DS2mD2.record_data(D2Ma/np.float(corrAvg), D2Pha/np.float(corrAvg), kk, jj, ii)                   
+                    DS2mD2.record_data(D2Ma/np.float(corrAvg), D2Pha/np.float(corrAvg), kk, jj, ii)
                     DS2vD2.record_data(D2vMa/np.float(corrAvg), D2vPha/np.float(corrAvg), kk, jj, ii)
                     DSP_PD2.record_data((D2aPow/np.float(corrAvg)) ,kk, jj, ii)
 
                     DSP.save_data()
-                    DS11.save_data()        
-                    DSP_PD1.save_data()        
+                    DS11.save_data()
+                    DSP_PD1.save_data()
                     DSP_PD2.save_data()
 
 
-                   
+
             # Free up some Memomy
             covAvgMat = None
-            covMat = None  
+            covMat = None
             I1 = None
-            I2 = None            
+            I2 = None
             Q1 = None
-            Q2 = None            
-            
+            Q2 = None
+
             DSP.save_data()
             DS11.save_data()
 
@@ -301,7 +301,7 @@ try:
             t1 = time()
             remaining_time = ((t1-t0)/(jj+1)*dim_2.pt*dim_3.pt - (t1-t0))
             print 'req time (h):'+str(remaining_time/3600)
-            
+
     print 'Measurement Finished'
     # D1.performClose()
     # D2.performClose()
