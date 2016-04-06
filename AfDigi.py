@@ -198,6 +198,7 @@ class instrument():
         self.checkADCOverload()
         (self.scaledI, self.scaledQ) = self.digitizer.capture_iq_capt_mem(self.nSamples)
         # self.levelcorr = self.digitizer.rf_level_correction_get()
+
     def downl_data_buff(self):
         self.digitizer.capture_iq_reclaim_buffer(capture_ref=self.capture_ref, buffer_ref_pointer=self.buffer_ref_pointer)
         if self.buffer_ref_pointer:
