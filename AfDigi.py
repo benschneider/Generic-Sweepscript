@@ -19,20 +19,10 @@ class instrument():
         again...
     '''
 
-    def __init__(self,
-                 adressDigi='3036D1',
-                 adressLo='3011D1',
-                 LoPosAB=1,
-                 LoRef=0,
-                 name='D',
-                 cfreq=4.57e9,
-                 inputlvl=0,
-                 start=4.43e9,
-                 stop=0,
-                 pt=1,
-                 nSample=50e3,
-                 sampFreq=10e6):
-        self.sampFreq = sampFreq        # in Hz
+    def __init__(self, adressDigi='3036D1', adressLo='3011D1',
+                 LoPosAB=1, LoRef=0, name='D', cfreq=4.57e9, inputlvl=0,
+                 start=4.43e9, stop=0, pt=1, nSample=50e3, sampFreq=10e6):
+        self.sampFreq = sampFreq        # Hz
         self.bandwidth = 10e6
         self.removeDCoff = 1
         self.LoPos = LoPosAB          # Lo Above (1) or Below (0)
@@ -130,7 +120,6 @@ class instrument():
         self.scaledQ = np.zeros(self.nSamples)
         self.checkADCOverload()
         (self.scaledI, self.scaledQ) = self.digitizer.capture_iq_capt_mem(self.nSamples)
-        # self.levelcorr = self.digitizer.rf_level_correction_get()
 
     def setup_buffer(self):
         '''
@@ -184,6 +173,18 @@ class instrument():
         self.downl_data()
         self.levelcorr = self.digitizer.rf_level_correction_get()
         self.process_data()
+
+    def killsideband(self):
+        '''
+        Generates complex FFT of the data and kills the side-band.
+        cleared FFT data is stored in self.cfftsig
+        '''
+        self.cfftsig = np.fft.fft(1j*self.scaledI + self.scaledQ)
+        smid = int(len(self.cfftsig)/2) + 1
+        if self.LoPos is 1:
+            self.cfftsig[smid:-1] = 0.0
+        else:
+            self.cfftsig[0:smid] = 0.0
 
     def process_data(self):
         ''' Sample the signal, calc I+j*Q theta
