@@ -14,6 +14,8 @@ from dummydriver import instrument as dummy
 from keithley2000 import instrument as key2000
 from SRsim import instrument as sim900c
 from Sim928 import instrument as sim928c
+# from Yoko import instrument as yoko
+from AfDigi import instrument as AfDig
 
 thisfile = __file__
 filen_0 = 'S1_1014'
