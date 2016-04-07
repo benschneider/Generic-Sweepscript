@@ -38,7 +38,15 @@ class instrument():
         self.w = self._visainstrument.write
         self.name = name
         self.connection = False
+        self.default_reset()        
         
+    def default_reset(self):
+        '''This resets the voltage sources (on slot 2,3,4) '''
+        self.refresh()
+        self.clearslot(2)
+        self.clearslot(3)
+        self.clearslot(4)
+
     def _get_key(self, slot):
         '''Creates a simple escape string for the connection'''
         self.key = 'xY'+str(slot)+'zZ'
