@@ -24,10 +24,10 @@ class nit(object):
     _lib=WinDLL('niSync.dll')
     #init=_lib.niSync_init
 
-    def __init__(self):
+    def __init__(self, adress="PXI7::15::INSTR"):
         self.session=c_long()
         self.msg=create_string_buffer(256)
-        res = self._lib.niSync_init("PXI7::15::INSTR", False, False, byref(self.session))
+        res = self._lib.niSync_init(adress, False, False, byref(self.session))
         self.error_message(res)
     
     def error_message(self, error_code):
@@ -38,7 +38,7 @@ class nit(object):
         print self.msg.value
 
 
-    def connect_SW_trigger(self,num):
+    def connect_SW_trigger(self, num):
         res = self._lib.niSync_ConnectSWTrigToTerminal(self.session, 'GlobalSoftwareTrigger', ('PXI_Star'+str(num)), "SyncClkFullSpeed", 0, 0, c_double(0.0))
         self.error_message(res)
 
@@ -73,6 +73,7 @@ class nit(object):
         ''' Reset, set DDS to 0Hz...'''
         res = self._lib.niSync_reset (self.session)
         self.error_message(res)
+
 
 if __name__ == '__main__':
     pstar = nit()
