@@ -1,3 +1,4 @@
+from ctypes import c_float, POINTER, pointer
 from time import sleep
 import numpy as np
 import PXIDigitizer_wrapper
@@ -40,11 +41,14 @@ class instrument():
         self.pt = pt
         self.lin = np.linspace(self.start, self.stop, self.pt)
         self.digitizer = PXIDigitizer_wrapper.afDigitizer_BS()
+        self.prep_data()
+        self.performOpen()
+        self.set_settings()
+        
+    def performOpen(self):
         try:
             self.digitizer.create_object()
-            self.digitizer.boot_instrument(adressLo, adressDigi)
-            self.prep_data()
-            self.set_settings()
+            self.digitizer.boot_instrument(self.adressLo, self.adressDigi)
             print 'Digitizer ', self.name, ' started'
         except PXIDigitizer_wrapper.Error as e:
             print "Digitizer start failed"
@@ -127,22 +131,14 @@ class instrument():
         '''
         self.checkADCOverload()
         self.capture_ref = PXIDigitizer_wrapper.afDigitizerCaptureIQ_t()
-        self.i_buffer = np.zeros(
-            self.nSamples,
-            dtype=PXIDigitizer_wrapper.c_float)
-        self.q_buffer = np.zeros(
-            self.nSamples,
-            dtype=PXIDigitizer_wrapper.c_float)
+        self.i_buffer = np.zeros(self.nSamples, dtype=c_float)
+        self.q_buffer = np.zeros(self.nSamples, dtype=c_float)
         self.timeout = 10000
-        i_ctypes = self.i_buffer.ctypes.data_as(
-            PXIDigitizer_wrapper.POINTER(
-                PXIDigitizer_wrapper.c_float))
-        q_ctypes = self.q_buffer.ctypes.data_as(
-            PXIDigitizer_wrapper.POINTER(
-                PXIDigitizer_wrapper.c_float))
+        i_ctypes = self.i_buffer.ctypes.data_as(POINTER(c_float))
+        q_ctypes = self.q_buffer.ctypes.data_as(POINTER(c_float))
         self.buffer_ref = PXIDigitizer_wrapper.afDigitizerBufferIQ_t(
             i_ctypes, q_ctypes, self.nSamples)
-        self.buffer_ref_pointer = PXIDigitizer_wrapper.pointer(self.buffer_ref)
+        self.buffer_ref_pointer = pointer(self.buffer_ref)
         print 'buffer setup'
 
     def init_trigger_buff(self):
@@ -157,7 +153,6 @@ class instrument():
             capture_ref=self.capture_ref,
             buffer_ref_pointer=self.buffer_ref_pointer)
         if self.buffer_ref_pointer:
-            # print "BUFFER POINTER OK - Trigger {}".format(avgidx)
             total_samples = self.buffer_ref.samples
         else:
             print "NO BUFFER!"

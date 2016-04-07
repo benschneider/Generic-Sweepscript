@@ -16,19 +16,34 @@ from SRsim import instrument as sim900c
 from Sim928 import instrument as sim928c
 # from Yoko import instrument as yoko
 from AfDigi import instrument as AfDig
+from nirack import nit
+
+pstar = nit()
 
 thisfile = __file__
 filen_0 = 'S1_1014'
 folder = 'data\\'
 
+sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
-sim900 = sim900c('GPIB0::12::INSTR')
-sim900.refresh()
-sim900.clearslot(2)
-sim900.clearslot(3)
-sim900.clearslot(4)
+# Digitizer setup
+lags = 20
+BW = 1e5
+lsamples= 1e6
 
+D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0, 
+           name='D1 Lags (sec)', cfreq = 4.1e9, inputlvl = -15, 
+           start=(-lags/BW), stop=(lags/BW), 
+           pt=(lags*2-1), nSample=lsamples, sampFreq=BW)
+
+D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=1, LoRef=2,
+           name='D2 Lags (sec)', cfreq = 4.8e9, inputlvl = -15,
+           start=(-lags/BW), stop=(lags/BW), pt=(lags*2-1),
+           nSample=lsamples, sampFreq=BW)
+
+
+# Sweep equipment setup
 vBias = sim928c(sim900, name='V 1Mohm', slot=2,
                 start=-6.5, stop=6.5, pt=1301,
                 sstep=0.100, stime=0.010)
@@ -71,7 +86,6 @@ sweep_dim_2(dim_2, dim_2.defval)
 sweep_dim_3(dim_3, dim_3.defval)
 dim_1.output(1)
 dim_2.output(1)
-
 
 print 'Executing sweep'
 print 'req time (min):'+str(2.0*dim_3.pt*dim_2.pt*dim_1.pt*0.032/60)
