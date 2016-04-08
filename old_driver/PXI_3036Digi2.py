@@ -2,29 +2,15 @@
 """
 Created on Thu Apr 07 15:06:04 2016
 
-@author: Morran or Lumi
+@author: Ben
 """
 
-from comtypes.client import CreateObject
-#D1=CreateObject('afComDigitizer.afCoDigitizer')
-# C:\Python27\Lib\site-packages\comtypes\gen
-from comtypes.gen import AFCOMDIGITIZERLib as afdiglib
-
-print  afdiglib.afDigitizerDll_tsSW_TRIG
-#D1.BootInstrument('3011D1', '3036D1', False)
-
-
-#print  D1.ErrorCode,  D1.ErrorSource, D1.ErrorMessage
-
-
-#print D1.RF.CentreFrequency
-#D1.RF.CentreFrequency=3e9
-#print D1.RF.CentreFrequency
-#D1.CloseInstrument()
+from ctypes import c_int, c_long, c_float, c_double, c_ulong, POINTER, byref, WinDLL, c_char_p, Structure, c_void_p
 
 
 class digitizer(object):
-    
+
+    '''    
     def error_check(func):
         def new_func(*args, **kwargs):
             args[0].D.ClearErrors()
@@ -35,11 +21,44 @@ class digitizer(object):
                 print 'Warning ' + str(args[0].D.ErrorMessage)
             return a
         return new_func
+    '''
 
-    @error_check
     def __init__(self):
-        self.D=CreateObject('afComDigitizer.afCoDigitizer')
+        self.lib = WinDLL('afDigitizerDll_32')
+        self.session=c_long()
     
+    def error_check(func):
+        buffLen = c_ulong(256)
+        msgBuff = c_char_p(' '*256)       
+        err = c_long()
+        def new_func(*args, **kwargs):
+            ses = args[0].session
+            args[0].lib.afDigitizerDll_ClearErrors(ses)
+            a = func(*args, **kwargs)
+            args[0].lib.afDigitizerDll_ErrorCode_Get(ses, byref(err))
+            if err.value < 0 :
+                args[0].lib.afDigitizerDll_ErrorMessage_Get(ses, msgBuff, buffLen)
+                raise Exception(msgBuff.value)
+            if err.value > 0 :
+                args[0].lib.afDigitizerDll_ErrorMessage_Get(ses, msgBuff, buffLen)
+                print 'Warning ' + str(msgBuff.value)
+            return a
+        return new_func
+
+        
+
+    def error_message_get(self):
+        bufferLen = c_ulong(256)
+        msgBuffer = c_char_p(' '*256)
+        self.lib.afDigitizerDll_ErrorMessage_Get(self.session, msgBuffer, bufferLen)
+        return msgBuffer.value
+
+    def check_error(self, error=0):
+        """If error occurred, get error message and raise error"""
+        if error:
+            raise Exception(self.error_message_get())
+
+        
     def startup(self):
         pass
 
