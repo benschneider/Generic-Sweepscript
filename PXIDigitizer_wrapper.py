@@ -63,10 +63,32 @@ def getDllObject(sName, argtypes=[afDigitizerInstance_t], restype=c_long):
 
 
 class afDigitizer_BS():
+
+    def error_check(func):
+        buffLen = c_ulong(256)
+        msgBuff = c_char_p(' '*256)       
+        err = c_long()
+        def new_func(*args, **kwargs):
+            ses = args[0].session
+            _lib.afDigitizerDll_ClearErrors(ses)
+            a = func(*args, **kwargs)
+            _lib.afDigitizerDll_ErrorCode_Get(ses, byref(err))
+            if err.value < 0 :
+                _lib.afDigitizerDll_ErrorMessage_Get(ses, msgBuff, buffLen)
+                raise Exception(msgBuff.value)
+            if err.value > 0 :
+                _lib.afDigitizerDll_ErrorMessage_Get(ses, msgBuff, buffLen)
+                print 'Warning ' + str(msgBuff.value)
+            return a
+        return new_func
+
+
     def __init__(self):
         """The init case defines a session ID, used to identify the instrument"""
         # create a session id
         self.session = afDigitizerInstance_t()
+        #self._lib = WinDLL('afDigitizerDll_32')
+
 
     def capture_iq_issue_buffer(self, buffer_ref, capture_ref, timeout=1):
         obj=getDllObject('afDigitizerDll_Capture_IQ_IssueBuffer',
@@ -127,11 +149,13 @@ class afDigitizer_BS():
         self.check_error(error)
         return dValue.value
 
+    @error_check
     def rf_centre_frequency_set(self, dFreq):
         obj = getDllObject('afDigitizerDll_RF_CentreFrequency_Set',
                            argtypes=[afDigitizerInstance_t, c_double])
-        error = obj(self.session, c_double(dFreq))
-        self.check_error(error)
+        #error = 
+        obj(self.session, c_double(dFreq))
+        #self.check_error(error)
 
     def rf_centre_frequency_get(self):
         obj = getDllObject('afDigitizerDll_RF_CentreFrequency_Get',
@@ -246,10 +270,6 @@ class afDigitizer_BS():
         self.check_error(error)
         return int(iOption.value)
 
-    #Added 2014-02-22 by Philip
-    #Detects whether Whether a trigger event has occurred after arming the
-    #AF3070 trigger with the afRfDigitizerDll_Trigger_Arm method. Read-only
-
     def trigger_detected_get(self):
         obj = getDllObject('afRfDigitizerDll_Trigger_Detected_Get',
                            argtypes=[afDigitizerInstance_t, POINTER(AFBOOL)])
@@ -257,9 +277,6 @@ class afDigitizer_BS():
         error = obj(self.session, byref(pOn))
         self.check_error(error)
         return bool(pOn.value)
-
-    #Added 2014-02-22 by Philip
-    #Sets the trigger polarity
 
     def trigger_polarity_set(self, iOption=0):
         """Modes are [Positive=0, Negative=1]"""
@@ -318,19 +335,24 @@ class afDigitizer_BS():
         if error:
             raise Exception(self.error_message_get())
 
+    @error_check
     def rf_level_correction_get(self):
         obj = getDllObject('afDigitizerDll_RF_LevelCorrection_Get',
                            argtypes=[afDigitizerInstance_t, POINTER(c_double)])
         dValue = c_double()
-        error = obj(self.session, byref(dValue))
-        self.check_error(error)
+        obj(self.session, byref(dValue))
         return dValue.value
 
-    #    def set_IFaliasFilter(self, state=0):
-    #        self._lib.afDigitizerDll_iffbDisable(self.session, self.msg)
+    @error_check
+    def set_IFaliasFilter(self, state=0):
+        _lib.afDigitizerDll_RF_IFFilterBypass_Set(self.session.value, c_int(state))
 
-    # def get_IFaliasFilter(self, state=0):
-
+    @error_check
+    def get_IFaliasFilter(self):
+        state = c_long()
+        _lib.afDigitizerDll_RF_IFFilterBypass_Get(self.session.value, byref(state))
+        return state.value
+        
     def trigger_pre_edge_trigger_samples_get(self):
         afDigitizerDll_Trigger_PreEdgeTriggerSamples_Get = getDllObject('afDigitizerDll_Trigger_PreEdgeTriggerSamples_Get',
                                                                        argtypes = [afDigitizerInstance_t, POINTER(c_ulong)])
@@ -376,19 +398,19 @@ class afDigitizer_BS():
 
 if __name__ == '__main__':
     # test driver
-    Digitizer = afDigitizer_BS()
-    Digitizer.create_object()
+    D1 = afDigitizer_BS()
+    D1.create_object()
     # Digitizer.boot_instrument('PXI8::15::INSTR', 'PXI8::14::INSTR')
     # Digitizer.boot_instrument('PXI7::15::INSTR', 'PXI6::10::INSTR')
-    Digitizer.boot_instrument('3011D1', '3036D1')
-    print Digitizer.modulation_mode_get()
-    dFreq = Digitizer.modulation_generic_sampling_frequency_get()
+    D1.boot_instrument('3011D1', '3036D1')
+    print D1.modulation_mode_get()
+    dFreq = D1.modulation_generic_sampling_frequency_get()
     print 'Current frequency: ' + str(dFreq)
-    Digitizer.modulation_generic_sampling_frequency_set(250E6)
-    dFreq = Digitizer.modulation_generic_sampling_frequency_get()
+    D1.modulation_generic_sampling_frequency_set(250E6)
+    dFreq = D1.modulation_generic_sampling_frequency_get()
     print 'Current frequency: ' + str(dFreq)
-    [lI, lQ] = Digitizer.capture_iq_capt_mem(2048)
-    print Digitizer.modulation_mode_get()
+    [lI, lQ] = D1.capture_iq_capt_mem(2048)
+    print D1.modulation_mode_get()
     #print lI, lQ
-    Digitizer.close_instrument()
-    Digitizer.destroy_object()
+    D1.close_instrument()
+    D1.destroy_object()
