@@ -326,6 +326,11 @@ class afDigitizer_BS():
         self.check_error(error)
         return dValue.value
 
+    #    def set_IFaliasFilter(self, state=0):
+    #        self._lib.afDigitizerDll_iffbDisable(self.session, self.msg)
+
+    # def get_IFaliasFilter(self, state=0):
+
     def trigger_pre_edge_trigger_samples_get(self):
         afDigitizerDll_Trigger_PreEdgeTriggerSamples_Get = getDllObject('afDigitizerDll_Trigger_PreEdgeTriggerSamples_Get',
                                                                        argtypes = [afDigitizerInstance_t, POINTER(c_ulong)])
