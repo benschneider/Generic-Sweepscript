@@ -17,6 +17,7 @@ from Sim928 import instrument as sim928c
 # from Yoko import instrument as yoko
 from AfDigi import instrument as AfDig
 from nirack import nit
+import gc  # Garbage memory collection 
 
 pstar = nit()
 
@@ -123,6 +124,7 @@ try:
             t1 = time()
             remaining_time = ((t1-t0)/(jj+1)*dim_2.pt*dim_3.pt - (t1-t0))
             print 'req time (h):'+str(remaining_time/3600)
+            gc.collect()
     print 'Measurement Finished'
 
 except (KeyboardInterrupt):
@@ -137,4 +139,5 @@ finally:
     dim_1.output(0)
     dim_2.output(0)
     sim900._dconn()
+    gc.collect()
     print 'done'
