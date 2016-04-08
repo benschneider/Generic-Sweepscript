@@ -35,7 +35,7 @@ class nit(object):
             # success
             return
         self._lib.niSync_error_message(self.session.value, error_code, self.msg)
-        print self.msg.value
+        raise Exception(self.msg.value)
 
 
     def connect_SW_trigger(self, num):
