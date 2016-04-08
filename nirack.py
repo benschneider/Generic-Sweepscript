@@ -71,7 +71,7 @@ class nit(object):
 
     def reset(self):
         ''' Reset, set DDS to 0Hz...'''
-        res = self._lib.niSync_reset (self.session)
+        res = self._lib.niSync_reset(self.session)
         self.error_message(res)
 
 
