@@ -69,6 +69,7 @@ class afDigitizer_BS():
         msgBuff = c_char_p(' '*256)       
         err = c_long()
         def new_func(*args, **kwargs):
+            # something required here to get the helptags right
             ses = args[0].session
             _lib.afDigitizerDll_ClearErrors(ses)
             a = func(*args, **kwargs)
@@ -82,13 +83,16 @@ class afDigitizer_BS():
             return a
         return new_func
 
-
     def __init__(self):
         """The init case defines a session ID, used to identify the instrument"""
         # create a session id
         self.session = afDigitizerInstance_t()
+        #ready some variables to be used
+        self.state = c_long()
+        self.cint = c_int()
+        self.cdouble = c_double()
         #self._lib = WinDLL('afDigitizerDll_32')
-
+        self.create_object()
 
     def capture_iq_issue_buffer(self, buffer_ref, capture_ref, timeout=1):
         obj=getDllObject('afDigitizerDll_Capture_IQ_IssueBuffer',
@@ -110,6 +114,10 @@ class afDigitizer_BS():
         error = DestroyObject(self.session)
         self.check_error(error)
 
+    def shutdown(self):
+        self.close_instrument()
+        self.destroy_object()
+        
     def boot_instrument(self, sLoResource, sRfResource, bLoIsPlugin=False):
         cLoResource = STRING(sLoResource)
         cRfResource = STRING(sRfResource)
@@ -270,14 +278,6 @@ class afDigitizer_BS():
         self.check_error(error)
         return int(iOption.value)
 
-    def trigger_detected_get(self):
-        obj = getDllObject('afRfDigitizerDll_Trigger_Detected_Get',
-                           argtypes=[afDigitizerInstance_t, POINTER(AFBOOL)])
-        pOn = AFBOOL()
-        error = obj(self.session, byref(pOn))
-        self.check_error(error)
-        return bool(pOn.value)
-
     def trigger_polarity_set(self, iOption=0):
         """Modes are [Positive=0, Negative=1]"""
         obj = getDllObject('afDigitizerDll_Trigger_EdgeGatePolarity_Set',
@@ -295,14 +295,18 @@ class afDigitizer_BS():
         return dValue.value
 
     def trigger_type_set(self, iOption=0):
-        """Modes are [Edge=0, Gate=1]"""
+        """Modes are [Edge=0, Gate=1]
+        OLD        
+        """
         obj = getDllObject('afDigitizerDll_Trigger_TType_Set',
                            argtypes=[afDigitizerInstance_t, c_int])
         error = obj(self.session, c_int(iOption))
         self.check_error(error)
 
     def trigger_type_get(self):
-        """Modes are [Positive=0, Negative=1]"""
+        """Modes are [Positive=0, Negative=1]
+        OLD
+        """
         obj = getDllObject('afDigitizerDll_Trigger_TType_Get',
                            argtypes=[afDigitizerInstance_t, POINTER(c_int)])
         dValue = c_int()
@@ -316,6 +320,28 @@ class afDigitizer_BS():
         error = obj(self.session, c_int(inSamples))
         self.check_error(error)
 
+    @error_check
+    def set_trigger_mode(self, mode):
+        '''The internal level trigger mode (Absolute 0 or Relative 1)'''
+        _lib.afDigitizerDll_Trigger_IntTriggerMode_Set(self.session, c_int(mode))
+ 
+    @error_check
+    def get_trigger_mode(self):
+        '''The internal level trigger mode (Absolute 0 or Relative 1)'''
+        _lib.afDigitizerDll_Trigger_IntTriggerMode_Get(self.session, byref(self.state))
+        return self.state.value
+    
+    @error_check
+    def set_trigger_type(self, mode):
+        ''' Edge 0, Gate 1'''
+        _lib.afDigitizerDll_Trigger_TType_Set(self.session, c_int(mode))
+ 
+    @error_check
+    def get_trigger_type(self):
+        ''' Edge 0, Gate 1'''
+        _lib.afDigitizerDll_Trigger_TType_Get(self.session, byref(self.state))
+        return self.state.value
+        
     def data_capture_complete_get(self):
         obj = getDllObject('afDigitizerDll_Capture_IQ_CaptComplete_Get',
                            argtypes=[afDigitizerInstance_t, POINTER(AFBOOL)])
@@ -335,24 +361,50 @@ class afDigitizer_BS():
         if error:
             raise Exception(self.error_message_get())
 
-    @error_check
     def rf_level_correction_get(self):
-        obj = getDllObject('afDigitizerDll_RF_LevelCorrection_Get',
-                           argtypes=[afDigitizerInstance_t, POINTER(c_double)])
-        dValue = c_double()
-        obj(self.session, byref(dValue))
-        return dValue.value
+        #OLD
+        return self.get_rf_level_correction()
 
     @error_check
-    def set_IFaliasFilter(self, state=0):
-        _lib.afDigitizerDll_RF_IFFilterBypass_Set(self.session.value, c_int(state))
+    def get_rf_level_correction(self):
+        '''Returns level correction value in dB'''
+        _lib.afDigitizerDll_RF_LevelCorrection_Get(self.session.value, byref(self.cdouble))
+        return self.cdouble.value
+
+    @error_check
+    def set_IFaliasFilter(self, boolval=0):
+        _lib.afDigitizerDll_RF_IFFilterBypass_Set(self.session.value, c_int(boolval))
 
     @error_check
     def get_IFaliasFilter(self):
-        state = c_long()
-        _lib.afDigitizerDll_RF_IFFilterBypass_Get(self.session.value, byref(state))
-        return state.value
-        
+        _lib.afDigitizerDll_RF_IFFilterBypass_Get(self.session.value, byref(self.state))
+        return self.state.value
+
+    @error_check
+    def set_piplining(self, boolval=1):
+        '''
+        Enables (True) or disables (False) the Capture Pipelining mechanism.
+        To realize the optimum performance improvement, you must follow the sequence below: 
+        TriggerArm(...)          // If Armed trigger is used
+        TriggerDetected_Get(...) // If Armed trigger is used
+        CaptMem(...)
+        '''
+        _lib.afDigitizerDll_Capture_PipeliningEnable_Set(self.session.value, c_int(boolval))
+ 
+    @error_check
+    def get_piplining(self):
+        _lib.afDigitizerDll_Capture_PipeliningEnable_Get(self.session.value, byref(self.state))
+        return bool(self.state.value)
+
+    @error_check
+    def get_trigger_detected(self):
+        _lib.afDigitizerDll_Capture_IF_TriggerDetected_Get(self.session, byref(self.state))
+        return bool(self.state.value)
+ 
+    @error_check
+    def TriggerArmIF(self, nsamp):
+        _lib.afDigitizerDll_Capture_IF_TriggerArm(self.session, c_int(nsamp))
+       
     def trigger_pre_edge_trigger_samples_get(self):
         afDigitizerDll_Trigger_PreEdgeTriggerSamples_Get = getDllObject('afDigitizerDll_Trigger_PreEdgeTriggerSamples_Get',
                                                                        argtypes = [afDigitizerInstance_t, POINTER(c_ulong)])
@@ -399,7 +451,7 @@ class afDigitizer_BS():
 if __name__ == '__main__':
     # test driver
     D1 = afDigitizer_BS()
-    D1.create_object()
+    # D1.create_object()  # Implemented in the __init__
     # Digitizer.boot_instrument('PXI8::15::INSTR', 'PXI8::14::INSTR')
     # Digitizer.boot_instrument('PXI7::15::INSTR', 'PXI6::10::INSTR')
     D1.boot_instrument('3011D1', '3036D1')
