@@ -22,7 +22,6 @@ NISYNC_VAL_UPDATE_EDGE_FALLING=1
 
 class nit(object):
     _lib=WinDLL('niSync.dll')
-    #init=_lib.niSync_init
 
     def __init__(self, adress="PXI7::15::INSTR"):
         self.session=c_long()
