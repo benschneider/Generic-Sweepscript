@@ -12,8 +12,8 @@ The SRS rack class stores the information which instrumen it is
 currently connected to.
 '''
 
-#import visa
-from time import sleep
+import visa
+from time import time, sleep
 import numpy as np
 #rm = visa.ResourceManager()
 
@@ -25,14 +25,15 @@ class instrument():
     a ask
     '''
 
-    def __init__(self, sim900obj, name='sim928', slot=2, 
+    def __init__(self, sim900obj, name='sim928', sloti=2, 
                  start=0, stop=0, pt=1, sstep=1e-3, stime=1e-3):
         '''
         Establish connection, create shorthand for read,r, write,w and ask, a
         store sweep parameters here
         '''
         self.name = name
-        self.slot = slot  # instrument port / slot number
+        self.time = time()
+        self.sloti = sloti  # instrument port / slot number
         self.sim900 = sim900obj  # this is the sim900 rack
         self.a = self.sim900.a
         self.w = self.sim900.w
@@ -55,11 +56,15 @@ class instrument():
             it only updates from device if connection was not established
             or if the update is True
         '''
-        change = self.sim900.set_conn(self.slot)
+        change = self.sim900.set_conn(self.sloti)
         if update or change is True:
-            sleep(0.3)
-            # print self.a('*IDN?')
-            self._voltage = float(self.a('VOLT?'))
+            sleep(0.1)
+            try:
+                self._voltage = float(self.a('VOLT?'))
+            except visa.VisaIOError:
+                print 'failed'
+                self.sim900.reconnect(self.sloti)
+                self._voltage = float(self.a('VOLT?'))                
             return self._voltage
         else:
             return self._voltage
@@ -68,28 +73,32 @@ class instrument():
         ''' check if connection flag is True
             if it isn't it creates a connection to the selected port
             then it sets the Voltage
+            time() is used to ensure enough time for the instrument
         '''
-        change = self.sim900.set_conn(self.slot)
+        #if (time()-self.time) < 0.03:
+        #    sleep(0.02)
+        change = self.sim900.set_conn(self.sloti)
         if change is True:
             sleep(0.3)
         self.w('VOLT '+str(value))
+        #self.time = time()
         self._voltage = value
         
     def get_batts(self):
         ''' returns the battery state'''
-        self.sim900.set_conn(self.slot)
+        self.sim900.set_conn(self.sloti)
         return self.a('BATS?')
         
     def set_cbatt(self):
         ''' switches the Battery '''
-        self.sim900.set_conn(self.slot)
+        self.sim900.set_conn(self.sloti)
         return self.w('BCOR')        
         
     def output(self, val=0):
         '''
         Set output on/off True/False
         '''
-        self.sim900.set_conn(self.slot)
+        self.sim900.set_conn(self.sloti)
         if val is 1:
             a = self.w('OPON')
             sleep(0.02)

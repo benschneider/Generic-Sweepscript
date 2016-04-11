@@ -22,7 +22,7 @@ import gc  # Garbage memory collection
 pstar = nit()
 
 thisfile = __file__
-filen_0 = 'S1_1014'
+filen_0 = 'S1_1015'
 folder = 'data\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
@@ -44,13 +44,13 @@ vm = key2000('GPIB0::29::INSTR')
 
 
 # Sweep equipment setup
-vBias = sim928c(sim900, name='V 1Mohm', slot=2,
+vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
                 start=-6.5, stop=6.5, pt=1301,
-                sstep=0.100, stime=0.010)
+                sstep=0.050, stime=0.010)
 
-vMag = sim928c(sim900, name='Magnet V R=2.19KOhm', slot=3,
+vMag = sim928c(sim900, name='Magnet V R=2.19KOhm', sloti=3,
                start=-0.2, stop=0.5, pt=701,
-               sstep=0.100, stime=0.010)
+               sstep=0.010, stime=0.010)
 
 PSG = dummy('GPIB0::11::INSTR', name='none',
             start=0.0, stop=1.0, pt=1,
@@ -94,18 +94,18 @@ try:
     for kk in range(dim_3.pt):
         sweep_dim_3(dim_3, dim_3.lin[kk])
         sweep_dim_2(dim_2, dim_2.start)
-
+    
         for jj in range(dim_2.pt):
             sweep_dim_2(dim_2, dim_2.lin[jj])
             sweep_dim_1(dim_1, dim_1.start)
-            sleep(0.5)
+            sleep(0.2)
             if dim_1.UD is True:
                 print 'Up Trace'
                 for ii in range(dim_1.pt):
                     sweep_dim_1(dim_1, dim_1.lin[ii])
                     vdata = vm.get_val()
                     DS.record_data(vdata, kk, jj, ii)
-
+    
                 sweep_dim_1(dim_1, dim_1.stop)
                 sleep(0.1)
                 print 'Down Trace'
@@ -118,7 +118,7 @@ try:
                     sweep_dim_1(dim_1, dim_1.lin[ii])
                     vdata = vm.get_val()
                     DS.record_data(vdata, kk, jj, ii)
-
+    
             DS.save_data()
             t1 = time()
             remaining_time = ((t1-t0)/(jj+1)*dim_2.pt*dim_3.pt - (t1-t0))
@@ -133,9 +133,13 @@ finally:
     print 'Time used min:' + str((time()-t0)/60)
     print 'Sweep back to default'
     sweep_dim_1(dim_1, dim_1.defval)
+    sleep(1)
     sweep_dim_2(dim_2, dim_2.defval)
+    sleep(1)
     sweep_dim_3(dim_3, dim_3.defval)
+    sleep(1)
     dim_1.output(0)
+    sleep(1)
     dim_2.output(0)
     sim900._dconn()
     gc.collect()
