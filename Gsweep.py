@@ -15,7 +15,7 @@ from keithley2000 import instrument as key2000
 from SRsim import instrument as sim900c
 from Sim928 import instrument as sim928c
 # from Yoko import instrument as yoko
-from AfDigi import instrument as AfDig
+# from AfDigi import instrument as AfDig  # Digitizer driver
 from nirack import nit
 import gc  # Garbage memory collection 
 
@@ -29,19 +29,18 @@ sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
-lags = 20
-BW = 1e5
-lsamples= 1e6
-
-D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0, 
-           name='D1 Lags (sec)', cfreq = 4.1e9, inputlvl = -15, 
-           start=(-lags/BW), stop=(lags/BW), 
-           pt=(lags*2-1), nSample=lsamples, sampFreq=BW)
-
-D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=1, LoRef=2,
-           name='D2 Lags (sec)', cfreq = 4.8e9, inputlvl = -15,
-           start=(-lags/BW), stop=(lags/BW), pt=(lags*2-1),
-           nSample=lsamples, sampFreq=BW)
+#lags = 20
+#BW = 1e5
+#lsamples= 1e6
+#D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0, 
+#           name='D1 Lags (sec)', cfreq = 4.1e9, inputlvl = -15, 
+#           start=(-lags/BW), stop=(lags/BW), 
+#           pt=(lags*2-1), nSample=lsamples, sampFreq=BW)
+#
+#D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=1, LoRef=2,
+#           name='D2 Lags (sec)', cfreq = 4.8e9, inputlvl = -15,
+#           start=(-lags/BW), stop=(lags/BW), pt=(lags*2-1),
+#           nSample=lsamples, sampFreq=BW)
 
 
 # Sweep equipment setup
