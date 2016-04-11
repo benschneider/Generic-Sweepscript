@@ -24,7 +24,7 @@ class instrument():
                  LoPosAB=1, LoRef=0, name='D', cfreq=4.57e9, inputlvl=0,
                  start=4.43e9, stop=0, pt=1, nSample=50e3, sampFreq=10e6):
         self.sampFreq = sampFreq        # Hz
-        self.bandwidth = 10e6
+        self.bandwidth = 0.1e6
         self.removeDCoff = 1
         self.LoPos = LoPosAB          # Lo Above (1) or Below (0)
         self.freq = cfreq
@@ -47,7 +47,7 @@ class instrument():
         
     def performOpen(self):
         try:
-            self.digitizer.create_object()
+            # self.digitizer.create_object()
             self.digitizer.boot_instrument(self.adressLo, self.adressDigi)
             print 'Digitizer ', self.name, ' started'
         except PXIDigitizer_wrapper.Error as e:
@@ -187,11 +187,9 @@ class instrument():
          of each trigger there are x samples... which can be averaged...
         '''
         self.scaledI = (np.array(self.scaledI) *
-                        np.power(10.0, self.levelcorr / 20.0) /
-                        np.sqrt(1000))
+                        np.power(10.0, self.levelcorr / 20.0) / np.sqrt(1000))
         self.scaledQ = (np.array(self.scaledQ) *
-                        np.power(10.0, self.levelcorr / 20.0) /
-                        np.sqrt(1000))
+                        np.power(10.0, self.levelcorr / 20.0) / np.sqrt(1000))
 
         vI = np.zeros(1)
         vQ = np.zeros(1)
@@ -210,7 +208,7 @@ class instrument():
         self.vAvgPh = np.angle(self.vAvgIQ)
 
         # Average Magnitudes and Phases
-        cRawIQ = self.scaledI + 1j * self.scaledQ
+        cRawIQ = 1j * self.scaledQ + self.scaledI
         self.AvgMag = np.mean(np.absolute(cRawIQ))
         self.AvgPhase = np.mean(np.angle(cRawIQ))
 
