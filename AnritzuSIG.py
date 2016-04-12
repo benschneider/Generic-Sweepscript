@@ -40,7 +40,6 @@ class instrument():
         self.stime = stime
         self.output = self.get_power()
         self.phaseOffset = self.get_phaseOffset()
-        self.set_output(0)
 
     def get_freq(self):
         '''Return in Hz'''
