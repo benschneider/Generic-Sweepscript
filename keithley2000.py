@@ -57,7 +57,7 @@ class instrument():
         self.w('TRIG:DEL:AUTO OFF')                   #set triger delay to manual
         self.w('TRIG:DEL 0')                          #TRIGger:DELay to 0 sec
         self.w('TRIGger:COUNt 1')
-        #self.w(':FORM ASCII')                  #32ms
+        #self.w(':FORM ASCII')                  # 32ms
         #self.w(':FORM DREAL')                   # 9% comm speedup (29ms)
         self.w(':FORM SREAL')                  # 10% comm speedup (27-28ms)
 
