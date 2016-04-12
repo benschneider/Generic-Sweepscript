@@ -26,7 +26,7 @@ class instrument():
     '''
 
 
-    def __init__(self, adress='GPIB0::12::INSTR', name='SIM 900', commspeed = 0.03):
+    def __init__(self, adress='GPIB0::12::INSTR', name='SIM 900', commspeed = 0.020):
         '''
         Establish connection, create shorthand for read,r, write,w and ask, a
         store sweep parameters here
@@ -48,14 +48,14 @@ class instrument():
     def a(self, string):
         '''Ensure no to overload the rack with commands'''
         if abs(time()*1.0-self._t0) < self._commspeed:
-            sleep(0.02)
+            sleep(0.015)
         a = self._visainstrument.ask(string)
         self._t0 = time()
         return a
 
     def w(self, string):
         if abs(time()*1.0-self._t0) < self._commspeed:
-            sleep(0.02)
+            sleep(0.015)
         self._t0 = time()
         return self._visainstrument.write(string)
         
