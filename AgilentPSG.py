@@ -11,6 +11,7 @@ PSG Analog Signal Generator
 
 import visa
 import numpy as np
+rm = visa.ResourceManager()
 #from struct import unpack #, pack
 #from time import sleep
 #from parsers import savemtx, make_header, ask_overwrite
@@ -25,7 +26,7 @@ class instrument():
     
     def __init__(self, adress,name = 'PSG',start = 0, stop = 0, pt = 1, sstep = 1e-3, stime = 1e-3):
         self._adress = adress
-        self._visainstrument = visa.instrument(self._adress)
+        self._visainstrument = rm.open_resource(adress)
         self.name = name
         self.start = start
         self.stop = stop
