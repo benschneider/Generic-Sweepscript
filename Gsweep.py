@@ -10,7 +10,6 @@ from time import time, sleep
 from parsers import copy_file
 from ramp_mod import ramp
 from DataStorer import DataStoreSP  # , DataStore2Vec, DataStore11Vec
-#from covfunc import getCovMatrix
 # Drivers
 from dummydriver import instrument as dummy
 from keithley2000 import instrument as key2000
@@ -19,18 +18,11 @@ from SRsim import instrument as sim900c
 from Sim928 import instrument as sim928c
 # from Yoko import instrument as yoko
 from AfDigi import instrument as AfDig  # Digitizer driver
-#from nirack import nit
 import gc  # Garbage memory collection
-# import IQcorr
-# reload(IQcorr)
 from IQcorr import Process as CorrProc  # Handle Correlation measurements
 
-# PXI-Star Trigger control
-# pstar = nit()
-# pstar.send_many_triggers(10)
-
 thisfile = __file__
-filen_0 = 'S1_1018_NoiseHunting'
+filen_0 = 'S1_1020'
 folder = 'data\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
@@ -38,19 +30,19 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 20
-BW = 1e6
-lsamples = 1e4
+BW = 5e6
+lsamples = 1e5
 corrAvg = 1
 
-#D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0,
-#           name='D1 Lags (sec)', cfreq=4.1e9, inputlvl=-15,
-#           start=(-lags / BW), stop=(lags / BW),
-#           pt=(lags * 2 - 1), nSample=lsamples, sampFreq=BW)
-#
-#D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=1, LoRef=2,
-#           name='D2 Lags (sec)', cfreq=4.1e9, inputlvl=-15,
-#           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
-#           nSample=lsamples, sampFreq=BW)
+D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0,
+           name='D1 Lags (sec)', cfreq=4.1e9, inputlvl=10,
+           start=(-lags / BW), stop=(lags / BW),
+           pt=(lags * 2 - 1), nSample=lsamples, sampFreq=BW)
+
+D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=2,
+           name='D2 Lags (sec)', cfreq=4.1e9, inputlvl=10,
+           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
+           nSample=lsamples, sampFreq=BW)
 
 # Sweep equipment setup
 nothing = dummy('none', name='nothing', 
@@ -58,28 +50,25 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=-6, stop=6, pt=241,
+                start=-0.03, stop=0.03, pt=7,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=2.19KOhm', sloti=3,
-               start=0.16, stop=0.16, pt=231,
-               sstep=0.010, stime=0.020)
+               start=-1.0, stop=1.0, pt=2001,
+               sstep=0.01, stime=0.020)
 
 pflux = AnSigGen('GPIB0::17::INSTR', name='none',
                  start=0.0, stop=0.1, pt=1,
                  sstep=20e-3, stime=1e-3)
 
 sgen = None
-# CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
-# D12 = CorrProc(D1, D2, pflux, sgen, lags, BW, lsamples, corrAvg)
 
-
-pflux.set_output(0)
+# pflux.set_output(0)
 # pflux.set_power_mode(1)  # Linear mode in mV
 # pflux.set_power(pflux.start)  # if this would be a power sweep
 
-dim_1 = vBias
-dim_2 = vMag
+dim_1 = vMag
+dim_2 = vBias
 dim_3 = nothing
 dim_1.defval = 0.0
 dim_2.defval = 0.0
@@ -100,26 +89,35 @@ def sweep_dim_3(obj, value):
 
 # This describes how data is saved
 DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Vx1k')
-# D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
+
+# CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
+D12 = CorrProc(D1, D2, pflux, sgen, lags, BW, lsamples, corrAvg)
+D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
 
 DS.ask_overwrite()
 copy_file(thisfile, filen_0, folder)
 
 
 # describe how data is to be stored
-def record_datapoint(kk, jj, ii, back):
-    vdata = vm.get_val()
+def record_data(kk, jj, ii, back):
+    '''This function is called with each change in ii,jj,kk 
+        content: what to measure each time
+    '''
+    D12.init_trigger()  # Trigger and check D1 & D2
+    vdata = vm.get_val()  # aquire voltage data point
     if back is True:
         return DS.record_data2(vdata, kk, jj, ii)
  
-    # D12.init_trigger()  # Trigger and check D1 & D2
     DS.record_data(vdata, kk, jj, ii)
-    # D12.full_aqc(kk, jj, ii)  # Records and calc D1 & D2
+    D12.full_aqc(kk, jj, ii)  # Records and calc D1 & D2
 
 
 def save_recorded():
+    '''
+    Which functions to call to save the recored data
+    '''
     DS.save_data()  # save Volt data
-    # D12.data_save()  # save Digitizer data
+    D12.data_save()  # save Digitizer data
 
 
 # go to default value and activate output
@@ -148,7 +146,7 @@ try:
             print 'Up Trace'
             for ii in range(dim_1.pt):
                 sweep_dim_1(dim_1, dim_1.lin[ii])
-                record_datapoint(kk, jj, ii, False)
+                record_data(kk, jj, ii, False)
 
             if dim_1.UD is True:
                 sweep_dim_1(dim_1, dim_1.stop)
@@ -156,7 +154,7 @@ try:
                 print 'Down Trace'
                 for ii in range((dim_1.pt - 1), -1, -1):
                     sweep_dim_1(dim_1, dim_1.lin[ii])
-                    record_datapoint(kk, jj, ii, True)
+                    record_data(kk, jj, ii, True)
 
             save_recorded()
             t1 = time()
