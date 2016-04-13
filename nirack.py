@@ -27,15 +27,21 @@ class nit(object):
         self.session=c_long()
         self.msg=create_string_buffer(256)
         res = self._lib.niSync_init(adress, False, False, byref(self.session))
-        self.error_message(res)
-    
+        self.error_message(res) 
+        self.reset()
+        self.connect_SW_trigger(1)  # Digitizer 1
+        # self.connect_SW_trigger(2)
+        # self.connect_SW_trigger(3)
+        # self.connect_SW_trigger(4)
+        self.connect_SW_trigger(5)  # Digitizer 2
+        self.connect_SW_trigger(9)  # Sig Gen
+  
     def error_message(self, error_code):
         if error_code == 0:
             # success
             return
         self._lib.niSync_error_message(self.session.value, error_code, self.msg)
         raise Exception(self.msg.value)
-
 
     def connect_SW_trigger(self, num):
         res = self._lib.niSync_ConnectSWTrigToTerminal(self.session, 'GlobalSoftwareTrigger', ('PXI_Star'+str(num)), "SyncClkFullSpeed", 0, 0, c_double(0.0))
