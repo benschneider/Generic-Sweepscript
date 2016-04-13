@@ -106,6 +106,14 @@ class afDigitizer_BS():
         error = obj(self.session, capture_ref, byref(buffer_ref_pointer))
         self.check_error(error)
 
+    # @error_check
+    def capture_iq_reclaim_buffer_wait(self, capture_ref, buffer_ref_pointer):
+        obj=getDllObject('afDigitizerDll_Capture_IQ_ReclaimBuffer',
+                          argtypes = [afDigitizerInstance_t, afDigitizerCaptureIQ_t, POINTER(POINTER(afDigitizerBufferIQ_t))])
+        error = obj(self.session, capture_ref, byref(buffer_ref_pointer))
+        #_lib.afDigitizerDll_ErrorMessage_Get(ses, msgBuff, buffLen)
+        self.check_error(error)
+
     def create_object(self):
         error = CreateObject(self.session)
         self.check_error(error)
@@ -161,9 +169,7 @@ class afDigitizer_BS():
     def rf_centre_frequency_set(self, dFreq):
         obj = getDllObject('afDigitizerDll_RF_CentreFrequency_Set',
                            argtypes=[afDigitizerInstance_t, c_double])
-        #error = 
         obj(self.session, c_double(dFreq))
-        #self.check_error(error)
 
     def rf_centre_frequency_get(self):
         obj = getDllObject('afDigitizerDll_RF_CentreFrequency_Get',
