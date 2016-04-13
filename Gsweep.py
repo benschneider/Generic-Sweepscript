@@ -21,6 +21,8 @@ from Sim928 import instrument as sim928c
 from AfDigi import instrument as AfDig  # Digitizer driver
 #from nirack import nit
 import gc  # Garbage memory collection
+# import IQcorr
+# reload(IQcorr)
 from IQcorr import Process as CorrProc  # Handle Correlation measurements
 
 # PXI-Star Trigger control
@@ -51,16 +53,16 @@ D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=1, LoRef=2,
            nSample=lsamples, sampFreq=BW)
 
 # Sweep equipment setup
-nothing = dummy('none', name='nothing',
-                start=0, stop=0, pt=1,
-                sstep=20e-3, stime=1e-3)
+nothing = dummy('none', name='nothing', 
+                start=0, stop=1, pt=1,
+                sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
                 start=-0.14, stop=0.14, pt=7,
                 sstep=0.030, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=2.19KOhm', sloti=3,
-               start=-0.7, stop=1.0, pt=1401,
+               start=-0.7, stop=1.0, pt=1601,
                sstep=0.010, stime=0.020)
 
 pflux = AnSigGen('GPIB0::17::INSTR', name='none',
@@ -68,12 +70,13 @@ pflux = AnSigGen('GPIB0::17::INSTR', name='none',
                  sstep=20e-3, stime=1e-3)
 
 sgen = None
+# CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
 D12 = CorrProc(D1, D2, pflux, sgen, lags, BW, lsamples, corrAvg)
 
 
 pflux.set_output(0)
-pflux.set_power_mode(1)  # Linear mode in mV
-pflux.set_power(pflux.start)  # if this would be a power sweep
+# pflux.set_power_mode(1)  # Linear mode in mV
+# pflux.set_power(pflux.start)  # if this would be a power sweep
 
 dim_1 = vMag
 dim_2 = vBias
@@ -95,22 +98,11 @@ def sweep_dim_2(obj, value):
 def sweep_dim_3(obj, value):
     pass
 
+# This describes how data is saved
 DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Vx1k')
-DS.ask_overwrite()
-
 D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
-# Prepare Digitizer data files
-# DS11 = DataStore11Vec(folder, filen_0, dim_1, dim_2, D1, 'CovMat')
-# DSP_PD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, label='D1Pow', cname='Watts')
-# DSP_LD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, label='D1LevCorr', cname='LvLCorr')
-# DS2vD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1vAvg')
-# DS2mD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1mAvg')
-# DSP_PD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, label='D2Pow', cname='Watts')
-# DSP_LD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, label='D2LevCorr', cname='LvLCorr')
-# DS2vD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2vAvg')
-# DS2mD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
 
-
+DS.ask_overwrite()
 copy_file(thisfile, filen_0, folder)
 
 
@@ -119,102 +111,15 @@ def record_datapoint(kk, jj, ii, back):
     vdata = vm.get_val()
     if back is True:
         return DS.record_data2(vdata, kk, jj, ii)
-
-    return DS.record_data(vdata, kk, jj, ii)
-
-
-# def D12init_trigger():
-#    D1.init_trigger_buff()
-#    D2.init_trigger_buff()
-#    sleep(0.01)
-#    pstar.send_software_trigger()
-#    sleep(0.02)
-#    det1 = D1.digitizer.get_trigger_detected()
-#    det2 = D2.digitizer.get_trigger_detected()
-#    if det1 is False:
-#        raise Exception('Trigger1 Not Detected')
-#    if det2 is False:
-#        raise Exception('Trigger2 Not Detected')
-
-# def D12grab_data():
-#    while True:
-#        try:
-#            D1.downl_data_buff()
-#            D2.downl_data_buff()
-#        except Exception, e:
-#            # bug! '==' not same as 'is' here ->
-#            if str(e) == 'Reclaim timeout':
-#                sleep(0.1)
-#                continue
-#            else:
-#                raise e
-#        break
-
-
-# def record_vnadata(kk, jj, ii):
-#    D1Ma = np.float(0.0)
-#    D1Pha =  np.float(0.0)
-#    D1vMa = np.float(0.0)
-#    D1vPha =  np.float(0.0)
-#    D2vMa = np.float(0.0)
-#    D2vPha =  np.float(0.0)
-#    D2Ma = np.float(0.0)
-#    D2Pha =  np.float(0.0)
-#    covAvgMat = np.zeros([11,lags*2-1])
-#    D1aPow = np.float(0.0)
-#    D2aPow = np.float(0.0)
-#
-#    for cz in range(int(corrAvg)):
-#        D1.get_Levelcorr()  # update level correction value
-#        D2.get_Levelcorr()
-#        D12grab_data()
-#        if (cz+1) < corrAvg:
-#            D12init_trigger()
-#
-#        D1.process_data()
-#        D2.process_data()
-#        # Digitizer 1 Values
-#        D1Ma += D1.AvgMag
-#        D1Pha += D1.AvgPhase
-#        D1vMa += D1.vAvgMag
-#        D1vPha += D1.vAvgPh
-#        D1aPow += D1.vAvgPow
-#
-#        # Digitizer 2 Values
-#        D2Ma +=  D2.AvgMag
-#        D2Pha += D2.AvgPhase
-#        D2vMa += D2.vAvgMag
-#        D2vPha += D2.vAvgPh
-#        D2aPow += D2.vAvgPow
-#
-#        covAvgMat +=  getCovMatrix(D1.scaledI, D1.scaledQ,
-#                                   D2.scaledI, D2.scaledQ, lags)
-#
-#    DS11.record_data(covAvgMat/np.float(corrAvg),kk,jj,ii)
-#    DSP_PD1.record_data((D1aPow/np.float(corrAvg)) ,kk, jj, ii)
-#    DSP_PD2.record_data((D2aPow/np.float(corrAvg)) ,kk, jj, ii)
-#    DSP_LD1.record_data(D1.levelcorr,kk, jj, ii)
-#    DSP_LD2.record_data(D2.levelcorr, kk, jj, ii)
-#    DS2mD2.record_data(D2Ma/np.float(corrAvg), D2Pha/np.float(corrAvg), kk, jj, ii)
-#    DS2mD1.record_data(D1Ma/np.float(corrAvg), D1Pha/np.float(corrAvg), kk, jj, ii)
-#    DS2vD1.record_data(D1vMa/np.float(corrAvg), D1vPha/np.float(corrAvg) ,kk, jj, ii)
-#    DS2vD2.record_data(D2vMa/np.float(corrAvg), D2vPha/np.float(corrAvg), kk, jj, ii)
+ 
+    D12.init_trigger()  # Trigger and check D1 & D2
+    DS.record_data(vdata, kk, jj, ii)
+    D12.full_aqc(kk, jj, ii)  # Records and calc D1 & D2
 
 
 def save_recorded():
     DS.save_data()  # save Volt data
     D12.data_save()  # save Digitizer data
-#    DS11.save_data()
-#    DSP_PD1.save_data()
-#    DSP_PD2.save_data()
-#    DS.save_data()
-#
-#    DSP_LD1.save_data()
-#    DSP_LD2.save_data()
-#    DS2mD2.save_data()
-#    DS2mD1.save_data()
-#    DS2vD1.save_data()
-#    DS2vD2.save_data()
 
 
 # go to default value and activate output
@@ -243,11 +148,7 @@ try:
             print 'Up Trace'
             for ii in range(dim_1.pt):
                 sweep_dim_1(dim_1, dim_1.lin[ii])
-                # D12init_trigger()
-                D12.init_trigger()
                 record_datapoint(kk, jj, ii, False)
-                # record_vnadata(kk, jj, ii)
-                D12.full_aqc()
 
             if dim_1.UD is True:
                 sweep_dim_1(dim_1, dim_1.stop)

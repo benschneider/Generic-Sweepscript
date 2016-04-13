@@ -29,12 +29,15 @@ class Process():
         # Make some object references
         self.D1 = D1
         self.D2 = D2
-        self.D1w = self.D1.Digitizer
-        self.D2w = self.D2.Digitizer
+        self.D1w = self.D1.digitizer
+        self.D2w = self.D2.digitizer
         self.sgen = sgen
         self.pflux = pflux
         self.pstar = nit()
         self.corrAvg = corrAvg
+        self.lags = lags 
+        self.BW = BW 
+        self.lsamples = lsamples
         self.pstar.send_many_triggers(10)
         self.data_variables()
 
@@ -116,9 +119,7 @@ class Process():
             break
 
     def data_record(self, kk, jj, ii):
-
         corrAvg = np.float(self.corrAvg)
-        self.D12_corr_average()
         self.DS11.record_data(self.covAvgMat / corrAvg, kk, jj, ii)
         self.DSP_PD1.record_data((self.D1aPow / corrAvg), kk, jj, ii)
         self.DSP_PD2.record_data((self.D2aPow / corrAvg), kk, jj, ii)
@@ -137,7 +138,6 @@ class Process():
         self.DS11.save_data()
         self.DSP_PD1.save_data()
         self.DSP_PD2.save_data()
-        self.DS.save_data()
         self.DSP_LD1.save_data()
         self.DSP_LD2.save_data()
         self.DS2mD2.save_data()
@@ -173,7 +173,7 @@ class Process():
                                            self.D2.scaledI, self.D2.scaledQ,
                                            self.lags)
 
-    def full_aqc(self):
+    def full_aqc(self, kk, jj, ii):
         # former record vna data
         ''' This it the function to run
         1. clears variables
@@ -186,7 +186,8 @@ class Process():
         self.data_variables()  # 1
         self.init_trigger()  # 2
         self.avg_corr()  # 3
-        self.data_record()  # 4
+        # self.avg_corr()  # aquires the averaged correcation data
+        self.data_record(kk, jj, ii)  # 4
 
     def get_cov_matrix(self):
         pass
