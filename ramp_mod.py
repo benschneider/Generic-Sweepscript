@@ -1,7 +1,7 @@
 import numpy as np
 from time import sleep #, time
 
-def ramp(instrument, parameter, value, step, wait):
+def ramp(inst, parameter, value, step, wait):
     '''
     instrument -- actual variable where instrument is stored
     parameter -- (string) parameter to be ramped. Must have get and set.
@@ -9,8 +9,8 @@ def ramp(instrument, parameter, value, step, wait):
     step -- step size
     wait -- wait time per step
     '''
-    get_v = getattr(instrument,'get_%s' % parameter)
-    set_v = getattr(instrument,'set_%s' % parameter)
+    get_v = getattr(inst,'get_%s' % parameter)
+    set_v = getattr(inst,'set_%s' % parameter)
     
     v_start = get_v()
     
@@ -23,7 +23,7 @@ def ramp(instrument, parameter, value, step, wait):
         set_v(value)
 
     else:
-        print str(instrument.name)+' '+str(np.arange(v_start,value,step))
+        print str(inst.name)+'start, target, step '+str([v_start,value,step])
         for v in np.arange(v_start,value,step):
             set_v(v)
             if wait > 0.0:
