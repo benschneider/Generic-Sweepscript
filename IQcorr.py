@@ -92,7 +92,7 @@ class Process():
         # self.D1w.set_piplining(1)
         # self.D2w.set_piplining(1)
 
-    def init_trigger(self):
+    def init_trigger_wcheck(self):
         self.D1.init_trigger_buff()
         self.D2.init_trigger_buff()
         sleep(0.015)
@@ -114,6 +114,11 @@ class Process():
                 raise Exception('Trigger2 Not Detected 3x')
         self.num = 0
 
+    def init_trigger(self):
+        self.D1.init_trigger_buff()
+        self.D2.init_trigger_buff()
+        sleep(0.02)
+        self.pstar.send_software_trigger()
 
     def data_grab(self):
         while True:
@@ -123,6 +128,7 @@ class Process():
             except Exception, e:
                 # bug! '==' not same as 'is' here ->
                 if str(e) == 'Reclaim timeout':
+                    print 'Reclaim timeout'
                     sleep(0.1)
                     continue
                 else:
