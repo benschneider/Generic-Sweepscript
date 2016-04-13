@@ -122,22 +122,22 @@ def D12init_trigger():
     sleep(0.02)
     pstar.send_software_trigger()
     sleep(0.02)
-    det1 = D1.digitizer.get_trigger_detected()
-    det2 = D2.digitizer.get_trigger_detected()
-    if det1 is False:
-        raise Exception('Trigger1 Not Detected')
-    if det2 is False:
-        raise Exception('Trigger2 Not Detected')
+    #    det1 = D1.digitizer.get_trigger_detected()
+    #    det2 = D2.digitizer.get_trigger_detected()
+    #    if det1 is False:
+    #        raise Exception('Trigger1 Not Detected')
+    #    if det2 is False:
+    #        raise Exception('Trigger2 Not Detected')
 
 def D12grab_data():    
     while True:
         try:
-            sleep(0.1)
             D1.downl_data_buff()
             D2.downl_data_buff()
         except Exception, e:
             # bug! '==' not same as 'is' here ->
             if str(e) == 'Reclaim timeout':
+                sleep(0.1)
                 continue
             else:
                 raise e
@@ -214,7 +214,9 @@ dim_1.output(1)
 dim_2.output(1)
 
 print 'Executing sweep'
-print 'req time (min):'+str(2.0*dim_3.pt*dim_2.pt*dim_1.pt*0.032/60)
+#print 'req time (min):'+str(2.0*dim_3.pt*dim_2.pt*dim_1.pt*0.032/60)
+print 'req time (min):'+str(2.0*dim_3.pt*dim_2.pt*dim_1.pt*(0.032+corrAvg*lsamples/BW)/60)
+
 t0 = time()
 try:
     for kk in range(dim_3.pt):
