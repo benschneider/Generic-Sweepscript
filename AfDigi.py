@@ -134,7 +134,7 @@ class instrument():
         self.capture_ref = PXIDigitizer_wrapper.afDigitizerCaptureIQ_t()
         self.i_buffer = np.zeros(self.nSamples, dtype=c_float)
         self.q_buffer = np.zeros(self.nSamples, dtype=c_float)
-        self.timeout = 30000
+        self.timeout = 10000
         i_ctypes = self.i_buffer.ctypes.data_as(POINTER(c_float))
         q_ctypes = self.q_buffer.ctypes.data_as(POINTER(c_float))
         self.buffer_ref = PXIDigitizer_wrapper.afDigitizerBufferIQ_t(
