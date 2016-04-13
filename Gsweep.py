@@ -20,7 +20,7 @@ from Sim928 import instrument as sim928c
 # from Yoko import instrument as yoko
 from AfDigi import instrument as AfDig  # Digitizer driver
 #from nirack import nit
-import gc  # Garbage memory collection 
+import gc  # Garbage memory collection
 from IQcorr import Process as CorrProc  # Handle Correlation measurements
 
 # PXI-Star Trigger control
@@ -37,23 +37,23 @@ vm = key2000('GPIB0::29::INSTR')
 # Digitizer setup
 lags = 20
 BW = 1e6
-lsamples= 1e4
+lsamples = 1e4
 corrAvg = 1
 
-D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0, 
-           name='D1 Lags (sec)', cfreq = 4.1e9, inputlvl = -15, 
-           start=(-lags/BW), stop=(lags/BW), 
-           pt=(lags*2-1), nSample=lsamples, sampFreq=BW)
+D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0,
+           name='D1 Lags (sec)', cfreq=4.1e9, inputlvl=-15,
+           start=(-lags / BW), stop=(lags / BW),
+           pt=(lags * 2 - 1), nSample=lsamples, sampFreq=BW)
 
 D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=1, LoRef=2,
-           name='D2 Lags (sec)', cfreq = 4.1e9, inputlvl = -15,
-           start=(-lags/BW), stop=(lags/BW), pt=(lags*2-1),
+           name='D2 Lags (sec)', cfreq=4.1e9, inputlvl=-15,
+           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 
 # Sweep equipment setup
-nothing = dummy('none', name = 'nothing', 
-                start = 0, stop = 0, pt = 1,
-                sstep = 20e-3, stime = 1e-3)
+nothing = dummy('none', name='nothing',
+                start=0, stop=0, pt=1,
+                sstep=20e-3, stime=1e-3)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
                 start=-0.14, stop=0.14, pt=7,
@@ -63,17 +63,17 @@ vMag = sim928c(sim900, name='Magnet V R=2.19KOhm', sloti=3,
                start=-0.7, stop=1.0, pt=1401,
                sstep=0.010, stime=0.020)
 
-pflux = AnSigGen('GPIB0::17::INSTR', name='none', 
-                 start=0.0, stop=0.1, pt=1, 
+pflux = AnSigGen('GPIB0::17::INSTR', name='none',
+                 start=0.0, stop=0.1, pt=1,
                  sstep=20e-3, stime=1e-3)
 
-D12 = CorrProc(D1, D2, pflux, sgen=None, pstar, 
-               lags, BW, lsamples, corrAvg)
+sgen = None
+D12 = CorrProc(D1, D2, pflux, sgen, lags, BW, lsamples, corrAvg)
 
 
 pflux.set_output(0)
 pflux.set_power_mode(1)  # Linear mode in mV
-pflux.set_power(SIG.start) # if this would be a power sweep
+pflux.set_power(pflux.start)  # if this would be a power sweep
 
 dim_1 = vMag
 dim_2 = vBias
@@ -82,6 +82,7 @@ dim_1.defval = 0.0
 dim_2.defval = 0.0
 dim_3.defval = 0.0
 dim_1.UD = False
+
 
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
@@ -97,17 +98,17 @@ def sweep_dim_3(obj, value):
 DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Vx1k')
 DS.ask_overwrite()
 
-D12.create_datastore_objs(self, folder, filen_0, dim_1, dim_2, dim_3)
+D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
 # Prepare Digitizer data files
-#DS11 = DataStore11Vec(folder, filen_0, dim_1, dim_2, D1, 'CovMat')
-#DSP_PD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, label='D1Pow', cname='Watts')
-#DSP_LD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, label='D1LevCorr', cname='LvLCorr')
-#DS2vD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1vAvg')
-#DS2mD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1mAvg')
-#DSP_PD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, label='D2Pow', cname='Watts')
-#DSP_LD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, label='D2LevCorr', cname='LvLCorr')
-#DS2vD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2vAvg')
-#DS2mD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')                 
+# DS11 = DataStore11Vec(folder, filen_0, dim_1, dim_2, D1, 'CovMat')
+# DSP_PD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, label='D1Pow', cname='Watts')
+# DSP_LD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, label='D1LevCorr', cname='LvLCorr')
+# DS2vD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1vAvg')
+# DS2mD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1mAvg')
+# DSP_PD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, label='D2Pow', cname='Watts')
+# DSP_LD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, label='D2LevCorr', cname='LvLCorr')
+# DS2vD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2vAvg')
+# DS2mD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
 
 
 copy_file(thisfile, filen_0, folder)
@@ -117,12 +118,12 @@ copy_file(thisfile, filen_0, folder)
 def record_datapoint(kk, jj, ii, back):
     vdata = vm.get_val()
     if back is True:
-        return DS.record_data2(vdata, kk, jj, ii) 
- 
+        return DS.record_data2(vdata, kk, jj, ii)
+
     return DS.record_data(vdata, kk, jj, ii)
 
 
-#def D12init_trigger():
+# def D12init_trigger():
 #    D1.init_trigger_buff()
 #    D2.init_trigger_buff()
 #    sleep(0.01)
@@ -135,7 +136,7 @@ def record_datapoint(kk, jj, ii, back):
 #    if det2 is False:
 #        raise Exception('Trigger2 Not Detected')
 
-#def D12grab_data():    
+# def D12grab_data():
 #    while True:
 #        try:
 #            D1.downl_data_buff()
@@ -150,7 +151,7 @@ def record_datapoint(kk, jj, ii, back):
 #        break
 
 
-#def record_vnadata(kk, jj, ii):
+# def record_vnadata(kk, jj, ii):
 #    D1Ma = np.float(0.0)
 #    D1Pha =  np.float(0.0)
 #    D1vMa = np.float(0.0)
@@ -162,31 +163,31 @@ def record_datapoint(kk, jj, ii, back):
 #    covAvgMat = np.zeros([11,lags*2-1])
 #    D1aPow = np.float(0.0)
 #    D2aPow = np.float(0.0)
-#        
+#
 #    for cz in range(int(corrAvg)):
 #        D1.get_Levelcorr()  # update level correction value
 #        D2.get_Levelcorr()
 #        D12grab_data()
 #        if (cz+1) < corrAvg:
 #            D12init_trigger()
-#            
+#
 #        D1.process_data()
-#        D2.process_data()        
+#        D2.process_data()
 #        # Digitizer 1 Values
 #        D1Ma += D1.AvgMag
 #        D1Pha += D1.AvgPhase
 #        D1vMa += D1.vAvgMag
 #        D1vPha += D1.vAvgPh
 #        D1aPow += D1.vAvgPow
-#        
+#
 #        # Digitizer 2 Values
 #        D2Ma +=  D2.AvgMag
 #        D2Pha += D2.AvgPhase
 #        D2vMa += D2.vAvgMag
 #        D2vPha += D2.vAvgPh
 #        D2aPow += D2.vAvgPow
-#        
-#        covAvgMat +=  getCovMatrix(D1.scaledI, D1.scaledQ, 
+#
+#        covAvgMat +=  getCovMatrix(D1.scaledI, D1.scaledQ,
 #                                   D2.scaledI, D2.scaledQ, lags)
 #
 #    DS11.record_data(covAvgMat/np.float(corrAvg),kk,jj,ii)
@@ -201,12 +202,13 @@ def record_datapoint(kk, jj, ii, back):
 
 
 def save_recorded():
-    DS11.save_data()
-    D12.data_save()
+    DS.save_data()  # save Volt data
+    D12.data_save()  # save Digitizer data
+#    DS11.save_data()
 #    DSP_PD1.save_data()
 #    DSP_PD2.save_data()
 #    DS.save_data()
-#    
+#
 #    DSP_LD1.save_data()
 #    DSP_LD2.save_data()
 #    DS2mD2.save_data()
@@ -223,15 +225,16 @@ dim_1.output(1)
 dim_2.output(1)
 
 print 'Executing sweep'
-#print 'req time (min):'+str(2.0*dim_3.pt*dim_2.pt*dim_1.pt*0.032/60)
-print 'req time (min):'+str(2.0*dim_3.pt*dim_2.pt*dim_1.pt*(0.032+corrAvg*lsamples/BW)/60)
+texp = (2.0*dim_3.pt*dim_2.pt*dim_1.pt*(0.032+corrAvg*lsamples/BW)/60)
+# print 'req time (min):'+str(2.0*dim_3.pt*dim_2.pt*dim_1.pt*0.032/60)
+print 'req time (min):' + str(texp)
 
 t0 = time()
 try:
     for kk in range(dim_3.pt):
         sweep_dim_3(dim_3, dim_3.lin[kk])
         sweep_dim_2(dim_2, dim_2.start)
-    
+
         for jj in range(dim_2.pt):
             sweep_dim_2(dim_2, dim_2.lin[jj])
             sweep_dim_1(dim_1, dim_1.start)
@@ -240,27 +243,29 @@ try:
             print 'Up Trace'
             for ii in range(dim_1.pt):
                 sweep_dim_1(dim_1, dim_1.lin[ii])
-                D12init_trigger()
+                # D12init_trigger()
+                D12.init_trigger()
                 record_datapoint(kk, jj, ii, False)
-                record_vnadata(kk, jj, ii)
-            
+                # record_vnadata(kk, jj, ii)
+                D12.full_aqc()
+
             if dim_1.UD is True:
                 sweep_dim_1(dim_1, dim_1.stop)
                 sleep(0.1)
-                print 'Down Trace'                
-                for ii in range((dim_1.pt-1), -1, -1):
+                print 'Down Trace'
+                for ii in range((dim_1.pt - 1), -1, -1):
                     sweep_dim_1(dim_1, dim_1.lin[ii])
                     record_datapoint(kk, jj, ii, True)
-    
+
             save_recorded()
             t1 = time()
-            remaining_time = ((t1-t0)/(jj+1)*dim_2.pt*dim_3.pt - (t1-t0))
-            print 'req time (h):'+str(remaining_time/3600)
+            t_rem = ((t1 - t0) / (jj + 1) * dim_2.pt * dim_3.pt - (t1 - t0))
+            print 'req time (h):' + str(t_rem / 3600)
             gc.collect()
     print 'Measurement Finished'
 
 finally:
-    print 'Time used min:' + str((time()-t0)/60)
+    print 'Time used min:' + str((time() - t0) / 60)
     print 'Sweep back to default'
     sweep_dim_1(dim_1, dim_1.defval)
     sleep(1)
