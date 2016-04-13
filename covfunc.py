@@ -12,6 +12,57 @@ from numpy.fft import rfftn, irfftn
 _rfft_lock = threading.Lock()
 
 
+
+def get_g2(P1, P2, lags=20):
+    ''' Returns the Top part of the G2 equation (<P1P2> - <P1><P2>)'''
+    lags = int(lags)
+    P1 = np.asarray(P1)
+    P2 = np.asarray(P2)
+    # G2 = np.zeros([lags*2-1])
+
+    start = len(P1*2-1)-lags
+    stop = len(P1*2-1)-1+lags
+
+    # assume I1 Q1 have the same shape
+    sP1 = np.array(P1.shape)
+    complex_result = np.issubdtype(P1.dtype, np.complex)
+    shape = sP1 - 1
+    HPfilt = (int(sP1/(lags*4)))  # smallest features visible is lamda/4
+
+    # Speed up FFT by padding to optimal size for FFTPACK
+    fshape = [_next_regular(int(d)) for d in shape]
+    fslice = tuple([slice(0, int(sz)) for sz in shape])
+    # Pre-1.9 NumPy FFT routines are not threadsafe.  For older NumPys, make
+    # sure we only call rfftn/irfftn from one thread at a time.
+    if not complex_result and _rfft_lock.acquire(False):
+        try:
+            fftP1 = rfftn(P1, fshape)
+            rfftP2 = rfftn(P2[::-1], fshape)
+            fftP1 = np.concatenate((np.zeros(HPfilt), fftP1[HPfilt:]))
+            rfftP2 = np.concatenate((np.zeros(HPfilt), rfftP2[HPfilt:]))
+            G2 = irfftn((fftP1*rfftP2))[fslice].copy()[start:stop]/len(fftP1)
+            return 
+
+        finally:
+            _rfft_lock.release()
+
+    else:
+        # If we're here, it's either because we need a complex result, or we
+        # failed to acquire _rfft_lock (meaning rfftn isn't threadsafe and
+        # is already in use by another thread).  In either case, use the
+        # (threadsafe but slower) SciPy complex-FFT routines instead.
+        # ret = ifftn(fftn(in1, fshape) * fftn(in2, fshape))[fslice].copy()
+        print 'Abort, reason:complex input or Multithreaded FFT not available'
+
+        if not complex_result:
+            pass  # ret = ret.real
+
+    P12var = np.var(P1)*np.var(P2)
+    return G2-P12var
+
+ 
+
+
 def getCovMatrix(I1, Q1, I2, Q2, lags=20):
     '''
     This function was adaped from scipy.signal.fft.convolve.
