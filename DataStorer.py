@@ -2,13 +2,22 @@
 This file
 - Prepare matricies to store data into
 - write result matrix to file using the parser file
-
+- Started to clean this up a little ..
+.
 Ben
-2015-10-21
+2016-04-13
 '''
 import numpy as np
 # from time import time, sleep
 from parsers import savemtx, make_header, ask_overwrite
+
+
+class PrepDigitizer(object):
+
+    def __init__(self):
+        '''Handle 2 digitizers'''
+        pass
+        
 
 
 class DataStoreSP():
