@@ -30,7 +30,7 @@ from IQcorr import Process as CorrProc  # Handle Correlation measurements
 # pstar.send_many_triggers(10)
 
 thisfile = __file__
-filen_0 = 'S1_1017'
+filen_0 = 'S1_1018_NoiseHunting'
 folder = 'data\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
@@ -42,15 +42,15 @@ BW = 1e6
 lsamples = 1e4
 corrAvg = 1
 
-D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0,
-           name='D1 Lags (sec)', cfreq=4.1e9, inputlvl=-15,
-           start=(-lags / BW), stop=(lags / BW),
-           pt=(lags * 2 - 1), nSample=lsamples, sampFreq=BW)
-
-D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=1, LoRef=2,
-           name='D2 Lags (sec)', cfreq=4.1e9, inputlvl=-15,
-           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
-           nSample=lsamples, sampFreq=BW)
+#D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0,
+#           name='D1 Lags (sec)', cfreq=4.1e9, inputlvl=-15,
+#           start=(-lags / BW), stop=(lags / BW),
+#           pt=(lags * 2 - 1), nSample=lsamples, sampFreq=BW)
+#
+#D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=1, LoRef=2,
+#           name='D2 Lags (sec)', cfreq=4.1e9, inputlvl=-15,
+#           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
+#           nSample=lsamples, sampFreq=BW)
 
 # Sweep equipment setup
 nothing = dummy('none', name='nothing', 
@@ -58,11 +58,11 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=-0.14, stop=0.14, pt=7,
-                sstep=0.030, stime=0.020)
+                start=-6, stop=6, pt=241,
+                sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=2.19KOhm', sloti=3,
-               start=-0.7, stop=1.0, pt=1601,
+               start=0.16, stop=0.16, pt=231,
                sstep=0.010, stime=0.020)
 
 pflux = AnSigGen('GPIB0::17::INSTR', name='none',
@@ -71,15 +71,15 @@ pflux = AnSigGen('GPIB0::17::INSTR', name='none',
 
 sgen = None
 # CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
-D12 = CorrProc(D1, D2, pflux, sgen, lags, BW, lsamples, corrAvg)
+# D12 = CorrProc(D1, D2, pflux, sgen, lags, BW, lsamples, corrAvg)
 
 
 pflux.set_output(0)
 # pflux.set_power_mode(1)  # Linear mode in mV
 # pflux.set_power(pflux.start)  # if this would be a power sweep
 
-dim_1 = vMag
-dim_2 = vBias
+dim_1 = vBias
+dim_2 = vMag
 dim_3 = nothing
 dim_1.defval = 0.0
 dim_2.defval = 0.0
@@ -100,7 +100,7 @@ def sweep_dim_3(obj, value):
 
 # This describes how data is saved
 DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Vx1k')
-D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
+# D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
 
 DS.ask_overwrite()
 copy_file(thisfile, filen_0, folder)
@@ -112,14 +112,14 @@ def record_datapoint(kk, jj, ii, back):
     if back is True:
         return DS.record_data2(vdata, kk, jj, ii)
  
-    D12.init_trigger()  # Trigger and check D1 & D2
+    # D12.init_trigger()  # Trigger and check D1 & D2
     DS.record_data(vdata, kk, jj, ii)
-    D12.full_aqc(kk, jj, ii)  # Records and calc D1 & D2
+    # D12.full_aqc(kk, jj, ii)  # Records and calc D1 & D2
 
 
 def save_recorded():
     DS.save_data()  # save Volt data
-    D12.data_save()  # save Digitizer data
+    # D12.data_save()  # save Digitizer data
 
 
 # go to default value and activate output
