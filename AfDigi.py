@@ -44,6 +44,7 @@ class instrument():
         self.prep_data()
         self.performOpen()
         self.set_settings()
+        self.setup_buffer()
         
     def performOpen(self):
         try:
@@ -133,7 +134,7 @@ class instrument():
         self.capture_ref = PXIDigitizer_wrapper.afDigitizerCaptureIQ_t()
         self.i_buffer = np.zeros(self.nSamples, dtype=c_float)
         self.q_buffer = np.zeros(self.nSamples, dtype=c_float)
-        self.timeout = 10000
+        self.timeout = 30000
         i_ctypes = self.i_buffer.ctypes.data_as(POINTER(c_float))
         q_ctypes = self.q_buffer.ctypes.data_as(POINTER(c_float))
         self.buffer_ref = PXIDigitizer_wrapper.afDigitizerBufferIQ_t(
@@ -143,15 +144,13 @@ class instrument():
 
     def init_trigger_buff(self):
         ''' Initiate the Digitizer capturing into the buffer '''
-        self.digitizer.capture_iq_issue_buffer(
-            buffer_ref=self.buffer_ref,
-            capture_ref=self.capture_ref,
-            timeout=self.timeout)
+        self.digitizer.capture_iq_issue_buffer(buffer_ref=self.buffer_ref, 
+                                               capture_ref=self.capture_ref,
+                                               timeout=self.timeout)
 
     def downl_data_buff(self):
         self.digitizer.capture_iq_reclaim_buffer(
-            capture_ref=self.capture_ref,
-            buffer_ref_pointer=self.buffer_ref_pointer)
+        capture_ref=self.capture_ref, buffer_ref_pointer=self.buffer_ref_pointer)
         if self.buffer_ref_pointer:
             total_samples = self.buffer_ref.samples
         else:
@@ -186,10 +185,8 @@ class instrument():
          and store it in the driver object
          of each trigger there are x samples... which can be averaged...
         '''
-        self.scaledI = (np.array(self.scaledI) *
-                        np.power(10.0, self.levelcorr / 20.0) / np.sqrt(1000))
-        self.scaledQ = (np.array(self.scaledQ) *
-                        np.power(10.0, self.levelcorr / 20.0) / np.sqrt(1000))
+        self.scaledI = np.array((np.array(self.scaledI)*np.power(10.0, self.levelcorr/20.0)/np.sqrt(1000)))
+        self.scaledQ = np.array((np.array(self.scaledQ)*np.power(10.0, self.levelcorr/20.0)/np.sqrt(1000)))
 
         vI = np.zeros(1)
         vQ = np.zeros(1)
