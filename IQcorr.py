@@ -94,12 +94,12 @@ class Process():
 
     def init_trigger_wcheck(self, Refcheck=True, Trigcheck=False):
         if Refcheck is True:            
-            ref1 = bool(self.D1w.ref_is_locked(self))
-            ref2 = bool(self.D2w.ref_is_locked(self))  
+            ref1 = bool(self.D1w.ref_is_locked())
+            ref2 = bool(self.D2w.ref_is_locked())  
             if (ref1 == False or ref2 == False):
                 print ref1, ref2
                 print 'No reference lock! waiting..'
-                sleep(1)
+                sleep(0.1)
                 self.init_trigger_wcheck(Refcheck, Trigcheck)
 
         self.init_trigger()
@@ -138,8 +138,8 @@ class Process():
             except Exception, e:
                 # bug! '==' not same as 'is' here ->
                 if str(e) == 'Reclaim timeout':
-                    print 'Reclaim timeout'
-                    sleep(0.1)
+                    # print 'Reclaim timeout'
+                    sleep(0.05)
                     continue
                 else:
                     raise e
@@ -211,8 +211,8 @@ class Process():
         still needs data_save to be run to save the data file in the end.
         '''
         self.data_variables()  # 1
-        # self.init_trigger()  # 2
-        self.init_trigger_wcheck(True, False)  # Refcheck (Y), Trigcheck (N)
+        #self.init_trigger()  # 2
+        #self.init_trigger_wcheck(True, False)  # Refcheck (Y), Trigcheck (N)
         self.avg_corr()  # 3
         # self.avg_corr()  # aquires the averaged correcation data
         self.data_record(kk, jj, ii)  # 4
