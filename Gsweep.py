@@ -30,8 +30,8 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 20
-BW = 5e6
-lsamples = 1e5
+BW = 1e5
+lsamples = 1e4
 corrAvg = 1
 
 D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0,
