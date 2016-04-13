@@ -45,7 +45,7 @@ D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0,
            pt=(lags*2-1), nSample=lsamples, sampFreq=BW)
 
 D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=1, LoRef=2,
-           name='D2 Lags (sec)', cfreq = 4.8e9, inputlvl = -15,
+           name='D2 Lags (sec)', cfreq = 4.1e9, inputlvl = -15,
            start=(-lags/BW), stop=(lags/BW), pt=(lags*2-1),
            nSample=lsamples, sampFreq=BW)
 
@@ -55,11 +55,11 @@ nothing = dummy('none', name = 'nothing',
                 sstep = 20e-3, stime = 1e-3)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=-0.1, stop=0.1, pt=3,
+                start=-0.5, stop=0.5, pt=51,
                 sstep=0.030, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=2.19KOhm', sloti=3,
-               start=-0.2, stop=0.5, pt=701,
+               start=-0.7, stop=1.0, pt=1401,
                sstep=0.010, stime=0.020)
 
 SIG = AnSigGen('GPIB0::17::INSTR', name='none', 
@@ -186,14 +186,14 @@ def record_vnadata(kk, jj, ii):
                                    D2.scaledI, D2.scaledQ, lags)
 
     DS11.record_data(covAvgMat/np.float(corrAvg),kk,jj,ii)
-    DSP_LD1.record_data(D1.levelcorr,kk, jj, ii)
-    DS2mD1.record_data(D1Ma/np.float(corrAvg), D1Pha/np.float(corrAvg), kk, jj, ii)
-    DS2vD1.record_data(D1vMa/np.float(corrAvg), D1vPha/np.float(corrAvg) ,kk, jj, ii)
     DSP_PD1.record_data((D1aPow/np.float(corrAvg)) ,kk, jj, ii)
+    DSP_PD2.record_data((D2aPow/np.float(corrAvg)) ,kk, jj, ii)
+    DSP_LD1.record_data(D1.levelcorr,kk, jj, ii)
     DSP_LD2.record_data(D2.levelcorr, kk, jj, ii)
     DS2mD2.record_data(D2Ma/np.float(corrAvg), D2Pha/np.float(corrAvg), kk, jj, ii)
+    DS2mD1.record_data(D1Ma/np.float(corrAvg), D1Pha/np.float(corrAvg), kk, jj, ii)
+    DS2vD1.record_data(D1vMa/np.float(corrAvg), D1vPha/np.float(corrAvg) ,kk, jj, ii)
     DS2vD2.record_data(D2vMa/np.float(corrAvg), D2vPha/np.float(corrAvg), kk, jj, ii)
-    DSP_PD2.record_data((D2aPow/np.float(corrAvg)) ,kk, jj, ii)
 
 
 def save_recorded():
@@ -201,9 +201,13 @@ def save_recorded():
     DSP_PD1.save_data()
     DSP_PD2.save_data()
     DS.save_data()
-
-
-
+    
+    DSP_LD1.save_data()
+    DSP_LD2.save_data()
+    DS2mD2.save_data()
+    DS2mD1.save_data()
+    DS2vD1.save_data()
+    DS2vD2.save_data()
 
 
 # go to default value and activate output
