@@ -40,6 +40,7 @@ class Process():
         self.lsamples = lsamples
         self.pstar.send_many_triggers(10)
         self.data_variables()
+        self.num = 0    # number of missed triggers in a row
 
     def data_variables(self):
         ''' create empty variables to store average values '''
@@ -94,15 +95,25 @@ class Process():
     def init_trigger(self):
         self.D1.init_trigger_buff()
         self.D2.init_trigger_buff()
-        sleep(0.01)
+        sleep(0.015)
         self.pstar.send_software_trigger()
-        sleep(0.02)
+        sleep(0.015)
         det1 = self.D1.digitizer.get_trigger_detected()
         det2 = self.D2.digitizer.get_trigger_detected()
         if det1 is False:
-            raise Exception('Trigger1 Not Detected')
+            self.num += 1
+            sleep(0.1)
+            self.init_trigger()
+            if self.num > 3:
+                raise Exception('Trigger1 Not Detected 3x')
         if det2 is False:
-            raise Exception('Trigger2 Not Detected')
+            self.num += 1
+            sleep(0.1)
+            self.init_trigger()
+            if self.num > 3:
+                raise Exception('Trigger2 Not Detected 3x')
+        self.num = 0
+
 
     def data_grab(self):
         while True:
