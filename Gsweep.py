@@ -20,9 +20,11 @@ from Sim928 import instrument as sim928c
 from AfDigi import instrument as AfDig  # Digitizer driver
 import gc  # Garbage memory collection
 from IQcorr import Process as CorrProc  # Handle Correlation measurements
+import sys
+
 
 thisfile = __file__
-filen_0 = 'S1_1020'
+filen_0 = 'S1_1023'
 folder = 'data\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
@@ -30,7 +32,7 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 20
-BW = 1e5
+BW = 1e6
 lsamples = 1e4
 corrAvg = 1
 
@@ -39,7 +41,7 @@ D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0,
            start=(-lags / BW), stop=(lags / BW),
            pt=(lags * 2 - 1), nSample=lsamples, sampFreq=BW)
 
-D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=2,
+D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=3,
            name='D2 Lags (sec)', cfreq=4.1e9, inputlvl=10,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
@@ -50,11 +52,11 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=-0.03, stop=0.03, pt=7,
+                start=-7.0, stop=7.0, pt=701,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=2.19KOhm', sloti=3,
-               start=-1.0, stop=1.0, pt=2001,
+               start=-0.7, stop=0.7, pt=1401,
                sstep=0.01, stime=0.020)
 
 pflux = AnSigGen('GPIB0::17::INSTR', name='none',
@@ -111,13 +113,21 @@ def record_data(kk, jj, ii, back):
     DS.record_data(vdata, kk, jj, ii)
     D12.full_aqc(kk, jj, ii)  # Records and calc D1 & D2
 
-
 def save_recorded():
     '''
     Which functions to call to save the recored data
     '''
     DS.save_data()  # save Volt data
     D12.data_save()  # save Digitizer data
+
+def progresbar(kk, jj, ii):
+    ''' shows the progress (only from cmd line) '''
+    sys.stdout.write('\r')
+    pgsk = 100.0*(kk/dim_3.pt)
+    pgsj = 100.0*(jj/dim_2.pt)
+    pgsi = 100.0*(ii/dim_1.pt)
+    sys.stdout.write('kk ' + str(pgsk) + ' jj ' + str(pgsj) + ' ii ' + str(pgsi))
+    sys.stdout.flush()
 
 
 # go to default value and activate output
@@ -137,10 +147,11 @@ try:
     for kk in range(dim_3.pt):
         sweep_dim_3(dim_3, dim_3.lin[kk])
         sweep_dim_2(dim_2, dim_2.start)
-
+        
         for jj in range(dim_2.pt):
             sweep_dim_2(dim_2, dim_2.lin[jj])
             sweep_dim_1(dim_1, dim_1.start)
+            print kk, jj, ii
 
             sleep(0.2)
             print 'Up Trace'
@@ -153,6 +164,7 @@ try:
                 sleep(0.1)
                 print 'Down Trace'
                 for ii in range((dim_1.pt - 1), -1, -1):
+                    # progresbar(kk, jj, ii)
                     sweep_dim_1(dim_1, dim_1.lin[ii])
                     record_data(kk, jj, ii, True)
 
