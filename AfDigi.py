@@ -21,7 +21,7 @@ class instrument():
     '''
 
     def __init__(self, adressDigi='3036D1', adressLo='3011D1',
-                 LoPosAB=1, LoRef=0, name='D', cfreq=4.57e9, inputlvl=0,
+                 LoPosAB=1, LoRef=0, name='D', cfreq=4.57e9, inputlvl=30,
                  start=4.43e9, stop=0, pt=1, nSample=50e3, sampFreq=10e6):
         self.sampFreq = sampFreq        # Hz
         self.bandwidth = 0.1e6
