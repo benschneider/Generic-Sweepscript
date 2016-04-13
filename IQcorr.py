@@ -92,24 +92,34 @@ class Process():
         # self.D1w.set_piplining(1)
         # self.D2w.set_piplining(1)
 
-    def init_trigger_wcheck(self):
-        self.D1.init_trigger_buff()
-        self.D2.init_trigger_buff()
-        sleep(0.015)
-        self.pstar.send_software_trigger()
-        sleep(0.015)
+    def init_trigger_wcheck(self, Refcheck=True, Trigcheck=False):
+        if Refcheck is True:            
+            ref1 = bool(self.D1w.ref_is_locked(self))
+            ref2 = bool(self.D2w.ref_is_locked(self))  
+            if (ref1 == False or ref2 == False):
+                print ref1, ref2
+                print 'No reference lock! waiting..'
+                sleep(1)
+                self.init_trigger_wcheck(Refcheck, Trigcheck)
+
+        self.init_trigger()
+        if Trigcheck is True: 
+            sleep(0.015)
+            self.confirm_Trigger(Refcheck, Trigcheck)
+          
+    def confirm_Trigger(self, Refcheck, Trigcheck):
         det1 = self.D1.digitizer.get_trigger_detected()
         det2 = self.D2.digitizer.get_trigger_detected()
         if det1 is False:
             self.num += 1
             sleep(0.1)
-            self.init_trigger()
+            self.init_trigger_wcheck(Refcheck, Trigcheck)
             if self.num > 3:
                 raise Exception('Trigger1 Not Detected 3x')
         if det2 is False:
             self.num += 1
             sleep(0.1)
-            self.init_trigger()
+            self.init_trigger_wcheck(Refcheck, Trigcheck)
             if self.num > 3:
                 raise Exception('Trigger2 Not Detected 3x')
         self.num = 0
@@ -201,7 +211,8 @@ class Process():
         still needs data_save to be run to save the data file in the end.
         '''
         self.data_variables()  # 1
-        self.init_trigger()  # 2
+        # self.init_trigger()  # 2
+        self.init_trigger_wcheck(True, False)  # Refcheck (Y), Trigcheck (N)
         self.avg_corr()  # 3
         # self.avg_corr()  # aquires the averaged correcation data
         self.data_record(kk, jj, ii)  # 4
