@@ -10,7 +10,7 @@ Ben
 import numpy as np
 # from time import time, sleep
 from parsers import savemtx, make_header, ask_overwrite
-
+import gc
 
 class PrepDigitizer(object):
 
@@ -122,6 +122,7 @@ class DataStore2Vec():
 class DataStore11Vec():
 
     def __init__(self, folder, filen_0, dim_1, dim_2, dim_3, label = '_'):
+        gc.collect()
         self._folder = folder
         self._filen_1 = filen_0 + label + '_cI1I1' + '.mtx'
         self._filen_2 = filen_0 + label + '_cQ1Q1' + '.mtx'
@@ -150,12 +151,14 @@ class DataStore11Vec():
         self._matrix3d_2 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_3 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_4 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
+        gc.collect()
         self._matrix3d_5 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_6 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_7 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_8 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_9 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_10 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
+        gc.collect()
 
     def ask_overwrite(self):
         ask_overwrite(self._folder+self._filen_1)
