@@ -33,31 +33,33 @@ def ask_overwrite(filename):
             return sys.exit("Abort")
 
 
-def copy_file_interminal(thisfile, file_add, folder = ''):
+def copy_file_interminal(thisfile, file_add, folder=''):
     ''' folder = "somefolder\\"
     i.e.
     thisfile = '__filename__'
     copy_file(thisfile, 'bla','data\\')
     '''
-    #drive = os.getcwd()                #D:\
-    #filen = path.basename(thisfile)     #something.py
-    ffile = path.abspath(thisfile)     #D:\something.py
-    ffolder = path.dirname(thisfile)    #EMPTY
-    new_ffile = ffolder + folder + thisfile[:-3] +'_' + file_add + thisfile[-3:]
+    # drive = os.getcwd()                # D:\
+    # filen = path.basename(thisfile)     # something.py
+    ffile = path.abspath(thisfile)     # D:\something.py
+    ffolder = path.dirname(thisfile)    # EMPTY
+    new_ffile = ffolder+folder+thisfile[:-3]+'_'+file_add+thisfile[-3:]
     copy(ffile, new_ffile)
 
-def copy_file(thisfile, file_add, folder = ''):
+
+def copy_file(thisfile, file_add, folder=''):
     ''' folder = "somefolder\\"
     i.e.
     thisfile = '__filename__'
     copy_file(thisfile, 'bla','data\\')
     '''
-    #drive = os.getcwd()                #D:\
-    filen = path.basename(thisfile)     #something.py
-    ffile = path.abspath(thisfile)     #D:\something.py
-    ffolder = path.dirname(thisfile)    #EMPTY
-    new_ffile = ffolder +'\\'+ folder + file_add +'_' + filen[:-3] + thisfile[-3:]
+    # drive = os.getcwd()                # D:\
+    filen = path.basename(thisfile)     # something.py
+    ffile = path.abspath(thisfile)     # D:\something.py
+    ffolder = path.dirname(thisfile)    # EMPTY
+    new_ffile = ffolder+'\\'+folder+file_add+'_'+filen[:-3]+thisfile[-3:]
     copy(ffile, new_ffile)
+
 
 def loaddat(*inputs):
     '''
@@ -81,8 +83,9 @@ def loaddat(*inputs):
     outputs = zip(*file_data)
     return outputs
 
-def savedat(filename1,data1,**quarks):
-    #just use : np.savetxt(filename, data, delimiter = ',')
+
+def savedat(filename1, data1, **quarks):
+    # just use : np.savetxt(filename, data, delimiter = ',')
     '''filename, data, arguments
     simply uses numpy.savetext with a
     delimiter = ','
@@ -92,14 +95,15 @@ def savedat(filename1,data1,**quarks):
     '''
     data1 = zip(*data1)
     if 'delimiter' in quarks:
-        np.savetxt(filename1, data1 ,**quarks)
+        np.savetxt(filename1, data1, **quarks)
     else:
-        np.savetxt(filename1, data1 , delimiter = '\t', **quarks)
+        np.savetxt(filename1, data1, delimiter = '\t', **quarks)
+
 
 def loadcsv(filename, delim =';'):
-    #open file (using with to make sure file is closed afer use)
+    # open file (using with to make sure file is closed afer use)
     with open(filename, 'Ur') as f:
-        #collect tuples as a list in data, then convert to an np.array and return
+        # collect tuples as a list in data, then convert to an np.array and return
         data = list(tuple(rec) for rec in csv.reader(f, delimiter=delim))
         data = np.array(data, dtype=float)
     return data.transpose()
@@ -121,70 +125,75 @@ def loadmtx(filename):
 
         line = f.readline()
         header = line[:-1].split(',')
-        #header = line
+        # header = line
 
         line = f.readline()
         a = line[:-1].split(' ')
         s = np.array(map(float, a))
 
-        raw = f.read() #reads everything else
+        raw = f.read()  # reads everything else
         f.close()
 
     if s[3] == 4:
-        data = unpack('f'*(s[2]*s[1]*s[0]), raw) #uses float
+        data = unpack('f'*(s[2]*s[1]*s[0]), raw)  # uses float
         M = np.reshape(data, (s[2], s[1], s[0]), order="F")
     else:
-        data = unpack('d'*(s[2]*s[1]*s[0]), raw) #uses double
+        data = unpack('d'*(s[2]*s[1]*s[0]), raw)  # uses double
         M = np.reshape(data, (s[2], s[1], s[0]), order="F")
     return M, header
 
-#note: reshape modes
-#a
-#Out[133]:
-# array([[1, 2, 3],
-#	[4, 5, 6]])
+# note: reshape modes
+# a
+# Out[133]:
+#  array([[1, 2, 3],
+# 	[4, 5, 6]])
 #
-#In [134]: a.reshape(3,2, order='F')
-#Out[134]:
-# array([[1, 5],
-#	[4, 3],
-#	[2, 6]])
+# In [134]: a.reshape(3,2, order='F')
+# Out[134]:
+#  array([[1, 5],
+# 	[4, 3],
+# 	[2, 6]])
 #
-#In [135]: a.reshape(3,2, order='c')
-#Out[135]:
-# array([[1, 2],
-#	[3, 4],
-#	[5, 6]])
-#def test1(*test1,**test2):
-#    '''A function to test arcs and quarks in python'''
-#    if 'head' in test2:
-#        return test2
-#    else:
-#        return test1
+# In [135]: a.reshape(3,2, order='c')
+# Out[135]:
+#  array([[1, 2],
+# 	[3, 4],
+# 	[5, 6]])
+# def test1(*test1,**test2):
+#     '''A function to test arcs and quarks in python'''
+#     if 'head' in test2:
+#         return test2
+#     else:
+#         return test1
 
 
-def savemtx(filename, data, header = 'Units,ufo,d1,0,1,d2,0,1,d3,0,1'):
+def append_to_mtx(filename, datapart, header='Units,ufo,d1,0,1,d2,0,1,d3,0,1'):
+    f = open(filename, 'wb')
+
+
+def savemtx(filename, data, header='Units,ufo,d1,0,1,d2,0,1,d3,0,1'):
     '''MTX - file parser by Ben Schneider
     stores to the file:
     Units, Dataset name, xname, xmin, xmax, yname, ymin, ymax, zname, zmin, zmax
     nx ny nz length
     [binary data....]
-
     the first line is the header i.e. with
-    myheader = 'Units, S11, Magnet (T), -1, 1, Volt (V), -10, 10, Freqeuency (Hz), 1, 10'
+    default header: 'Units,ufo,d1,0,1,d2,0,1,d3,0,1'
+    'Units, S11, Magnet (T), -1, 1, Volt (V), -10, 10, Freqeuency (Hz), 1, 10'
     savemtx('myfile.mtx',my-3d-np-array, header = myheader)
     '''
     with open(filename, 'wb') as f:
-        f.write(header +'\n')
+        f.write(header + '\n')
 
         mtxshape = data.shape
         line = str(mtxshape[2])+' '+str(mtxshape[1])+' '+str(mtxshape[0])+' '+'8'
-        f.write(line +'\n')  #'x y z 8 \n'
+        f.write(line + '\n')  #'x y z 8 \n'
 
         raw2 = np.reshape(data, mtxshape[0]*mtxshape[1]*mtxshape[2], order="F")
         raw = pack('%sd' % len(raw2), *raw2)
         f.write(raw)
         f.close()
+
 
 def make_header(dim_1, dim_2, dim_3, meas_data='ufo'):
     '''
@@ -199,9 +208,9 @@ def make_header(dim_1, dim_2, dim_3, meas_data='ufo'):
     returns a text string used as 1st line of an mtx file
     '''
     header = ('Units,'+ meas_data +','+
-                dim_1.name+','+ str(dim_1.start)+','+ str(dim_1.stop)+','+
-                dim_2.name+','+ str(dim_2.start)+','+ str(dim_2.stop)+','+
-                dim_3.name+','+ str(dim_3.start)+','+ str(dim_3.stop))
+                dim_1.name+','+str(dim_1.start)+','+ str(dim_1.stop)+','+
+                dim_2.name+','+str(dim_2.start)+','+ str(dim_2.stop)+','+
+                dim_3.name+','+str(dim_3.start)+','+ str(dim_3.stop))
     return header
 
 class dim():
