@@ -30,7 +30,7 @@ class instrument():
         self.freq = cfreq
         self.nSamples = int(nSample)   # Samples taken/trigger
         self.inputLvl = inputlvl
-        self.Overload = 4           # to test the overload code
+        self.Overload = 0
         self.LoRef = LoRef          # 0=ocxo, 1=int 2=extDaisy, 3=extTerminated
         self.trig_source = 8        # 8=Star, 32=SW, 35=internal
         self.adressLo = adressLo
@@ -220,7 +220,7 @@ class instrument():
             self.Overload = self.Overload + 1
             print 'Overload number:', self.Overload
             sleep(0.2)
-            if self.Overload > 2:
+            if self.Overload > 1:
                 self.digitizer.rf_rf_input_level_set(30)
                 raise Exception('ADC overloaded 2x in a row')
         else:
