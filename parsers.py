@@ -167,8 +167,35 @@ def loadmtx(filename):
 #         return test1
 
 
-def append_to_mtx(filename, datapart, header='Units,ufo,d1,0,1,d2,0,1,d3,0,1'):
-    f = open(filename, 'wb')
+def np_farray(filename, myshape, new=False):
+    ''' This uses a very useful function to deal with slightly larger data files
+        maps an numpy array of the shape (myshape) into the hard disk as a file
+        if new is set to True it deletes the old one and creates a new file.
+        Otherwise it simply opens the old one.
+        Important to note is the shape information.
+    '''
+    if new:
+        return np.memmap(
+            filename, dtype='float32', mode='w+', shape=myshape, order='F')
+    return np.memmap(
+        filename, dtype='float32', mode='r+', shape=myshape, order='F')
+
+
+def farray2mtx(farrayfn, shape, header='Units,ufo,d1,0,1,d2,0,1,d3,0,1'):
+    '''MTX - file parser by Ben Schneider
+    changes the farray file into an mtx file for spyview
+    '''
+    newfile = farrayfn + '.mtx'
+    line = str(shape[2])+' '+str(shape[1])+' '+str(shape[0])+' '+'8'
+    fp = np.memmap(farrayfn, dtype='float32', mode='r', shape=shape, order='C')
+    with open(newfile, 'wb') as f:
+        f.write(header + '\n')
+        f.write(line + '\n')
+        for ii in range(shape[2]):
+            for jj in range(shape[1]):
+                content = pack('%sd' % shape[0], *fp[:, jj, ii])
+                f.write(content)
+        f.close()
 
 
 def savemtx(filename, data, header='Units,ufo,d1,0,1,d2,0,1,d3,0,1'):
@@ -181,17 +208,24 @@ def savemtx(filename, data, header='Units,ufo,d1,0,1,d2,0,1,d3,0,1'):
     default header: 'Units,ufo,d1,0,1,d2,0,1,d3,0,1'
     'Units, S11, Magnet (T), -1, 1, Volt (V), -10, 10, Freqeuency (Hz), 1, 10'
     savemtx('myfile.mtx',my-3d-np-array, header = myheader)
+    # Update looping through the individual elements as for big files this is safer.
     '''
     with open(filename, 'wb') as f:
         f.write(header + '\n')
 
         mtxshape = data.shape
         line = str(mtxshape[2])+' '+str(mtxshape[1])+' '+str(mtxshape[0])+' '+'8'
-        f.write(line + '\n')  #'x y z 8 \n'
+        f.write(line + '\n')  # 'x y z 8 \n'
 
-        raw2 = np.reshape(data, mtxshape[0]*mtxshape[1]*mtxshape[2], order="F")
-        raw = pack('%sd' % len(raw2), *raw2)
-        f.write(raw)
+        # raw2 = np.reshape(
+        #               data, mtxshape[0]*mtxshape[1]*mtxshape[2], order="F")
+        # raw = pack('%sd' % len(raw2), *raw2)
+        # f.write(raw)
+        # f.close()
+        for ii in range(mtxshape[2]):
+            for jj in range(mtxshape[1]):
+                content = pack('%sd' % mtxshape[0], *data[:, jj, ii])
+                f.write(content)
         f.close()
 
 
