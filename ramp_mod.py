@@ -23,7 +23,7 @@ def ramp(inst, parameter, value, step, wait):
         set_v(value)
 
     else:
-        print str(inst.name)+'start, target, step '+str([v_start,value,step])
+        print str(inst.name)+' '+str([v_start, value, step])
         for v in np.arange(v_start,value,step):
             set_v(v)
             if wait > 0.0:
