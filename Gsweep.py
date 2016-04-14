@@ -5,7 +5,7 @@ Generic Sweep script
 20/10/2015
 - B
 '''
-import numpy as np
+#import numpy as np
 from time import time, sleep
 from parsers import copy_file
 from ramp_mod import ramp
@@ -37,12 +37,12 @@ lsamples = 1e6
 corrAvg = 1
 
 D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0,
-           name='D1 Lags (sec)', cfreq=4.1e9, inputlvl=5,
+           name='D1 Lags (sec)', cfreq=4.1e9, inputlvl=10,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1), 
            nSample=lsamples, sampFreq=BW)
 
 D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=3,
-           name='D2 Lags (sec)', cfreq=4.8e9, inputlvl=5,
+           name='D2 Lags (sec)', cfreq=4.8e9, inputlvl=10,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 

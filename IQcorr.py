@@ -129,18 +129,18 @@ class Process():
     def init_trigger(self):
         self.D1.init_trigger_buff()
         self.D2.init_trigger_buff()
-        sleep(0.02)
+        sleep(0.022)
         self.pstar.send_software_trigger()
 
     def data_grab(self):
         while True:
             try:
-                self.D1.downl_data_buff()
                 self.D2.downl_data_buff()
+                self.D1.downl_data_buff()
             except Exception, e:
                 if str(e) == 'Reclaim timeout':
                     # print 'Reclaim timeout'
-                    sleep(0.05)
+                    sleep(0.1)
                     continue
                 elif str(e) == 'ADC overflow occurred in reclaimed buffer':
                     print e.message
@@ -218,9 +218,9 @@ class Process():
         still needs data_save to be run to save the data file in the end.
         '''
         self.data_variables()  # 1
-        sleep(self.lsamples/self.BW-0.1) # wait for completion of data aquisition
-        #self.init_trigger()  # 2
-        #self.init_trigger_wcheck(True, False)  # Refcheck (Y), Trigcheck (N)
+        # sleep(self.lsamples/self.BW-0.1) # wait for completion of data aquisition
+        # self.init_trigger()  # 2
+        # self.init_trigger_wcheck(True, False)  # Refcheck (Y), Trigcheck (N)
         self.D1.checkADCOverload()
         self.D2.checkADCOverload()
         self.avg_corr()  # 3        

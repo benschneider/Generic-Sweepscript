@@ -140,7 +140,7 @@ class instrument():
         self.buffer_ref = PXIDigitizer_wrapper.afDigitizerBufferIQ_t(
             i_ctypes, q_ctypes, self.nSamples)
         self.buffer_ref_pointer = pointer(self.buffer_ref)
-        print 'buffer setup'
+        # print 'buffer setup'
 
     def init_trigger_buff(self):
         ''' Initiate the Digitizer capturing into the buffer '''
