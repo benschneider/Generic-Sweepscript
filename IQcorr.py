@@ -214,7 +214,6 @@ class Process():
         #self.init_trigger()  # 2
         #self.init_trigger_wcheck(True, False)  # Refcheck (Y), Trigcheck (N)
         self.avg_corr()  # 3
-        # self.avg_corr()  # aquires the averaged correcation data
         self.data_record(kk, jj, ii)  # 4
 
     def get_cov_matrix(self):
