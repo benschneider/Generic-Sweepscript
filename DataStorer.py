@@ -18,11 +18,11 @@ class PrepDigitizer(object):
     def __init__(self):
         '''Handle 2 digitizers'''
         pass
-        
+
 
 
 class DataStoreSP():
-    
+
     def __init__(self, folder, filen_0, dim_1, dim_2, dim_3, label = '_', cname='Voltage x1k'):
         self._folder = folder
         self._filen_1 = filen_0 + label + '.mtx'
@@ -33,7 +33,7 @@ class DataStoreSP():
             self._filen_2 = filen_0 + label + '_2' + '.mtx'
             self.UD = True
             self._matrix3d_2 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
-            
+
     def ask_overwrite(self):
         ask_overwrite(self._folder+self._filen_1)
 
@@ -100,7 +100,7 @@ class DataStore2Vec():
         self._head_4 = make_header(dim_1, dim_2, dim_3, 'S11 _phase')
         self._matrix3d_3 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_4 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
-        
+
     def ask_overwrite(self):
         ask_overwrite(self._folder+self._filen_1)
 
@@ -119,7 +119,7 @@ class DataStore2Vec():
         savemtx(self._folder + self._filen_4,
                 self._matrix3d_4,
                 header=self._head_4)
-                
+
 class DataStore11Vec():
 
     def __init__(self, folder, filen_0, dim_1, dim_2, dim_3, label = '_'):
