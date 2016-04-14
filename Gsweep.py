@@ -24,14 +24,14 @@ import sys
 
 
 thisfile = __file__
-filen_0 = 'S1_1023'
+filen_0 = 'S1_1024'
 folder = 'data\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
-lags = 20
+lags = 10
 BW = 1e6
 lsamples = 1e4
 corrAvg = 1
@@ -52,11 +52,11 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=-7.0, stop=7.0, pt=701,
+                start=-0.2, stop=0.2, pt=41,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=2.19KOhm', sloti=3,
-               start=-0.7, stop=0.7, pt=1401,
+               start=-0.7, stop=0.7, pt=2801,
                sstep=0.01, stime=0.020)
 
 pflux = AnSigGen('GPIB0::17::INSTR', name='none',
@@ -151,7 +151,6 @@ try:
         for jj in range(dim_2.pt):
             sweep_dim_2(dim_2, dim_2.lin[jj])
             sweep_dim_1(dim_1, dim_1.start)
-            print kk, jj, ii
 
             sleep(0.2)
             print 'Up Trace'
