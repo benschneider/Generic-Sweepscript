@@ -8,6 +8,7 @@ Ben
 2016-04-13
 '''
 import numpy as np
+import tables as tb
 # from time import time, sleep
 from parsers import savemtx, make_header, ask_overwrite
 import gc
@@ -188,3 +189,19 @@ class DataStore11Vec():
         savemtx(self._folder + self._filen_9, self._matrix3d_8, header=self._head_8)
         savemtx(self._folder + self._filen_10, self._matrix3d_9, header=self._head_9)
         savemtx(self._folder + self._filen_11, self._matrix3d_10, header=self._head_10)
+
+class CovarianceMat(tb.IsDescription):
+    name = tb.StringCol(16)
+    cI1I1 = tb.Float32Col()  # I phot 1
+    cQ1Q1 = tb.Float32Col()  # Q phot 1
+    cI2I2 = tb.Float32Col()  # I phot 2
+    cQ2Q2 = tb.Float32Col()  # Q phot 2
+    cQ1I1 = tb.Float32Col()  # Corr Single Mode 1
+    cQ2I2 = tb.Float32Col()  # Corr Single Mode 2
+    cI1I2 = tb.Float32Col()  # CCorr Two Mode
+    cI2I1 = tb.Float32Col()
+    cQ1Q2 = tb.Float32Col()
+    cQ2Q1 = tb.Float32Col()
+
+
+
