@@ -60,11 +60,20 @@ class instrument():
         if update or change is True:
             sleep(0.1)
             try:
-                self._voltage = float(self.a('VOLT?'))
+                value = self.a('VOLT?')
+                try:
+                    self._voltage = eval(value)
+                except ValueError, e:
+                    sleep(1)
+                    print e + '---' + value
+                    self.get_volt(True)
+                
             except visa.VisaIOError:
                 print 'failed'
                 self.sim900.reconnect(self.sloti)
-                self._voltage = float(self.a('VOLT?'))                
+                sleep(1)
+                #self._voltage = float(self.a('VOLT?'))
+                self.get_volt(True)
             return self._voltage
         else:
             return self._voltage
