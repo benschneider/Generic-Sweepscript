@@ -27,6 +27,7 @@ class Process():
         pstar: Trigger source (PXI-Star)
         '''
         # Make some object references
+        self.ACDoverflow = 0
         self.D1 = D1
         self.D2 = D2
         self.D1w = self.D1.digitizer
@@ -141,8 +142,15 @@ class Process():
                     # print 'Reclaim timeout'
                     sleep(0.05)
                     continue
+                elif str(e) == 'ADC overflow occurred in reclaimed buffer':
+                    print e.message
+                    self.ACDoverflow += 1
+                    if self.ACDoverflow > 2:
+                        raise e
+                    break
                 else:
                     raise e
+            self.ACDoverflow = 0
             break
 
     def data_record(self, kk, jj, ii):
@@ -214,6 +222,8 @@ class Process():
         #self.init_trigger()  # 2
         #self.init_trigger_wcheck(True, False)  # Refcheck (Y), Trigcheck (N)
         self.avg_corr()  # 3
+        self.D1.checkADCOverload()
+        self.D2.checkADCOverload()
         self.data_record(kk, jj, ii)  # 4
 
     def get_cov_matrix(self):
