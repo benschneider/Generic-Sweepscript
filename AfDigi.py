@@ -22,7 +22,7 @@ class instrument():
 
     def __init__(self, adressDigi='3036D1', adressLo='3011D1',
                  LoPosAB=1, LoRef=0, name='D', cfreq=4.57e9, inputlvl=30,
-                 start=4.43e9, stop=0, pt=1, nSample=50e3, sampFreq=10e6):
+                 start=4.43e9, stop=0, pt=1, nSample=1e6, sampFreq=1e5):
         self.sampFreq = sampFreq        # Hz
         self.bandwidth = 0.1e6
         self.removeDCoff = 1
@@ -30,7 +30,7 @@ class instrument():
         self.freq = cfreq
         self.nSamples = int(nSample)   # Samples taken/trigger
         self.inputLvl = inputlvl
-        self.Overload = 4           # to test the overload code
+        self.Overload = 0
         self.LoRef = LoRef          # 0=ocxo, 1=int 2=extDaisy, 3=extTerminated
         self.trig_source = 8        # 8=Star, 32=SW, 35=internal
         self.adressLo = adressLo
@@ -134,13 +134,13 @@ class instrument():
         self.capture_ref = PXIDigitizer_wrapper.afDigitizerCaptureIQ_t()
         self.i_buffer = np.zeros(self.nSamples, dtype=c_float)
         self.q_buffer = np.zeros(self.nSamples, dtype=c_float)
-        self.timeout = 10000
+        self.timeout = int(1000*self.nSamples/self.bandwidth+10000)
         i_ctypes = self.i_buffer.ctypes.data_as(POINTER(c_float))
         q_ctypes = self.q_buffer.ctypes.data_as(POINTER(c_float))
         self.buffer_ref = PXIDigitizer_wrapper.afDigitizerBufferIQ_t(
             i_ctypes, q_ctypes, self.nSamples)
         self.buffer_ref_pointer = pointer(self.buffer_ref)
-        print 'buffer setup'
+        # print 'buffer setup'
 
     def init_trigger_buff(self):
         ''' Initiate the Digitizer capturing into the buffer '''
@@ -220,7 +220,7 @@ class instrument():
             self.Overload = self.Overload + 1
             print 'Overload number:', self.Overload
             sleep(0.2)
-            if self.Overload > 2:
+            if self.Overload > 1:
                 self.digitizer.rf_rf_input_level_set(30)
                 raise Exception('ADC overloaded 2x in a row')
         else:

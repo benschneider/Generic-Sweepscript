@@ -91,7 +91,7 @@ class afDigitizer_BS():
         self.state = c_long()
         self.cint = c_int()
         self.cdouble = c_double()
-        #self._lib = WinDLL('afDigitizerDll_32')
+        self._lib = WinDLL('afDigitizerDll_32')
         self.create_object()
 
     def capture_iq_issue_buffer(self, buffer_ref, capture_ref, timeout=1):

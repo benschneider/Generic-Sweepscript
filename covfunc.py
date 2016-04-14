@@ -82,7 +82,8 @@ def getCovMatrix(I1, Q1, I2, Q2, lags=20):
     # 7: <Q1Q2>
     # 8: <I1Q2>
     # 9: <Q1I2>
-    # 10: <Squeezing>
+    # 10: <Squeezing> Magnitude
+    # 11: <Squeezing> Phase
     '''
 
     lags = int(lags)
@@ -90,7 +91,7 @@ def getCovMatrix(I1, Q1, I2, Q2, lags=20):
     Q1 = np.asarray(Q1)
     I2 = np.asarray(I2)
     Q2 = np.asarray(Q2)
-    CovMat = np.zeros([11, lags*2-1])
+    CovMat = np.zeros([12, lags*2-1])
 
     start = len(I1*2-1)-lags
     stop = len(I1*2-1)-1+lags
@@ -162,9 +163,12 @@ def getCovMatrix(I1, Q1, I2, Q2, lags=20):
             # 9: <Q1I2>
             CovMat[9, :] = (irfftn((fftQ1*rfftI2))[fslice].copy()[start:stop]
                             / len(fftI1))
-            # 10: <Squeezing>
+            # 10: <Squeezing> Magnitude
             CovMat[10, :] = (abs(1j*(CovMat[8, :]+CovMat[9, :])
                                  + (CovMat[6, :] - CovMat[7, :])))
+            # 10: <Squeezing> Angle
+            CovMat[11, :] = (np.angle(1j*(CovMat[8, :]+CovMat[9, :]) + (CovMat[6, :] - CovMat[7, :])))
+            
             return CovMat
 
         finally:
@@ -192,41 +196,3 @@ def covConv(a, b, lags=20):
     start = len(a)-lags
     stop = len(a)-1+lags
     return result[start:stop]
-
-
-def getCovMatrix_old(I1, Q1, I2, Q2, lags=20, extended=True):
-    ''' # Matrix index as follows:
-    # 0: <I1I1>
-    # 1: <Q1Q1>
-    # 2: <I2I2>
-    # 3: <Q2Q2>
-    # 4: <I1Q1>
-    # 5: <I2Q2>
-    # 6: <I1I2>
-    # 7: <Q1Q2>
-    # 8: <I1Q2>
-    # 9: <Q1I2>
-    # 10: <Squeezing> '''
-
-    CovMat = np.zeros([11, lags*2-1])
-    if extended is True:
-        # these should simply show a single peak
-        # with a height of its covariance
-        # CovMat[0,:] = thread.start_new_thread( covConv, (I1, I1, lags) )
-        # thread.start_new_thread( print_time, ("Thread-2", 4, ) )
-        CovMat[0, :] = covConv(I1, I1, lags)
-        CovMat[1, :] = covConv(Q1, Q1, lags)
-        CovMat[2, :] = covConv(I2, I2, lags)
-        CovMat[3, :] = covConv(Q2, Q2, lags)
-
-    # and these one go to zero for non singlemode squeezed states
-    CovMat[4, :] = covConv(I1, Q1, lags)
-    CovMat[5, :] = covConv(I2, Q2, lags)
-    # these ones are relevant for 2 mode squeezing
-    CovMat[6, :] = covConv(I1, I2, lags)
-    CovMat[7, :] = covConv(Q1, Q2, lags)
-    CovMat[8, :] = covConv(I1, Q2, lags)
-    CovMat[9, :] = covConv(Q1, I2, lags)
-    CovMat[10, :] = abs(1j*(CovMat[8, :]+CovMat[9, :])
-                        + (CovMat[6, :] - CovMat[7, :]))
-    return CovMat

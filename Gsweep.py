@@ -5,7 +5,7 @@ Generic Sweep script
 20/10/2015
 - B
 '''
-import numpy as np
+#import numpy as np
 from time import time, sleep
 from parsers import copy_file
 from ramp_mod import ramp
@@ -24,25 +24,25 @@ import sys
 
 
 thisfile = __file__
-filen_0 = 'S1_1024'
+filen_0 = 'S1_1035'
 folder = 'data\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
-lags = 10
-BW = 1e6
-lsamples = 1e4
+lags = 20
+BW = 1e5
+lsamples = 1e6
 corrAvg = 1
 
 D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0,
            name='D1 Lags (sec)', cfreq=4.1e9, inputlvl=10,
-           start=(-lags / BW), stop=(lags / BW),
-           pt=(lags * 2 - 1), nSample=lsamples, sampFreq=BW)
+           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1), 
+           nSample=lsamples, sampFreq=BW)
 
 D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=3,
-           name='D2 Lags (sec)', cfreq=4.1e9, inputlvl=10,
+           name='D2 Lags (sec)', cfreq=4.8e9, inputlvl=10,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 
@@ -52,30 +52,35 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=-0.2, stop=0.2, pt=41,
+                start=0.0, stop=0.0, pt=1,
                 sstep=0.060, stime=0.020)
 
-vMag = sim928c(sim900, name='Magnet V R=2.19KOhm', sloti=3,
-               start=-0.7, stop=0.7, pt=2801,
-               sstep=0.01, stime=0.020)
+vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
+               start=-1.0, stop=-0.4, pt=71,
+               sstep=0.03, stime=0.020)
 
-pflux = AnSigGen('GPIB0::17::INSTR', name='none',
-                 start=0.0, stop=0.1, pt=1,
-                 sstep=20e-3, stime=1e-3)
+pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
+                 start=0.300, stop=0.03, pt=28,
+                 sstep=30e-3, stime=1e-3)
 
 sgen = None
 
-# pflux.set_output(0)
-# pflux.set_power_mode(1)  # Linear mode in mV
-# pflux.set_power(pflux.start)  # if this would be a power sweep
+pFlux.set_output(1)
+pFlux.set_power_mode(1)  # Linear mode in mV
+pFlux.set_freq(8.9e9)
+pFlux.set_power(pFlux.start)
+pFlux.sweep_par='power'  # Power sweep
 
-dim_1 = vMag
-dim_2 = vBias
-dim_3 = nothing
+dim_1 = pFlux
+dim_2 = vMag
+dim_3 = vBias
 dim_1.defval = 0.0
 dim_2.defval = 0.0
 dim_3.defval = 0.0
 dim_1.UD = False
+recordD12 = True
+D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
+D12.doHist2d = False  # Plot 2d Histograms ??
 
 
 def sweep_dim_1(obj, value):
@@ -87,14 +92,14 @@ def sweep_dim_2(obj, value):
 
 
 def sweep_dim_3(obj, value):
-    pass
+    ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
+
 
 # This describes how data is saved
 DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Vx1k')
-
 # CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
-D12 = CorrProc(D1, D2, pflux, sgen, lags, BW, lsamples, corrAvg)
-D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
+if recordD12:
+    D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
 
 DS.ask_overwrite()
 copy_file(thisfile, filen_0, folder)
@@ -105,20 +110,23 @@ def record_data(kk, jj, ii, back):
     '''This function is called with each change in ii,jj,kk 
         content: what to measure each time
     '''
-    D12.init_trigger()  # Trigger and check D1 & D2
+    if recordD12:
+        D12.init_trigger()  # Trigger and check D1 & D2
     vdata = vm.get_val()  # aquire voltage data point
     if back is True:
         return DS.record_data2(vdata, kk, jj, ii)
  
     DS.record_data(vdata, kk, jj, ii)
-    D12.full_aqc(kk, jj, ii)  # Records and calc D1 & D2
+    if recordD12:
+        D12.full_aqc(kk, jj, ii)  # Records and calc D1 & D2
 
 def save_recorded():
     '''
     Which functions to call to save the recored data
     '''
     DS.save_data()  # save Volt data
-    D12.data_save()  # save Digitizer data
+    if recordD12:
+        D12.data_save()  # save Digitizer data
 
 def progresbar(kk, jj, ii):
     ''' shows the progress (only from cmd line) '''
@@ -134,7 +142,7 @@ def progresbar(kk, jj, ii):
 sweep_dim_1(dim_1, dim_1.defval)
 sweep_dim_2(dim_2, dim_2.defval)
 sweep_dim_3(dim_3, dim_3.defval)
-dim_1.output(1)
+dim_3.output(1)
 dim_2.output(1)
 
 print 'Executing sweep'
@@ -183,9 +191,13 @@ finally:
     sleep(1)
     sweep_dim_3(dim_3, dim_3.defval)
     sleep(1)
-    dim_1.output(0)
+    dim_3.output(0)
     sleep(1)
     dim_2.output(0)
     sim900._dconn()
     gc.collect()
+    # D1.downl_data_buff()
+    # D2.downl_data_buff()
+    #D1.performClose()
+    #D2.performClose()
     print 'done'

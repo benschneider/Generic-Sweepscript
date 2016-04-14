@@ -40,6 +40,7 @@ class instrument():
         self.stime = stime
         self.output = self.get_power()
         self.phaseOffset = self.get_phaseOffset()
+        self.sweep_par = 'power'
 
     def get_freq(self):
         '''Return in Hz'''
@@ -79,10 +80,12 @@ class instrument():
         return self.a('OD1')
 
     def set_power(self, power):
+        ''' sets the output power'''
         self.pow = power
         return self.w('L1 '+str(power)+' DMCLOCF1')
 
     def get_power(self):
+        ''' reads the output power'''
         return eval(self.a('OL1'))
 
     def set_power_mode(self, state):

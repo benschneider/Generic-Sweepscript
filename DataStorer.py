@@ -135,7 +135,8 @@ class DataStore11Vec():
         self._filen_8 = filen_0 + label + '_cQ1Q2' + '.mtx'
         self._filen_9 = filen_0 + label + '_cI1Q2' + '.mtx'
         self._filen_10 = filen_0 + label + '_cQ1I2' + '.mtx'
-        self._filen_11 = filen_0 + label + '_Squeezing' + '.mtx'
+        self._filen_11 = filen_0 + label + '_SqMag' + '.mtx'
+        self._filen_12 = filen_0 + label + '_SqPhs' + '.mtx'
         self._head_0 = make_header(dim_1, dim_2, dim_3, 'cCov')
         self._head_1 = make_header(dim_1, dim_2, dim_3, 'cCov')
         self._head_2 = make_header(dim_1, dim_2, dim_3, 'cCov')
@@ -146,20 +147,20 @@ class DataStore11Vec():
         self._head_7 = make_header(dim_1, dim_2, dim_3, 'cCov')
         self._head_8 = make_header(dim_1, dim_2, dim_3, 'cCov')
         self._head_9 = make_header(dim_1, dim_2, dim_3, 'cCov')
-        self._head_10 = make_header(dim_1, dim_2, dim_3, 'Squeezing')
+        self._head_10 = make_header(dim_1, dim_2, dim_3, 'Sq-Mag')
+        self._head_11 = make_header(dim_1, dim_2, dim_3, 'Sq-Phs')
         self._matrix3d_0 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_1 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_2 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_3 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_4 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
-        gc.collect()
         self._matrix3d_5 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_6 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_7 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_8 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_9 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
         self._matrix3d_10 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
-        gc.collect()
+        self._matrix3d_11 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
 
     def ask_overwrite(self):
         ask_overwrite(self._folder+self._filen_1)
@@ -176,6 +177,7 @@ class DataStore11Vec():
         self._matrix3d_8[:, jj, ii] = data[8,:]
         self._matrix3d_9[:, jj, ii] = data[9,:]
         self._matrix3d_10[:, jj, ii] = data[10,:]
+        self._matrix3d_11[:, jj, ii] = data[11,:]
 
     def save_data(self):
         savemtx(self._folder + self._filen_1, self._matrix3d_0, header=self._head_0)
@@ -189,6 +191,7 @@ class DataStore11Vec():
         savemtx(self._folder + self._filen_9, self._matrix3d_8, header=self._head_8)
         savemtx(self._folder + self._filen_10, self._matrix3d_9, header=self._head_9)
         savemtx(self._folder + self._filen_11, self._matrix3d_10, header=self._head_10)
+        savemtx(self._folder + self._filen_12, self._matrix3d_11, header=self._head_11)
 
 class CovarianceMat(tb.IsDescription):
     name = tb.StringCol(16)

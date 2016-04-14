@@ -27,6 +27,7 @@ class Process():
         pstar: Trigger source (PXI-Star)
         '''
         # Make some object references
+        self.ACDoverflow = 0
         self.D1 = D1
         self.D2 = D2
         self.D1w = self.D1.digitizer
@@ -41,6 +42,7 @@ class Process():
         self.pstar.send_many_triggers(10)
         self.data_variables()
         self.num = 0    # number of missed triggers in a row
+        self.doHist2d = False
 
     def data_variables(self):
         ''' create empty variables to store average values '''
@@ -53,7 +55,7 @@ class Process():
         self.D2vPha = np.float(0.0)
         self.D2Ma = np.float(0.0)
         self.D2Pha = np.float(0.0)
-        self.covAvgMat = np.zeros([11, self.lags * 2 - 1])
+        self.covAvgMat = np.zeros([12, self.lags * 2 - 1])
         self.D1aPow = np.float(0.0)
         self.D2aPow = np.float(0.0)
 
@@ -127,22 +129,28 @@ class Process():
     def init_trigger(self):
         self.D1.init_trigger_buff()
         self.D2.init_trigger_buff()
-        sleep(0.02)
+        sleep(0.022)
         self.pstar.send_software_trigger()
 
     def data_grab(self):
         while True:
             try:
-                self.D1.downl_data_buff()
                 self.D2.downl_data_buff()
+                self.D1.downl_data_buff()
             except Exception, e:
-                # bug! '==' not same as 'is' here ->
                 if str(e) == 'Reclaim timeout':
                     # print 'Reclaim timeout'
-                    sleep(0.05)
+                    sleep(0.1)
                     continue
+                elif str(e) == 'ADC overflow occurred in reclaimed buffer':
+                    print e.message
+                    self.ACDoverflow += 1
+                    if self.ACDoverflow > 2:
+                        raise e
+                    break
                 else:
                     raise e
+            self.ACDoverflow = 0
             break
 
     def data_record(self, kk, jj, ii):
@@ -195,7 +203,6 @@ class Process():
             self.D2vMa += self.D2.vAvgMag
             self.D2vPha += self.D2.vAvgPh
             self.D2aPow += self.D2.vAvgPow
-
             self.covAvgMat += getCovMatrix(self.D1.scaledI, self.D1.scaledQ,
                                            self.D2.scaledI, self.D2.scaledQ,
                                            self.lags)
@@ -211,13 +218,27 @@ class Process():
         still needs data_save to be run to save the data file in the end.
         '''
         self.data_variables()  # 1
-        #self.init_trigger()  # 2
-        #self.init_trigger_wcheck(True, False)  # Refcheck (Y), Trigcheck (N)
-        self.avg_corr()  # 3
+        # sleep(self.lsamples/self.BW-0.1) # wait for completion of data aquisition
+        # self.init_trigger()  # 2
+        # self.init_trigger_wcheck(True, False)  # Refcheck (Y), Trigcheck (N)
+        self.D1.checkADCOverload()
+        self.D2.checkADCOverload()
+        self.avg_corr()  # 3        
         self.data_record(kk, jj, ii)  # 4
+        if self.doHist2d:
+            self.pltHistograms()
 
     def get_cov_matrix(self):
         pass
 
     def get_g2(self):
         pass
+
+    def pltHistograms(self):
+        ''' This creates a figure of the histogram at one specific point'''
+        #histI1Q1, xl, yl = np.histogram2d(self.D1.scaledI, self.D1.scaledQ)
+        #histI2Q2, xl, yl = np.histogram2d(self.D2.scaledI, self.D2.scaledQ)
+        #histI1I2, xl, yl = np.histogram2d(self.D1.scaledI, self.D2.scaledI)
+        #histQ1Q2, xl, yl = np.histogram2d(self.D1.scaledQ, self.D2.scaledQ)
+        #histI1Q2, xl, yl = np.histogram2d(self.D1.scaledI, self.D2.scaledQ)
+        #histQ1I2, xl, yl = np.histogram2d(self.D1.scaledQ, self.D2.scaledI)

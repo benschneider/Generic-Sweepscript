@@ -62,10 +62,11 @@ class instrument():
             try:
                 value = self.a('VOLT?')
                 try:
-                    self._voltage = eval(value)
+                    self._voltage = float(value)
                 except ValueError, e:
                     sleep(1)
-                    print e + '---' + value
+                    print str(e )
+                    print str(value)
                     self.get_volt(True)
                 
             except visa.VisaIOError:
