@@ -22,7 +22,7 @@ class instrument():
 
     def __init__(self, adressDigi='3036D1', adressLo='3011D1',
                  LoPosAB=1, LoRef=0, name='D', cfreq=4.57e9, inputlvl=30,
-                 start=4.43e9, stop=0, pt=1, nSample=50e3, sampFreq=10e6):
+                 start=4.43e9, stop=0, pt=1, nSample=1e6, sampFreq=1e5):
         self.sampFreq = sampFreq        # Hz
         self.bandwidth = 0.1e6
         self.removeDCoff = 1
@@ -134,7 +134,7 @@ class instrument():
         self.capture_ref = PXIDigitizer_wrapper.afDigitizerCaptureIQ_t()
         self.i_buffer = np.zeros(self.nSamples, dtype=c_float)
         self.q_buffer = np.zeros(self.nSamples, dtype=c_float)
-        self.timeout = 10000
+        self.timeout = int(1000*self.nSamples/self.bandwidth+10000)
         i_ctypes = self.i_buffer.ctypes.data_as(POINTER(c_float))
         q_ctypes = self.q_buffer.ctypes.data_as(POINTER(c_float))
         self.buffer_ref = PXIDigitizer_wrapper.afDigitizerBufferIQ_t(
