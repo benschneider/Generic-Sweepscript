@@ -22,9 +22,10 @@ class instrument():
 
     def __init__(self, adressDigi='3036D1', adressLo='3011D1',
                  LoPosAB=1, LoRef=0, name='D', cfreq=4.57e9, inputlvl=30,
-                 start=4.43e9, stop=0, pt=1, nSample=1e6, sampFreq=1e5):
-        self.sampFreq = sampFreq        # Hz
-        self.bandwidth = 0.1e6
+                 start=4.43e9, stop=0, pt=1, nSample=1e6, sampFreq=1e5, 
+                 buffmode=True):
+        self.capture_ref = None
+        self.bandwidth = sampFreq
         self.removeDCoff = 1
         self.LoPos = LoPosAB          # Lo Above (1) or Below (0)
         self.freq = cfreq
@@ -44,7 +45,8 @@ class instrument():
         self.prep_data()
         self.performOpen()
         self.set_settings()
-        self.setup_buffer()
+        if buffmode:
+            self.setup_buffer()
         
     def performOpen(self):
         try:
@@ -53,6 +55,8 @@ class instrument():
             print 'Digitizer ', self.name, ' started'
         except PXIDigitizer_wrapper.Error as e:
             print "Digitizer start failed"
+            self.digitizer.close_instrument()
+            self.digitizer.destroy_object()
             raise Exception(e)
 
     def performClose(self, bError=False):
@@ -64,6 +68,7 @@ class instrument():
             if not bError:
                 raise Exception(e)
         finally:
+            self.digitizer.close_instrument()
             self.digitizer.destroy_object()
             del self.digitizer
 
@@ -72,7 +77,7 @@ class instrument():
         right now its easies to simply set the settings here
         '''
         self.digitizer.rf_remove_dc_offset_set(bool(self.removeDCoff))
-        self.digitizer.modulation_generic_sampling_frequency_set(self.sampFreq)
+        self.digitizer.modulation_generic_sampling_frequency_set(self.bandwidth)
         # self.digitizer.trigger_IQ_bandwidth_set(self.bandwidth, iOption)
         self.digitizer.rf_rf_input_level_set(self.inputLvl)
         self.digitizer.rf_userLOPosition_set(self.LoPos)
@@ -80,6 +85,7 @@ class instrument():
         self.digitizer.rf_centre_frequency_set(self.freq)
         self.digitizer.lo_reference_set(self.LoRef)
         self.digitizer.trigger_source_set(self.trig_source)
+        self.digitizer.set_piplining(1)  # activate Pipelining
 
     def prep_data(self):
         self.vAvgIQ = None
@@ -118,8 +124,7 @@ class instrument():
         pass
 
     def downl_data(self):
-        '''grabs the biggest chunks of data and does
-        not update the Level correction value'''
+        '''grabs the biggest chunks of data '''
         # self.wait_capture_complete()
         self.scaledI = np.zeros(self.nSamples)
         self.scaledQ = np.zeros(self.nSamples)
@@ -148,7 +153,7 @@ class instrument():
                                                capture_ref=self.capture_ref,
                                                timeout=self.timeout)
 
-    def downl_data_buff(self):
+    def downl_data_buff_2(self):
         self.digitizer.capture_iq_reclaim_buffer(
         capture_ref=self.capture_ref, buffer_ref_pointer=self.buffer_ref_pointer)
         if self.buffer_ref_pointer:
@@ -158,6 +163,30 @@ class instrument():
             total_samples = 0
         self.scaledI = self.i_buffer[:total_samples].astype(np.float32)
         self.scaledQ = self.q_buffer[:total_samples].astype(np.float32)
+
+    def downl_data_buff_mem(self):
+        self.digitizer.capture_iq_reclaim_buffer(
+        capture_ref=self.capture_ref, buffer_ref_pointer=self.buffer_ref_pointer)
+ 
+    def downl_data_buff(self):
+        while True:
+            try:
+                self.downl_data_buff_2()
+            except Exception, e:
+                if str(e) == 'Reclaim timeout':
+                    # print 'Reclaim timeout'
+                    sleep(0.05)
+                    continue
+                elif str(e) == 'ADC overflow occurred in reclaimed buffer':
+                    print e.message
+                    self.ACDoverflow += 1
+                    if self.ACDoverflow > 2:
+                        raise e
+                    break
+                else:
+                    raise e
+            self.ACDoverflow = 0
+            break
 
     def get_newdata(self):
         ''' This one Triggers, waits till capture is complete

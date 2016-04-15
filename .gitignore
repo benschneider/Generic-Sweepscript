@@ -49,3 +49,4 @@ data_JJ
 *.swp
 .Ropeproject
 tmp
+test.dat

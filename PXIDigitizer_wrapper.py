@@ -410,6 +410,11 @@ class afDigitizer_BS():
     @error_check
     def TriggerArmIF(self, nsamp):
         _lib.afDigitizerDll_Capture_IF_TriggerArm(self.session, c_int(nsamp))
+
+    @error_check
+    def Capture_IF_Mem(self, sampleNum, ifBuffer):
+        _lib.afDigitizerDll_Capture_IF_CaptMem(self.session, sampleNum, byref(ifBuffer))
+        return ifBuffer
        
     def trigger_pre_edge_trigger_samples_get(self):
         afDigitizerDll_Trigger_PreEdgeTriggerSamples_Get = getDllObject('afDigitizerDll_Trigger_PreEdgeTriggerSamples_Get',
