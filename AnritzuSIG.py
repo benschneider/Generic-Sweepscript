@@ -38,9 +38,10 @@ class instrument():
         self.lin = np.linspace(self.start,self.stop,self.pt)
         self.sstep = sstep
         self.stime = stime
-        self.output = self.get_power()
+        self.powerlevel = self.get_power()
         self.phaseOffset = self.get_phaseOffset()
         self.sweep_par = 'power'
+        self.output_val = None
 
     def get_freq(self):
         '''Return in Hz'''
@@ -107,13 +108,9 @@ class instrument():
         self.w(':CORR:STAT '+str(boolval))
         self.PCS = boolval
 
-    def set_output(self, boolval=0):
-        self.output = boolval
-        return self.w('RF '+str(boolval))
-
-    def get_output(self):
-        ''' command not found yet '''
-        return self.output
+    def output(self, boolval=0):
+        self.output_val = int(boolval)
+        return self.w('RF '+str(self.output_val))
 
     def set_phaseOffset(self, phaseOffs):
         '''Phase Offset in Degrees'''
