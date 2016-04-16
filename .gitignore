@@ -50,3 +50,7 @@ data_JJ
 .Ropeproject
 tmp
 test.dat
+*.dll
+afDigitizerDll.lib
+*.mem
+cov.dat
