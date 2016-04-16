@@ -42,10 +42,16 @@ class Process():
         self.lsamples = lsamples
         self.pstar.send_many_triggers(10)
         self.data_variables()
+        self._takeBG = False
         self.num = 0    # number of missed triggers in a row
         self.doHist2d = doHist2d
         if doHist2d:
+            # hdf5 format is desired, files would become too large to address in 32bit
             pass
+            # X = 100  # (Typical Bin size)
+            # Y = 100
+            # self.hist = np.memmap('histograms.dat', dtype=np.float32, mode='w+',
+            #                       shape=(6, X, Y, dim_3.pt, dim_2.pt, dim_1.pt))
 
     def data_variables(self):
         ''' create empty variables to store average values '''
@@ -149,18 +155,29 @@ class Process():
         self.DS2vD1.save_data()
         self.DS2vD2.save_data()
 
-    def avg_corr(self):
-        '''assumes init trigger was run once before'''
-        for cz in range(int(self.corrAvg)):
-            self.D1.get_Levelcorr()  # update level correction value
-            self.D2.get_Levelcorr()
-            self.D2.downl_data_buff()
-            self.D1.downl_data_buff()
-            if (cz + 1) < self.corrAvg:
-                self.init_trigger()
+    def update_data(self, cz):
+        '''This downloads data from D1 and D2,
+        once downloaded, data acquisition continues.
+        At the same time D1 and D2 data is being processed
+        '''
+        self.D1.get_Levelcorr()  # update level correction value
+        self.D2.get_Levelcorr()
+        self.D2.downl_data_buff()
+        self.D1.downl_data_buff()
+        if (cz + 1) < self.corrAvg:
+            self.init_trigger()  # Initiate next measurement set
+        self.D1.process_data()  # process data, while measurement is running
+        self.D2.process_data()
 
-            self.D1.process_data()
-            self.D2.process_data()
+    def avg_corr(self):
+        '''init_trigger() should have run once before. This is the averaging,
+        processing and measurement main loop '''
+        averages = int(self.corrAvg)
+        if self._takeBG:
+            averages *= 2
+
+        for cz in range(int(self.corrAvg)):
+            self.update_data(cz)
             # Digitizer 1 Values
             self.D1Ma += self.D1.AvgMag
             self.D1Pha += self.D1.AvgPhase
@@ -184,7 +201,6 @@ class Process():
         2. triggers and averages correlation
         3. calulates correlations
         4. record data to memory
-
         still needs data_save to be run to save the data file in the end.
         '''
         self.data_variables()  # 1
@@ -195,19 +211,17 @@ class Process():
         self.avg_corr()  # 3
         self.data_record(kk, jj, ii)  # 4
         if self.doHist2d:
-            self.pltHistograms()
+            self.pltHistograms(kk, jj, ii)
 
-    def get_cov_matrix(self):
-        pass
-
-    def get_g2(self):
-        pass
-
-    def pltHistograms(self):
+    def pltHistograms(self, kk, jj, ii):
         ''' This creates a figure of the histogram at one specific point'''
-        #histI1Q1, xl, yl = np.histogram2d(self.D1.scaledI, self.D1.scaledQ)
-        #histI2Q2, xl, yl = np.histogram2d(self.D2.scaledI, self.D2.scaledQ)
-        #histI1I2, xl, yl = np.histogram2d(self.D1.scaledI, self.D2.scaledI)
-        #histQ1Q2, xl, yl = np.histogram2d(self.D1.scaledQ, self.D2.scaledQ)
-        #histI1Q2, xl, yl = np.histogram2d(self.D1.scaledI, self.D2.scaledQ)
-        #histQ1I2, xl, yl = np.histogram2d(self.D1.scaledQ, self.D2.scaledI)
+        I1 = self.D1.scaledI
+        Q1 = self.D1.scaledQ
+        I2 = self.D2.scaledI
+        Q2 = self.D2.scaledQ
+        histI1Q1, xl, yl = np.histogram2d(I1, Q1)
+        histI2Q2, xl, yl = np.histogram2d(I2, Q2)
+        histI1I2, xl, yl = np.histogram2d(I1, I2)
+        histQ1Q2, xl, yl = np.histogram2d(Q1, Q2)
+        histI1Q2, xl, yl = np.histogram2d(I1, Q2)
+        histQ1I2, xl, yl = np.histogram2d(Q1, I2)
