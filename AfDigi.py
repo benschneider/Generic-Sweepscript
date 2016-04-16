@@ -22,7 +22,7 @@ class instrument():
 
     def __init__(self, adressDigi='3036D1', adressLo='3011D1',
                  LoPosAB=1, LoRef=0, name='D', cfreq=4.57e9, inputlvl=30,
-                 start=4.43e9, stop=0, pt=1, nSample=1e6, sampFreq=1e5, 
+                 start=4.43e9, stop=0, pt=1, nSample=1e6, sampFreq=1e5,
                  buffmode=True):
         self.capture_ref = None
         self.buffmode = buffmode
@@ -48,7 +48,7 @@ class instrument():
         self.set_settings()
         if self.buffmode:
             self.setup_buffer()
-        
+
     def performOpen(self):
         try:
             # self.digitizer.create_object()
@@ -87,7 +87,7 @@ class instrument():
         self.digitizer.rf_centre_frequency_set(self.freq)
         self.digitizer.lo_reference_set(self.LoRef)
         self.digitizer.trigger_source_set(self.trig_source)
-        self.digitizer.set_piplining(1)  # activate Pipelining
+        self.digitizer.set_piplining(1)  # activate Pipelining (download data while it keeps measuring)
 
     def prep_data(self):
         '''Creates a range of empty variables which are used store data in'''
@@ -99,14 +99,14 @@ class instrument():
         self.vAvgMag = None
         self.vAvgPh = None
         self.create_memfiles()
-        
+
     def create_memfiles(self):
         '''This creates on DISK Temp files to store large data chunks '''
         if self.nSamples > 1e5:
             self.cIQ = np.memmap(self.name[:2]+'.cIQ.mem', dtype='complex64', mode='w+', shape=self.nSamples)
             self.scaledI = np.memmap(self.name[:2]+'.I.mem', dtype=np.float32, mode='w+', shape=self.nSamples)
             self.scaledQ = np.memmap(self.name[:2]+'.Q.mem', dtype=np.float32, mode='w+', shape=self.nSamples)
-            self.cfftsig = np.memmap(self.name[:2]+'.FFT.mem', dtype='complex64', mode='w+', shape=self.nSamples)            
+            self.cfftsig = np.memmap(self.name[:2]+'.FFT.mem', dtype='complex64', mode='w+', shape=self.nSamples)
             self.i_buffer = np.memmap(self.name[:2]+'.IB.mem', dtype=c_float, mode='w+', shape=self.nSamples)
             self.q_buffer = np.memmap(self.name[:2]+'.QB.mem', dtype=c_float, mode='w+', shape=self.nSamples)
 
@@ -114,17 +114,13 @@ class instrument():
             self.i_buffer = np.zeros(self.nSamples, dtype=c_float)
             self.q_buffer = np.zeros(self.nSamples, dtype=c_float)
             self.cIQ = np.zeros(self.nSamples, dtype='complex64')
-            self.scaledI = np.zeros(self.nSamples, dtype= np.float32)
-            self.scaledQ = np.zeros(self.nSamples, dtype= np.float32)
+            self.scaledI = np.zeros(self.nSamples, dtype=np.float32)
+            self.scaledQ = np.zeros(self.nSamples, dtype=np.float32)
             self.cfftsig = np.zeros(self.nSamples, dtype='complex64')
-
-                
-            
-
 
     def close_memfiles(self):
         del self.cIQ, self.scaledI, self.scaledQ, self.cfftsig
-        if self.buffmode:        
+        if self.buffmode:
             del self.i_buffer, self.q_buffer
 
     def set_freq(self, freq):
@@ -172,15 +168,14 @@ class instrument():
         # print 'buffer setup'
 
     def init_trigger_IF(self):
-        return self.digitizer.TriggerArmIF(self.nSamples)        
+        return self.digitizer.TriggerArmIF(self.nSamples)
 
     def init_trigger_buff(self):
-        ''' Initiate the Digitizer capturing into the buffer, 
+        ''' Initiate the Digitizer capturing into the buffer,
         once a trigger signal is received  '''
         self.digitizer.capture_iq_issue_buffer(
-        buffer_ref=self.buffer_ref, capture_ref=self.capture_ref, 
-        timeout=self.timeout)
- 
+            buffer_ref=self.buffer_ref, capture_ref=self.capture_ref, timeout=self.timeout)
+
     def downl_data_check(func):
         '''This is a property used when downloading data from the buffer.
         it excecutes the func until download beginns
@@ -210,14 +205,14 @@ class instrument():
     @downl_data_check
     def downl_data_buff(self):
         a = self.digitizer.capture_iq_reclaim_buffer(
-        capture_ref=self.capture_ref, buffer_ref_pointer=self.buffer_ref_pointer)
+            capture_ref=self.capture_ref, buffer_ref_pointer=self.buffer_ref_pointer)
         if a == 0:
             '''for successfull download of buffer store IQ as complex array'''
             self.scaledI[:] = self.i_buffer
             self.scaledQ[:] = self.q_buffer
 
     def get_data_complete(self):
-        ''' Downloads Data, Lvl Correction and processes the data 
+        ''' Downloads Data, Lvl Correction and processes the data
         stored as self.scaledI ...'''
         self.downl_data_buff()
         self.levelcorr = self.digitizer.rf_level_correction_get()
@@ -237,28 +232,20 @@ class instrument():
             self.cfftsig[0:smid] = 0.0
         if onlyfft:
             return
-        #self.cIQ[:] = np.fft.ifft(np.fft.ifftshift(self.cfftsig))
+        # self.cIQ[:] = np.fft.ifft(np.fft.ifftshift(self.cfftsig))
         self.scaledI[:] = np.imag(self.cIQ)
         self.scaledQ[:] = np.real(self.cIQ)
-    
 
     def process_data(self):
         ''' Sample the signal, calc I+j*Q theta
          and store it in the driver object
          of each trigger there are x samples... which can be averaged...
         '''
-        if self.nSamples > 1e5:
-            self.scaledI[:] = np.array((np.array(self.scaledI[:])*np.power(10.0, self.levelcorr/20.0)/np.sqrt(1000)))
-            self.scaledQ[:] = np.array((np.array(self.scaledQ[:])*np.power(10.0, self.levelcorr/20.0)/np.sqrt(1000)))
-            self.cIQ[:] = 1j * self.scaledQ + self.scaledI
-        else:
-            self.scaledI = np.array((np.array(self.scaledI)*np.power(10.0, self.levelcorr/20.0)/np.sqrt(1000)))
-            self.scaledQ = np.array((np.array(self.scaledQ)*np.power(10.0, self.levelcorr/20.0)/np.sqrt(1000)))
-            self.cIQ = 1j * self.scaledQ + self.scaledI
-            
+        self.scaledI[:] = np.array((np.array(self.scaledI[:])*np.power(10.0, self.levelcorr/20.0)/np.sqrt(1000)))
+        self.scaledQ[:] = np.array((np.array(self.scaledQ[:])*np.power(10.0, self.levelcorr/20.0)/np.sqrt(1000)))
+        self.cIQ[:] = 1j * self.scaledQ + self.scaledI
+        # self.killsideband()  # Not yet working using hardware filters for now
 
-        #self.killsideband()  # Not yet working
-    
         vI = np.zeros(1)
         vQ = np.zeros(1)
         vI2 = np.zeros(1)

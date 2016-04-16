@@ -12,6 +12,7 @@ from nirack import nit  # load PXI trigger
 from covfunc import getCovMatrix  # Function to calculate Covarianve Matrixes
 import gc  # Garbage memory collection
 
+
 class Process():
     ''' acesses the trigger, handles the data storage, saves the data,
         acesses the procedure to calculate covariance Matrixes
@@ -36,8 +37,8 @@ class Process():
         self.pflux = pflux
         self.pstar = nit()
         self.corrAvg = corrAvg
-        self.lags = lags 
-        self.BW = BW 
+        self.lags = lags
+        self.BW = BW
         self.lsamples = lsamples
         self.pstar.send_many_triggers(10)
         self.data_variables()
@@ -61,18 +62,6 @@ class Process():
         self.D1aPow = np.float(0.0)
         self.D2aPow = np.float(0.0)
 
-    def create_datastore_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
-        ''' Prepare Digitizer data files '''
-        self.DS11 = DataStore11Vec(folder, filen_0, dim_1, dim_2, self.D1, 'CovMat')
-        self.DSP_PD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1Pow', cname='Watts')
-        self.DSP_LD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1LevCorr', cname='LvLCorr')
-        self.DS2vD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1vAvg')
-        self.DS2mD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1mAvg')
-        self.DSP_PD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2Pow', cname='Watts')
-        self.DSP_LD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2LevCorr', cname='LvLCorr')
-        self.DS2vD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2vAvg')
-        self.DS2mD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
-
     def setup_D1D2(self):
         '''
         Trigger on PXI-Star
@@ -84,20 +73,21 @@ class Process():
         # self.D2w.set_piplining(1)
 
     def init_trigger_wcheck(self, Refcheck=True, Trigcheck=False):
-        if Refcheck is True:            
+        if Refcheck is True:
             ref1 = bool(self.D1w.ref_is_locked())
-            ref2 = bool(self.D2w.ref_is_locked())  
-            if (ref1 == False or ref2 == False):
+            ref2 = bool(self.D2w.ref_is_locked())
+            if (ref1 and ref2):
+                self.init_trigger()
+                if Trigcheck:
+                    sleep(0.017)
+                    self.confirm_Trigger(Refcheck, Trigcheck)
+
+            else:
                 print ref1, ref2
                 print 'No reference lock! waiting..'
-                sleep(0.1)
+                sleep(0.2)
                 self.init_trigger_wcheck(Refcheck, Trigcheck)
 
-        self.init_trigger()
-        if Trigcheck is True: 
-            sleep(0.015)
-            self.confirm_Trigger(Refcheck, Trigcheck)
-          
     def confirm_Trigger(self, Refcheck, Trigcheck):
         det1 = self.D1.digitizer.get_trigger_detected()
         det2 = self.D2.digitizer.get_trigger_detected()
@@ -121,7 +111,20 @@ class Process():
         sleep(0.022)
         self.pstar.send_software_trigger()
 
+    def create_datastore_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
+        ''' Prepare Digitizer data files '''
+        self.DSP_PD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1Pow', cname='Watts')
+        self.DSP_PD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2Pow', cname='Watts')
+        self.DSP_LD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1LevCorr', cname='LvLCorr')
+        self.DSP_LD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2LevCorr', cname='LvLCorr')
+        self.DS2vD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1vAvg')
+        self.DS2vD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2vAvg')
+        self.DS2mD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1mAvg')
+        self.DS2mD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
+        self.DS11 = DataStore11Vec(folder, filen_0, dim_1, dim_2, self.D1, 'CovMat')  # Cov Matrix D1 has dim_3 info
+
     def data_record(self, kk, jj, ii):
+        '''This loads the new information into the matices'''
         corrAvg = np.float(self.corrAvg)
         self.DS11.record_data(self.covAvgMat / corrAvg, kk, jj, ii)
         self.DSP_PD1.record_data((self.D1aPow / corrAvg), kk, jj, ii)
@@ -134,6 +137,8 @@ class Process():
         self.DS2vD2.record_data(self.D2vMa/corrAvg, self.D2vPha/corrAvg, kk, jj, ii)
 
     def data_save(self):
+        '''save the data in question, at the moment these functions rewrite the matrix eachtime,
+        instead of just appending to it.'''
         self.DS11.save_data()
         self.DSP_PD1.save_data()
         self.DSP_PD2.save_data()
@@ -187,7 +192,7 @@ class Process():
         # self.init_trigger_wcheck(True, False)  # Refcheck (Y), Trigcheck (N)
         self.D1.checkADCOverload()
         self.D2.checkADCOverload()
-        self.avg_corr()  # 3        
+        self.avg_corr()  # 3
         self.data_record(kk, jj, ii)  # 4
         if self.doHist2d:
             self.pltHistograms()
