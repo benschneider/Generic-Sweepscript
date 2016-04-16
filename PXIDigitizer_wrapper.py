@@ -18,7 +18,8 @@ class Error(Exception):
     pass
 
 _lib = WinDLL('afDigitizerDll_32')
-
+# _lib = WinDLL('C:\Windows\SysWOW64\afDigitizerDll_32')
+#_lib = WinDLL('afdigitizerdotnet')
 # define data types used by this dll
 STRING = c_char_p
 AFBOOL = c_long
@@ -100,19 +101,11 @@ class afDigitizer_BS():
         error=obj(self.session, byref(buffer_ref), 1000*timeout, byref(capture_ref))
         self.check_error(error)
 
+    @error_check
     def capture_iq_reclaim_buffer(self, capture_ref, buffer_ref_pointer):
         obj=getDllObject('afDigitizerDll_Capture_IQ_ReclaimBuffer',
                           argtypes = [afDigitizerInstance_t, afDigitizerCaptureIQ_t, POINTER(POINTER(afDigitizerBufferIQ_t))])
-        error = obj(self.session, capture_ref, byref(buffer_ref_pointer))
-        self.check_error(error)
-
-    # @error_check
-    def capture_iq_reclaim_buffer_wait(self, capture_ref, buffer_ref_pointer):
-        obj=getDllObject('afDigitizerDll_Capture_IQ_ReclaimBuffer',
-                          argtypes = [afDigitizerInstance_t, afDigitizerCaptureIQ_t, POINTER(POINTER(afDigitizerBufferIQ_t))])
-        error = obj(self.session, capture_ref, byref(buffer_ref_pointer))
-        #_lib.afDigitizerDll_ErrorMessage_Get(ses, msgBuff, buffLen)
-        self.check_error(error)
+        return obj(self.session, capture_ref, byref(buffer_ref_pointer))
 
     def create_object(self):
         error = CreateObject(self.session)
@@ -192,7 +185,6 @@ class afDigitizer_BS():
         error = obj(self.session, byref(dValue))
         self.check_error(error)
         return dValue.value
-
 
     def modulation_generic_sampling_frequency_set(self, dValue):
         obj = getDllObject('afDigitizerDll_Modulation_SetGenericSamplingFreqRatio',
@@ -454,6 +446,7 @@ class afDigitizer_BS():
         return iValue.value
 
     def rf_userLOPosition_set(self, iLOPosition):
+        '''Set the Local oscillator position above(1) or below(0)'''
         afDigitizerDll_RF_UserLOPosition_Set = getDllObject('afDigitizerDll_RF_UserLOPosition_Set', argtypes = [afDigitizerInstance_t, c_int])
         error = afDigitizerDll_RF_UserLOPosition_Set(self.session, iLOPosition)
         self.check_error(error)
