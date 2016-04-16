@@ -24,7 +24,7 @@ import sys
 
 
 thisfile = __file__
-filen_0 = 'S1_1042_SN'
+filen_0 = 'S1_1045_T'
 folder = 'data\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
@@ -32,9 +32,9 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 10e6
-lsamples = 1e6
-corrAvg = 10
+BW = 1e5
+lsamples = 1e5
+corrAvg = 1
 
 #BPF implemented to kill noise sideband, 
 #FFT filtering not yet working, possibly BW not large enough
@@ -57,7 +57,7 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=-20.0, stop=20.0, pt=2001,
+                start=-0.05, stop=0.05, pt=101,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
@@ -65,7 +65,7 @@ vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=0.3, stop=0.03, pt=1,
+                 start=0.3, stop=0.03, pt=14,
                  sstep=30e-3, stime=1e-3)
 
 sgen = None
@@ -75,14 +75,14 @@ pFlux.set_freq(8.9e9)
 pFlux.set_power(pFlux.start)
 pFlux.sweep_par='power'  # Power sweep
 
-dim_1 = vBias
-dim_2 = pFlux
+dim_2 = vBias
+dim_1 = pFlux
 dim_3 = vMag
 dim_1.defval = 0.0
 dim_2.defval = 0.0
 dim_3.defval = 0.0
 dim_1.UD = False
-recordD12 = True
+recordD12 = True  # activates /deactivates all D1 D2 data storage 
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
 D12.doHist2d = False  # Plot 2d Histograms ??
 
@@ -147,7 +147,7 @@ sweep_dim_1(dim_1, dim_1.defval)
 sweep_dim_2(dim_2, dim_2.defval)
 sweep_dim_3(dim_3, dim_3.defval)
 dim_1.output(1)
-dim_2.output(0)
+dim_2.output(1)
 dim_3.output(1)
 
 print 'Executing sweep'
