@@ -101,24 +101,26 @@ class instrument():
         self.create_memfiles()
         
     def create_memfiles(self):
-        '''This creates on DISK Temp files to store large data chunks in'''
-        self.cIQ = np.memmap(self.name[:2]+'.cIQ.mem', dtype='complex64', 
-                             mode='w+', shape=self.nSamples)
-        self.scaledI = np.memmap(self.name[:2]+'.I.mem', 
-                                 dtype=np.float32, mode='w+', 
-                                 shape=self.nSamples)
-        self.scaledQ = np.memmap(self.name[:2]+'.Q.mem', 
-                                 dtype=np.float32, mode='w+', 
-                                 shape=self.nSamples)
-        self.cfftsig = np.memmap(self.name[:2]+'.FFT.mem', dtype='complex64', 
-                                 mode='w+', shape=self.nSamples)
-        if self.buffmode:
-            self.i_buffer = np.memmap(self.name[:2]+'.IB.mem', 
-                                     dtype=c_float, mode='w+', 
-                                     shape=self.nSamples)
-            self.q_buffer = np.memmap(self.name[:2]+'.QB.mem', 
-                                     dtype=c_float, mode='w+', 
-                                     shape=self.nSamples)
+        '''This creates on DISK Temp files to store large data chunks '''
+        if self.nSamples > 1e5:
+            self.cIQ = np.memmap(self.name[:2]+'.cIQ.mem', dtype='complex64', mode='w+', shape=self.nSamples)
+            self.scaledI = np.memmap(self.name[:2]+'.I.mem', dtype=np.float32, mode='w+', shape=self.nSamples)
+            self.scaledQ = np.memmap(self.name[:2]+'.Q.mem', dtype=np.float32, mode='w+', shape=self.nSamples)
+            self.cfftsig = np.memmap(self.name[:2]+'.FFT.mem', dtype='complex64', mode='w+', shape=self.nSamples)            
+            self.i_buffer = np.memmap(self.name[:2]+'.IB.mem', dtype=c_float, mode='w+', shape=self.nSamples)
+            self.q_buffer = np.memmap(self.name[:2]+'.QB.mem', dtype=c_float, mode='w+', shape=self.nSamples)
+
+        else:
+            self.i_buffer = np.zeros(self.nSamples, dtype=c_float)
+            self.q_buffer = np.zeros(self.nSamples, dtype=c_float)
+            self.cIQ = np.zeros(self.nSamples, dtype='complex64')
+            self.scaledI = np.zeros(self.nSamples, dtype= np.float32)
+            self.scaledQ = np.zeros(self.nSamples, dtype= np.float32)
+            self.cfftsig = np.zeros(self.nSamples, dtype='complex64')
+
+                
+            
+
 
     def close_memfiles(self):
         del self.cIQ, self.scaledI, self.scaledQ, self.cfftsig
@@ -205,19 +207,6 @@ class instrument():
                 break
         return new_func
 
-#    @downl_data_check
-#    def downl_data_buff(self):
-#        self.digitizer.capture_iq_reclaim_buffer(
-#        capture_ref=self.capture_ref, 
-#        buffer_ref_pointer=self.buffer_ref_pointer)
-#        if self.buffer_ref_pointer:
-#            total_samples = self.buffer_ref.samples
-#        else:
-#            print "NO BUFFER!"
-#            total_samples = 0
-#        self.scaledI[:] = self.i_buffer[:total_samples].astype(np.float32)
-#        self.scaledQ[:] = self.q_buffer[:total_samples].astype(np.float32)
-
     @downl_data_check
     def downl_data_buff(self):
         a = self.digitizer.capture_iq_reclaim_buffer(
@@ -258,9 +247,16 @@ class instrument():
          and store it in the driver object
          of each trigger there are x samples... which can be averaged...
         '''
-        self.scaledI[:] = np.array((np.array(self.scaledI[:])*np.power(10.0, self.levelcorr/20.0)/np.sqrt(1000)))
-        self.scaledQ[:] = np.array((np.array(self.scaledQ[:])*np.power(10.0, self.levelcorr/20.0)/np.sqrt(1000)))
-        self.cIQ[:] = 1j * self.scaledQ + self.scaledI
+        if self.nSamples > 1e5:
+            self.scaledI[:] = np.array((np.array(self.scaledI[:])*np.power(10.0, self.levelcorr/20.0)/np.sqrt(1000)))
+            self.scaledQ[:] = np.array((np.array(self.scaledQ[:])*np.power(10.0, self.levelcorr/20.0)/np.sqrt(1000)))
+            self.cIQ[:] = 1j * self.scaledQ + self.scaledI
+        else:
+            self.scaledI = np.array((np.array(self.scaledI)*np.power(10.0, self.levelcorr/20.0)/np.sqrt(1000)))
+            self.scaledQ = np.array((np.array(self.scaledQ)*np.power(10.0, self.levelcorr/20.0)/np.sqrt(1000)))
+            self.cIQ = 1j * self.scaledQ + self.scaledI
+            
+
         #self.killsideband()  # Not yet working
     
         vI = np.zeros(1)
