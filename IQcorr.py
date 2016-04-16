@@ -63,28 +63,15 @@ class Process():
 
     def create_datastore_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
         ''' Prepare Digitizer data files '''
-        self.DS11 = DataStore11Vec(
-            folder, filen_0, dim_1, dim_2, self.D1, 'CovMat')
-        self.DSP_PD1 = DataStoreSP(
-            folder, filen_0, dim_1, dim_2, dim_3,
-            label='D1Pow', cname='Watts')
-        self.DSP_LD1 = DataStoreSP(
-            folder, filen_0, dim_1, dim_2, dim_3,
-            label='D1LevCorr', cname='LvLCorr')
-        self.DS2vD1 = DataStore2Vec(
-            folder, filen_0, dim_1, dim_2, dim_3, 'D1vAvg')
-        self.DS2mD1 = DataStore2Vec(
-            folder, filen_0, dim_1, dim_2, dim_3, 'D1mAvg')
-        self.DSP_PD2 = DataStoreSP(
-            folder, filen_0, dim_1, dim_2, dim_3,
-            label='D2Pow', cname='Watts')
-        self.DSP_LD2 = DataStoreSP(
-            folder, filen_0, dim_1, dim_2, dim_3,
-            label='D2LevCorr', cname='LvLCorr')
-        self.DS2vD2 = DataStore2Vec(
-            folder, filen_0, dim_1, dim_2, dim_3, 'D2vAvg')
-        self.DS2mD2 = DataStore2Vec(
-            folder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
+        self.DS11 = DataStore11Vec(folder, filen_0, dim_1, dim_2, self.D1, 'CovMat')
+        self.DSP_PD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1Pow', cname='Watts')
+        self.DSP_LD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1LevCorr', cname='LvLCorr')
+        self.DS2vD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1vAvg')
+        self.DS2mD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1mAvg')
+        self.DSP_PD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2Pow', cname='Watts')
+        self.DSP_LD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2LevCorr', cname='LvLCorr')
+        self.DS2vD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2vAvg')
+        self.DS2mD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
 
     def setup_D1D2(self):
         '''
@@ -141,14 +128,10 @@ class Process():
         self.DSP_PD2.record_data((self.D2aPow / corrAvg), kk, jj, ii)
         self.DSP_LD1.record_data(self.D1.levelcorr, kk, jj, ii)
         self.DSP_LD2.record_data(self.D2.levelcorr, kk, jj, ii)
-        self.DS2mD2.record_data(
-            self.D2Ma/corrAvg, self.D2Pha/corrAvg, kk, jj, ii)
-        self.DS2mD1.record_data(
-            self.D1Ma/corrAvg, self.D1Pha/corrAvg, kk, jj, ii)
-        self.DS2vD1.record_data(
-            self.D1vMa/corrAvg, self.D1vPha/corrAvg, kk, jj, ii)
-        self.DS2vD2.record_data(
-            self.D2vMa/corrAvg, self.D2vPha/corrAvg, kk, jj, ii)
+        self.DS2mD2.record_data(self.D2Ma/corrAvg, self.D2Pha/corrAvg, kk, jj, ii)
+        self.DS2mD1.record_data(self.D1Ma/corrAvg, self.D1Pha/corrAvg, kk, jj, ii)
+        self.DS2vD1.record_data(self.D1vMa/corrAvg, self.D1vPha/corrAvg, kk, jj, ii)
+        self.DS2vD2.record_data(self.D2vMa/corrAvg, self.D2vPha/corrAvg, kk, jj, ii)
 
     def data_save(self):
         self.DS11.save_data()
@@ -200,7 +183,6 @@ class Process():
         still needs data_save to be run to save the data file in the end.
         '''
         self.data_variables()  # 1
-        # sleep(self.lsamples/self.BW-0.1) # not needed here
         # self.init_trigger()  # 2
         # self.init_trigger_wcheck(True, False)  # Refcheck (Y), Trigcheck (N)
         self.D1.checkADCOverload()
