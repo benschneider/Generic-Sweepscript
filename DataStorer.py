@@ -8,10 +8,11 @@ Ben
 2016-04-13
 '''
 import numpy as np
-import tables as tb
+# import tables as tb
 # from time import time, sleep
 from parsers import savemtx, make_header, ask_overwrite
 import gc
+
 
 class PrepDigitizer(object):
 
@@ -20,10 +21,10 @@ class PrepDigitizer(object):
         pass
 
 
-
 class DataStoreSP():
 
-    def __init__(self, folder, filen_0, dim_1, dim_2, dim_3, label = '_', cname='Voltage x1k'):
+    def __init__(self, folder, filen_0, dim_1, dim_2, dim_3,
+                 label='_', cname='Voltage x1k'):
         self._folder = folder
         self._filen_1 = filen_0 + label + '.mtx'
         self._head_1 = make_header(dim_1, dim_2, dim_3, cname)
@@ -37,7 +38,6 @@ class DataStoreSP():
     def ask_overwrite(self):
         ask_overwrite(self._folder+self._filen_1)
 
-
     def record_data(self, vdata, kk, jj, ii=1):
         self._matrix3d_1[kk, jj, ii] = vdata
 
@@ -45,9 +45,11 @@ class DataStoreSP():
         self._matrix3d_2[kk, jj, ii] = vdata
 
     def save_data(self):
-        savemtx(self._folder + self._filen_1, self._matrix3d_1, header=self._head_1)
+        savemtx(self._folder+self._filen_1,
+                self._matrix3d_1, header=self._head_1)
         if self.UD is True:
-            savemtx(self._folder + self._filen_2, self._matrix3d_2, header=self._head_1)
+            savemtx(self._folder + self._filen_2,
+                    self._matrix3d_2, header=self._head_1)
 
 
 class DataStore4Vec():
@@ -195,15 +197,15 @@ class DataStore11Vec():
         savemtx(self._folder + self._filen_12, self._matrix3d_11, header=self._head_11)
 
 
-class CovarianceMat(tb.IsDescription):
-    name = tb.StringCol(16)
-    cI1I1 = tb.Float32Col()  # I phot 1
-    cQ1Q1 = tb.Float32Col()  # Q phot 1
-    cI2I2 = tb.Float32Col()  # I phot 2
-    cQ2Q2 = tb.Float32Col()  # Q phot 2
-    cQ1I1 = tb.Float32Col()  # Corr Single Mode 1
-    cQ2I2 = tb.Float32Col()  # Corr Single Mode 2
-    cI1I2 = tb.Float32Col()  # CCorr Two Mode
-    cI2I1 = tb.Float32Col()
-    cQ1Q2 = tb.Float32Col()
-    cQ2Q1 = tb.Float32Col()
+# class CovarianceMat(tb.IsDescription):
+#     name = tb.StringCol(16)
+#     cI1I1 = tb.Float32Col()  # I phot 1
+#     cQ1Q1 = tb.Float32Col()  # Q phot 1
+#     cI2I2 = tb.Float32Col()  # I phot 2
+#     cQ2Q2 = tb.Float32Col()  # Q phot 2
+#     cQ1I1 = tb.Float32Col()  # Corr Single Mode 1
+#     cQ2I2 = tb.Float32Col()  # Corr Single Mode 2
+#     cI1I2 = tb.Float32Col()  # CCorr Two Mode
+#     cI2I1 = tb.Float32Col()
+#     cQ1Q2 = tb.Float32Col()
+#     cQ2Q1 = tb.Float32Col()
