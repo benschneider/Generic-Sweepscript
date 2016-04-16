@@ -18,7 +18,7 @@ class Process():
     '''
 
     def __init__(self, D1, D2, pflux, sgen,
-                 lags=20, BW=1e6, lsamples=1e4, corrAvg=1):
+                 lags=20, BW=1e6, lsamples=1e4, corrAvg=1, doHist2d=False):
         '''
         D1, D2, pgen, pstar
         D1,2: Digitizer 1,2 object
@@ -42,7 +42,9 @@ class Process():
         self.pstar.send_many_triggers(10)
         self.data_variables()
         self.num = 0    # number of missed triggers in a row
-        self.doHist2d = False
+        self.doHist2d = doHist2d
+        if doHist2d:
+            pass
 
     def data_variables(self):
         ''' create empty variables to store average values '''
