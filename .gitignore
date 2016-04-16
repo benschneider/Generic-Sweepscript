@@ -49,3 +49,8 @@ data_JJ
 *.swp
 .Ropeproject
 tmp
+test.dat
+*.dll
+afDigitizerDll.lib
+*.mem
+cov.dat

@@ -18,7 +18,7 @@ class Process():
     '''
 
     def __init__(self, D1, D2, pflux, sgen,
-                 lags=20, BW=1e6, lsamples=1e4, corrAvg=1):
+                 lags=20, BW=1e6, lsamples=1e4, corrAvg=1, doHist2d=False):
         '''
         D1, D2, pgen, pstar
         D1,2: Digitizer 1,2 object
@@ -42,7 +42,9 @@ class Process():
         self.pstar.send_many_triggers(10)
         self.data_variables()
         self.num = 0    # number of missed triggers in a row
-        self.doHist2d = False
+        self.doHist2d = doHist2d
+        if doHist2d:
+            pass
 
     def data_variables(self):
         ''' create empty variables to store average values '''
@@ -132,27 +134,6 @@ class Process():
         sleep(0.022)
         self.pstar.send_software_trigger()
 
-    def data_grab(self):
-        while True:
-            try:
-                self.D2.downl_data_buff()
-                self.D1.downl_data_buff()
-            except Exception, e:
-                if str(e) == 'Reclaim timeout':
-                    # print 'Reclaim timeout'
-                    sleep(0.1)
-                    continue
-                elif str(e) == 'ADC overflow occurred in reclaimed buffer':
-                    print e.message
-                    self.ACDoverflow += 1
-                    if self.ACDoverflow > 2:
-                        raise e
-                    break
-                else:
-                    raise e
-            self.ACDoverflow = 0
-            break
-
     def data_record(self, kk, jj, ii):
         corrAvg = np.float(self.corrAvg)
         self.DS11.record_data(self.covAvgMat / corrAvg, kk, jj, ii)
@@ -185,7 +166,8 @@ class Process():
         for cz in range(int(self.corrAvg)):
             self.D1.get_Levelcorr()  # update level correction value
             self.D2.get_Levelcorr()
-            self.data_grab()
+            self.D2.downl_data_buff()
+            self.D1.downl_data_buff()
             if (cz + 1) < self.corrAvg:
                 self.init_trigger()
 
@@ -218,7 +200,7 @@ class Process():
         still needs data_save to be run to save the data file in the end.
         '''
         self.data_variables()  # 1
-        # sleep(self.lsamples/self.BW-0.1) # wait for completion of data aquisition
+        # sleep(self.lsamples/self.BW-0.1) # not needed here
         # self.init_trigger()  # 2
         # self.init_trigger_wcheck(True, False)  # Refcheck (Y), Trigcheck (N)
         self.D1.checkADCOverload()

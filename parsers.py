@@ -167,8 +167,9 @@ def loadmtx(filename):
 #         return test1
 
 
-def np_farray(filename, myshape, new=False):
-    ''' This uses a very useful function to deal with slightly larger data files
+def farray(filename, myshape, new=False):
+    ''' File Array
+        This uses a very useful function to deal with slightly larger data files
         maps an numpy array of the shape (myshape) into the hard disk as a file
         if new is set to True it deletes the old one and creates a new file.
         Otherwise it simply opens the old one.
@@ -176,9 +177,9 @@ def np_farray(filename, myshape, new=False):
     '''
     if new:
         return np.memmap(
-            filename, dtype='float32', mode='w+', shape=myshape, order='F')
+            filename, dtype='float32', mode='w+', shape=myshape, order='C')
     return np.memmap(
-        filename, dtype='float32', mode='r+', shape=myshape, order='F')
+        filename, dtype='float32', mode='r+', shape=myshape, order='C')
 
 
 def farray2mtx(farrayfn, shape, header='Units,ufo,d1,0,1,d2,0,1,d3,0,1'):
