@@ -94,7 +94,7 @@ class DataStore4Vec():
 
 class DataStore2Vec():
 
-    def __init__(self, folder, filen_0, dim_1, dim_2, dim_3, label = '_'):
+    def __init__(self, folder, filen_0, dim_1, dim_2, dim_3, label='_'):
         self._folder = folder
         self._filen_3 = filen_0 + label + '_mag' + '.mtx'
         self._filen_4 = filen_0 + label + '_phase' + '.mtx'
@@ -115,17 +115,13 @@ class DataStore2Vec():
             self._matrix3d_4[kk, jj] = np.unwrap(phase)
 
     def save_data(self):
-        savemtx(self._folder + self._filen_3,
-                self._matrix3d_3,
-                header=self._head_3)
-        savemtx(self._folder + self._filen_4,
-                self._matrix3d_4,
-                header=self._head_4)
+        savemtx(self._folder + self._filen_3, self._matrix3d_3, header=self._head_3)
+        savemtx(self._folder + self._filen_4, self._matrix3d_4, header=self._head_4)
 
 
 class DataStore11Vec():
 
-    def __init__(self, folder, filen_0, dim_1, dim_2, dim_3, label = '_'):
+    def __init__(self, folder, filen_0, dim_1, dim_2, dim_3, label='_'):
         ''' Folder where to save the data files,
         filen_0 is the base name added to each file,
         dim_1,2,3 are the sweep objects used to grab data length and names,
@@ -152,15 +148,15 @@ class DataStore11Vec():
 
         self.head.append(make_header(dim_1, dim_2, dim_3, 'Sq-Mag'))
         self.head.append(make_header(dim_1, dim_2, dim_3, 'Sq-Phs'))
-        self.matrix3d = np.memmap('cov.dat', dtype=np.float32, mode='w+',
-                                   shape=(12, dim_3.pt, dim_2.pt, dim_1.pt))
+        self.matrix3d = np.memmap(folder+'cov.dat', dtype=np.float32, mode='w+',
+                                  shape=(12, dim_3.pt, dim_2.pt, dim_1.pt))
 
     def ask_overwrite(self):
         ask_overwrite(self._folder+self._filen_1)
 
     def record_data(self, data, kk, jj, ii):
         for k in range(self.matrix3d.shape[0]):
-            self.matrix3d[k,:, jj, ii] = data[k,:]
+            self.matrix3d[k, :, jj, ii] = data[k, :]
 
     def save_data(self):
         for K in range(self.matrix3d.shape[0]):

@@ -45,6 +45,12 @@ class Process():
         self._takeBG = False
         self.num = 0    # number of missed triggers in a row
         self.doHist2d = doHist2d
+        # Define the different measurement types here:
+        self.driveON = meastype(D1, D2, lags, 'ON')  # Pump drive ON
+        self.driveOFF = meastype(D1, D2, lags, 'OFF')  # Pump drive off
+        # self.driveOFFf1 = meastype(D1, D2, lags, 'f1')  # Pump drive off & Probe Signal f1
+        # self.driveOFFf2 = meastype(D1, D2, lags, 'f2')  # Pump drive off & Probe Signal f2
+
         if doHist2d:
             # hdf5 format is desired, files would become too large to address in 32bit
             pass
@@ -53,20 +59,20 @@ class Process():
             # self.hist = np.memmap('histograms.dat', dtype=np.float32, mode='w+',
             #                       shape=(6, X, Y, dim_3.pt, dim_2.pt, dim_1.pt))
 
-    def data_variables(self):
-        ''' create empty variables to store average values '''
-        gc.collect()
-        self.D1Ma = np.float(0.0)
-        self.D1Pha = np.float(0.0)
-        self.D1vMa = np.float(0.0)
-        self.D1vPha = np.float(0.0)
-        self.D2vMa = np.float(0.0)
-        self.D2vPha = np.float(0.0)
-        self.D2Ma = np.float(0.0)
-        self.D2Pha = np.float(0.0)
-        self.covAvgMat = np.zeros([12, self.lags * 2 - 1])
-        self.D1aPow = np.float(0.0)
-        self.D2aPow = np.float(0.0)
+    # def data_variables(self):
+    #     ''' create empty variables to store average values '''
+    #     gc.collect()
+    #     self.D1Ma = np.float(0.0)
+    #     self.D1Pha = np.float(0.0)
+    #     self.D1vMa = np.float(0.0)
+    #     self.D1vPha = np.float(0.0)
+    #     self.D2vMa = np.float(0.0)
+    #     self.D2vPha = np.float(0.0)
+    #     self.D2Ma = np.float(0.0)
+    #     self.D2Pha = np.float(0.0)
+    #     self.covAvgMat = np.zeros([12, self.lags * 2 - 1])
+    #     self.D1aPow = np.float(0.0)
+    #     self.D2aPow = np.float(0.0)
 
     def setup_D1D2(self):
         '''
@@ -118,42 +124,55 @@ class Process():
         self.pstar.send_software_trigger()
 
     def create_datastore_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
-        ''' Prepare Digitizer data files '''
-        self.DSP_PD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1Pow', cname='Watts')
-        self.DSP_PD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2Pow', cname='Watts')
-        self.DSP_LD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1LevCorr', cname='LvLCorr')
-        self.DSP_LD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2LevCorr', cname='LvLCorr')
-        self.DS2vD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1vAvg')
-        self.DS2vD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2vAvg')
-        self.DS2mD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1mAvg')
-        self.DS2mD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
-        self.DS11 = DataStore11Vec(folder, filen_0, dim_1, dim_2, self.D1, 'CovMat')  # Cov Matrix D1 has dim_3 info
-
-    def data_record(self, kk, jj, ii):
-        '''This loads the new information into the matices'''
-        corrAvg = np.float(self.corrAvg)
-        self.DS11.record_data(self.covAvgMat / corrAvg, kk, jj, ii)
-        self.DSP_PD1.record_data((self.D1aPow / corrAvg), kk, jj, ii)
-        self.DSP_PD2.record_data((self.D2aPow / corrAvg), kk, jj, ii)
-        self.DSP_LD1.record_data(self.D1.levelcorr, kk, jj, ii)
-        self.DSP_LD2.record_data(self.D2.levelcorr, kk, jj, ii)
-        self.DS2mD2.record_data(self.D2Ma/corrAvg, self.D2Pha/corrAvg, kk, jj, ii)
-        self.DS2mD1.record_data(self.D1Ma/corrAvg, self.D1Pha/corrAvg, kk, jj, ii)
-        self.DS2vD1.record_data(self.D1vMa/corrAvg, self.D1vPha/corrAvg, kk, jj, ii)
-        self.DS2vD2.record_data(self.D2vMa/corrAvg, self.D2vPha/corrAvg, kk, jj, ii)
+        self.driveON.create_objs(folder, filen_0, dim_1, dim_2, dim_3)
+        self.driveOFF.create_objs(folder, filen_0, dim_1, dim_2, dim_3)
 
     def data_save(self):
-        '''save the data in question, at the moment these functions rewrite the matrix eachtime,
-        instead of just appending to it.'''
-        self.DS11.save_data()
-        self.DSP_PD1.save_data()
-        self.DSP_PD2.save_data()
-        self.DSP_LD1.save_data()
-        self.DSP_LD2.save_data()
-        self.DS2mD2.save_data()
-        self.DS2mD1.save_data()
-        self.DS2vD1.save_data()
-        self.DS2vD2.save_data()
+        self.driveON.data_save()
+        self.driveOFF.data_save()
+
+    def data_record(self, kk, jj, ii):
+        self.driveON.data_record()
+        self.driveOFF.data_record()
+
+    # def create_datastore_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
+    #     ''' Prepare Digitizer data files '''
+    #     self.DSP_PD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1Pow', cname='Watts')
+    #     self.DSP_PD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2Pow', cname='Watts')
+    #     self.DSP_LD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1LevCorr', cname='LvLCorr')
+    #     self.DSP_LD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2LevCorr', cname='LvLCorr')
+    #     self.DS2vD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1vAvg')
+    #     self.DS2vD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2vAvg')
+    #     self.DS2mD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1mAvg')
+    #     self.DS2mD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
+    #     self.DS11 = DataStore11Vec(folder, filen_0, dim_1, dim_2, self.D1,
+    #                                'CovMat')  # Cov Matrix D1 has dim_3 info
+
+    # def data_record(self, kk, jj, ii):
+    #     '''This loads the new information into the matices'''
+    #     corrAvg = np.float(self.corrAvg)
+    #     self.DS11.record_data(self.covAvgMat / corrAvg, kk, jj, ii)
+    #     self.DSP_PD1.record_data((self.D1aPow / corrAvg), kk, jj, ii)
+    #     self.DSP_PD2.record_data((self.D2aPow / corrAvg), kk, jj, ii)
+    #     self.DSP_LD1.record_data(self.D1.levelcorr, kk, jj, ii)
+    #     self.DSP_LD2.record_data(self.D2.levelcorr, kk, jj, ii)
+    #     self.DS2mD2.record_data(self.D2Ma / corrAvg, self.D2Pha / corrAvg, kk, jj, ii)
+    #     self.DS2mD1.record_data(self.D1Ma / corrAvg, self.D1Pha / corrAvg, kk, jj, ii)
+    #     self.DS2vD1.record_data(self.D1vMa / corrAvg, self.D1vPha / corrAvg, kk, jj, ii)
+    #     self.DS2vD2.record_data(self.D2vMa / corrAvg, self.D2vPha / corrAvg, kk, jj, ii)
+
+    # def data_save(self):
+    #     '''save the data in question, at the moment these functions rewrite the matrix eachtime,
+    #     instead of just appending to it.'''
+    #     self.DS11.save_data()
+    #     self.DSP_PD1.save_data()
+    #     self.DSP_PD2.save_data()
+    #     self.DSP_LD1.save_data()
+    #     self.DSP_LD2.save_data()
+    #     self.DS2mD2.save_data()
+    #     self.DS2mD1.save_data()
+    #     self.DS2vD1.save_data()
+    #     self.DS2vD2.save_data()
 
     def update_data(self, cz):
         '''This downloads data from D1 and D2,
@@ -177,22 +196,31 @@ class Process():
             averages *= 2
 
         for cz in range(int(self.corrAvg)):
-            self.update_data(cz)
-            # Digitizer 1 Values
-            self.D1Ma += self.D1.AvgMag
-            self.D1Pha += self.D1.AvgPhase
-            self.D1vMa += self.D1.vAvgMag
-            self.D1vPha += self.D1.vAvgPh
-            self.D1aPow += self.D1.vAvgPow
-            # Digitizer 2 Values
-            self.D2Ma += self.D2.AvgMag
-            self.D2Pha += self.D2.AvgPhase
-            self.D2vMa += self.D2.vAvgMag
-            self.D2vPha += self.D2.vAvgPh
-            self.D2aPow += self.D2.vAvgPow
-            self.covAvgMat += getCovMatrix(self.D1.scaledI, self.D1.scaledQ,
-                                           self.D2.scaledI, self.D2.scaledQ,
-                                           self.lags)
+            self.update_data(cz)  # downloading new data is the same for all
+            if (cz % 2 == 0):
+                self.driveON.add_avg()
+                self.pflux.output(0)  # now switch drive OFF
+                sleep(0.02)
+            else:
+                self.driveOFF.add_avg()
+                self.pflux.output(0)  # now switch drive ON again
+                sleep(0.02)
+
+            # # Digitizer 1 Values
+            # self.D1Ma += self.D1.AvgMag
+            # self.D1Pha += self.D1.AvgPhase
+            # self.D1vMa += self.D1.vAvgMag
+            # self.D1vPha += self.D1.vAvgPh
+            # self.D1aPow += self.D1.vAvgPow
+            # # Digitizer 2 Values
+            # self.D2Ma += self.D2.AvgMag
+            # self.D2Pha += self.D2.AvgPhase
+            # self.D2vMa += self.D2.vAvgMag
+            # self.D2vPha += self.D2.vAvgPh
+            # self.D2aPow += self.D2.vAvgPow
+            # self.covAvgMat += getCovMatrix(self.D1.scaledI, self.D1.scaledQ,
+            #                                self.D2.scaledI, self.D2.scaledQ,
+            #                                self.lags)
 
     def full_aqc(self, kk, jj, ii):
         # former record vna data
@@ -211,9 +239,9 @@ class Process():
         self.avg_corr()  # 3
         self.data_record(kk, jj, ii)  # 4
         if self.doHist2d:
-            self.pltHistograms(kk, jj, ii)
+            self.make_densityM(kk, jj, ii)
 
-    def pltHistograms(self, kk, jj, ii):
+    def make_densityM(self, kk, jj, ii):
         ''' This creates a figure of the histogram at one specific point'''
         I1 = self.D1.scaledI
         Q1 = self.D1.scaledQ
@@ -225,3 +253,84 @@ class Process():
         histQ1Q2, xl, yl = np.histogram2d(Q1, Q2)
         histI1Q2, xl, yl = np.histogram2d(I1, Q2)
         histQ1I2, xl, yl = np.histogram2d(Q1, I2)
+
+
+class meastype(object):
+    ''' This class contains the different types of measurements done:
+        one where the Drive is switched off, one, where its on,
+        one where a Probe signal is present at f1 one at f2... '''
+
+    def __init__(self, D1, D2, lags, name):
+        gc.collect()
+        self.D1 = D1
+        self.D2 = D2
+        self.lags = lags
+        self.name = name
+        ''' create empty variables to store average values '''
+        self.D1Ma = np.float(0.0)
+        self.D1Pha = np.float(0.0)
+        self.D1vMa = np.float(0.0)
+        self.D1vPha = np.float(0.0)
+        self.D2vMa = np.float(0.0)
+        self.D2vPha = np.float(0.0)
+        self.D2Ma = np.float(0.0)
+        self.D2Pha = np.float(0.0)
+        self.covAvgMat = np.zeros([12, self.lags * 2 - 1])  # For one particular ii, jj, kk
+        self.D1aPow = np.float(0.0)
+        self.D2aPow = np.float(0.0)
+
+    def add_avg(self):
+        self.D1Ma += self.D1.AvgMag
+        self.D1Pha += self.D1.AvgPhase
+        self.D1vMa += self.D1.vAvgMag
+        self.D1vPha += self.D1.vAvgPh
+        self.D1aPow += self.D1.vAvgPow
+        # Digitizer 2 Values
+        self.D2Ma += self.D2.AvgMag
+        self.D2Pha += self.D2.AvgPhase
+        self.D2vMa += self.D2.vAvgMag
+        self.D2vPha += self.D2.vAvgPh
+        self.D2aPow += self.D2.vAvgPow
+        self.covAvgMat += getCovMatrix(self.D1.scaledI, self.D1.scaledQ,
+                                       self.D2.scaledI, self.D2.scaledQ,
+                                       self.lags)
+
+    def create_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
+        ''' Prepare Digitizer data files '''
+        folder = folder+filen_0+self.name+'\\'
+        self.DSP_PD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1Pow', cname='Watts')
+        self.DSP_PD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2Pow', cname='Watts')
+        self.DSP_LD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1LevCorr', cname='LvLCorr')
+        self.DSP_LD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2LevCorr', cname='LvLCorr')
+        self.DS2vD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1vAvg')
+        self.DS2vD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2vAvg')
+        self.DS2mD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1mAvg')
+        self.DS2mD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
+        self.DS11 = DataStore11Vec(folder, filen_0, dim_1, dim_2, self.D1, 'CovMat')
+        # Cov Matrix D1 has dim_3 info
+
+    def data_record(self, kk, jj, ii):
+        '''This loads the new information into the matices'''
+        corrAvg = np.float(self.corrAvg)
+        self.DS11.record_data(self.covAvgMat / corrAvg, kk, jj, ii)
+        self.DSP_PD1.record_data((self.D1aPow / corrAvg), kk, jj, ii)
+        self.DSP_PD2.record_data((self.D2aPow / corrAvg), kk, jj, ii)
+        self.DSP_LD1.record_data(self.D1.levelcorr, kk, jj, ii)
+        self.DSP_LD2.record_data(self.D2.levelcorr, kk, jj, ii)
+        self.DS2mD2.record_data(self.D2Ma / corrAvg, self.D2Pha / corrAvg, kk, jj, ii)
+        self.DS2mD1.record_data(self.D1Ma / corrAvg, self.D1Pha / corrAvg, kk, jj, ii)
+        self.DS2vD1.record_data(self.D1vMa / corrAvg, self.D1vPha / corrAvg, kk, jj, ii)
+        self.DS2vD2.record_data(self.D2vMa / corrAvg, self.D2vPha / corrAvg, kk, jj, ii)
+
+    def data_save(self):
+        '''save the data in question, at the moment these functions rewrite the matrix eachtime,
+        instead of just appending to it.'''
+        self.DS11.save_data()
+        self.DSP_PD1.save_data()
+        self.DSP_PD2.save_data()
+        self.DSP_LD1.save_data()
+        self.DSP_LD2.save_data()
+        self.DS2mD2.save_data()
+        self.DS2mD1.save_data()
+        self.DS2vD1.save_data()
+        self.DS2vD2.save_data()
