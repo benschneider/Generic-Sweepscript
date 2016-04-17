@@ -11,7 +11,7 @@ from DataStorer import DataStoreSP, DataStore2Vec, DataStore11Vec
 from nirack import nit  # load PXI trigger
 from covfunc import getCovMatrix  # Function to calculate Covarianve Matrixes
 import gc  # Garbage memory collection
-
+import os
 
 class Process():
     ''' acesses the trigger, handles the data storage, saves the data,
@@ -41,13 +41,12 @@ class Process():
         self.BW = BW
         self.lsamples = lsamples
         self.pstar.send_many_triggers(10)
-        self.data_variables()
-        self._takeBG = False
+        self._takeBG = True
         self.num = 0    # number of missed triggers in a row
         self.doHist2d = doHist2d
         # Define the different measurement types here:
-        self.driveON = meastype(D1, D2, lags, 'ON')  # Pump drive ON
-        self.driveOFF = meastype(D1, D2, lags, 'OFF')  # Pump drive off
+        self.driveON = meastype(D1, D2, lags, 'ON', self.corrAvg)  # Pump drive ON
+        self.driveOFF = meastype(D1, D2, lags, 'OFF', self.corrAvg)  # Pump drive off
         # self.driveOFFf1 = meastype(D1, D2, lags, 'f1')  # Pump drive off & Probe Signal f1
         # self.driveOFFf2 = meastype(D1, D2, lags, 'f2')  # Pump drive off & Probe Signal f2
 
@@ -58,21 +57,6 @@ class Process():
             # Y = 100
             # self.hist = np.memmap('histograms.dat', dtype=np.float32, mode='w+',
             #                       shape=(6, X, Y, dim_3.pt, dim_2.pt, dim_1.pt))
-
-    # def data_variables(self):
-    #     ''' create empty variables to store average values '''
-    #     gc.collect()
-    #     self.D1Ma = np.float(0.0)
-    #     self.D1Pha = np.float(0.0)
-    #     self.D1vMa = np.float(0.0)
-    #     self.D1vPha = np.float(0.0)
-    #     self.D2vMa = np.float(0.0)
-    #     self.D2vPha = np.float(0.0)
-    #     self.D2Ma = np.float(0.0)
-    #     self.D2Pha = np.float(0.0)
-    #     self.covAvgMat = np.zeros([12, self.lags * 2 - 1])
-    #     self.D1aPow = np.float(0.0)
-    #     self.D2aPow = np.float(0.0)
 
     def setup_D1D2(self):
         '''
@@ -132,61 +116,40 @@ class Process():
         self.driveOFF.data_save()
 
     def data_record(self, kk, jj, ii):
-        self.driveON.data_record()
-        self.driveOFF.data_record()
+        self.driveON.data_record(kk, jj, ii)
+        self.driveOFF.data_record(kk, jj, ii)
 
-    # def create_datastore_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
-    #     ''' Prepare Digitizer data files '''
-    #     self.DSP_PD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1Pow', cname='Watts')
-    #     self.DSP_PD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2Pow', cname='Watts')
-    #     self.DSP_LD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1LevCorr', cname='LvLCorr')
-    #     self.DSP_LD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2LevCorr', cname='LvLCorr')
-    #     self.DS2vD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1vAvg')
-    #     self.DS2vD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2vAvg')
-    #     self.DS2mD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1mAvg')
-    #     self.DS2mD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
-    #     self.DS11 = DataStore11Vec(folder, filen_0, dim_1, dim_2, self.D1,
-    #                                'CovMat')  # Cov Matrix D1 has dim_3 info
+    def data_variables(self):
+        self.driveON.data_variables()
+        self.driveOFF.data_variables()
 
-    # def data_record(self, kk, jj, ii):
-    #     '''This loads the new information into the matices'''
-    #     corrAvg = np.float(self.corrAvg)
-    #     self.DS11.record_data(self.covAvgMat / corrAvg, kk, jj, ii)
-    #     self.DSP_PD1.record_data((self.D1aPow / corrAvg), kk, jj, ii)
-    #     self.DSP_PD2.record_data((self.D2aPow / corrAvg), kk, jj, ii)
-    #     self.DSP_LD1.record_data(self.D1.levelcorr, kk, jj, ii)
-    #     self.DSP_LD2.record_data(self.D2.levelcorr, kk, jj, ii)
-    #     self.DS2mD2.record_data(self.D2Ma / corrAvg, self.D2Pha / corrAvg, kk, jj, ii)
-    #     self.DS2mD1.record_data(self.D1Ma / corrAvg, self.D1Pha / corrAvg, kk, jj, ii)
-    #     self.DS2vD1.record_data(self.D1vMa / corrAvg, self.D1vPha / corrAvg, kk, jj, ii)
-    #     self.DS2vD2.record_data(self.D2vMa / corrAvg, self.D2vPha / corrAvg, kk, jj, ii)
-
-    # def data_save(self):
-    #     '''save the data in question, at the moment these functions rewrite the matrix eachtime,
-    #     instead of just appending to it.'''
-    #     self.DS11.save_data()
-    #     self.DSP_PD1.save_data()
-    #     self.DSP_PD2.save_data()
-    #     self.DSP_LD1.save_data()
-    #     self.DSP_LD2.save_data()
-    #     self.DS2mD2.save_data()
-    #     self.DS2mD1.save_data()
-    #     self.DS2vD1.save_data()
-    #     self.DS2vD2.save_data()
-
-    def update_data(self, cz):
+    def update_data(self, cz, averages):
         '''This downloads data from D1 and D2,
         once downloaded, data acquisition continues.
         At the same time D1 and D2 data is being processed
         '''
         self.D1.get_Levelcorr()  # update level correction value
         self.D2.get_Levelcorr()
-        self.D2.downl_data_buff()
         self.D1.downl_data_buff()
-        if (cz + 1) < self.corrAvg:
-            self.init_trigger()  # Initiate next measurement set
+        self.D2.downl_data_buff()
+        if self._takeBG:
+            self.change_system_environment(cz)
         self.D1.process_data()  # process data, while measurement is running
         self.D2.process_data()
+        if (cz+1) < averages:
+            print 'send trigger from update data'
+            self.init_trigger()  # Initiate next measurement set
+            #self.init_trigger_wcheck(True, True)  # Refcheck (Y), Trigcheck (N)
+            
+    def change_system_environment(self, cz):
+            if (cz % 2 == 0):
+                self.pflux.output(0)  # now switch drive OFF
+                print 'output off'
+            else:
+                self.pflux.output(1)  # now switch drive OFF
+                print 'output on'
+            sleep(0.1)
+       
 
     def avg_corr(self):
         '''init_trigger() should have run once before. This is the averaging,
@@ -195,35 +158,19 @@ class Process():
         if self._takeBG:
             averages *= 2
 
-        for cz in range(int(self.corrAvg)):
-            self.update_data(cz)  # downloading new data is the same for all
-            if (cz % 2 == 0):
-                self.driveON.add_avg()
-                self.pflux.output(0)  # now switch drive OFF
-                sleep(0.02)
+        for cz in range(averages):
+            self.update_data(cz, averages)  # downloading new data is the same for all
+            if self._takeBG:                
+                if (cz % 2 == 0):
+                    self.driveON.add_avg()
+                    print 'Got ON Data'
+                else:
+                    self.driveOFF.add_avg()
+                    print 'Got OFF data'
             else:
-                self.driveOFF.add_avg()
-                self.pflux.output(0)  # now switch drive ON again
-                sleep(0.02)
-
-            # # Digitizer 1 Values
-            # self.D1Ma += self.D1.AvgMag
-            # self.D1Pha += self.D1.AvgPhase
-            # self.D1vMa += self.D1.vAvgMag
-            # self.D1vPha += self.D1.vAvgPh
-            # self.D1aPow += self.D1.vAvgPow
-            # # Digitizer 2 Values
-            # self.D2Ma += self.D2.AvgMag
-            # self.D2Pha += self.D2.AvgPhase
-            # self.D2vMa += self.D2.vAvgMag
-            # self.D2vPha += self.D2.vAvgPh
-            # self.D2aPow += self.D2.vAvgPow
-            # self.covAvgMat += getCovMatrix(self.D1.scaledI, self.D1.scaledQ,
-            #                                self.D2.scaledI, self.D2.scaledQ,
-            #                                self.lags)
+                self.driveON.add_avg()
 
     def full_aqc(self, kk, jj, ii):
-        # former record vna data
         ''' This it the function to run
         1. clears variables
         2. triggers and averages correlation
@@ -231,7 +178,7 @@ class Process():
         4. record data to memory
         still needs data_save to be run to save the data file in the end.
         '''
-        self.data_variables()  # 1
+        self.data_variables()  # 1 clears temp data
         # self.init_trigger()  # 2
         # self.init_trigger_wcheck(True, False)  # Refcheck (Y), Trigcheck (N)
         self.D1.checkADCOverload()
@@ -260,12 +207,16 @@ class meastype(object):
         one where the Drive is switched off, one, where its on,
         one where a Probe signal is present at f1 one at f2... '''
 
-    def __init__(self, D1, D2, lags, name):
+    def __init__(self, D1, D2, lags, name, corrAvg):
         gc.collect()
         self.D1 = D1
         self.D2 = D2
         self.lags = lags
         self.name = name
+        self.corrAvg = corrAvg
+        self.data_variables()
+        
+    def data_variables(self):
         ''' create empty variables to store average values '''
         self.D1Ma = np.float(0.0)
         self.D1Pha = np.float(0.0)
@@ -298,6 +249,8 @@ class meastype(object):
     def create_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
         ''' Prepare Digitizer data files '''
         folder = folder+filen_0+self.name+'\\'
+        if not os.path.exists(folder):
+            os.makedirs(folder)
         self.DSP_PD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1Pow', cname='Watts')
         self.DSP_PD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2Pow', cname='Watts')
         self.DSP_LD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1LevCorr', cname='LvLCorr')
