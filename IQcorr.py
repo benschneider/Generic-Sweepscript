@@ -109,21 +109,25 @@ class Process():
 
     def create_datastore_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
         self.driveON.create_objs(folder, filen_0, dim_1, dim_2, dim_3)
-        self.driveOFF.create_objs(folder, filen_0, dim_1, dim_2, dim_3)
+        if self._takeBG:
+            self.driveOFF.create_objs(folder, filen_0, dim_1, dim_2, dim_3)
 
     def data_save(self):
         self.driveON.data_save()
-        self.driveOFF.data_save()
+        if self._takeBG:
+            self.driveOFF.data_save()
 
     def data_record(self, kk, jj, ii):
         self.driveON.data_record(kk, jj, ii)
-        self.driveOFF.data_record(kk, jj, ii)
+        if self._takeBG:
+            self.driveOFF.data_record(kk, jj, ii)
 
     def data_variables(self):
         self.driveON.data_variables()
-        self.driveOFF.data_variables()
+        if self._takeBG:
+            self.driveOFF.data_variables()
 
-    def download_data(self, cz, averages):
+    def download_data(self, cz):
         '''This downloads data from D1 and D2,
         once downloaded, data acquisition can continue.
         At the same time D1 and D2 data can be processed
@@ -142,36 +146,40 @@ class Process():
         processing and measurement main loop '''
 
         for cz in range(int(self.corrAvg)):
-
-            self.download_data(cz)  # Download data from digitizer
-
+            # Download ON data
+            self.download_data(cz)  
+            
+            # Initiate OFF data aquisition
             if self._takeBG:
-                # Measure OFF data now
                 self.pflux.output(0)
                 print 'output off'
                 sleep(0.1)
                 self.init_trigger()  # Initiate next measurement set
 
-            self.process_dataD1D2() # Process digitizer ON data
+            # Process digitizer ON data
+            self.process_data() 
             self.driveON.add_avg()  # store ON data
 
+            # Download OFF data
             if self._takeBG:
-                # Download OFF data
                 self.download_data(cz)  # Download data from digitizer
 
-                #switch back to ON state for ON data
+                #After download Drive can be switched ON again
                 self.pflux.output(1)
                 print 'output on'
                 sleep(0.1)
-                
-                # Process OFF data
-                self.process_dataD1D2()  # Processing digitizer data                
+
+            # Initiate trigger for next average
+            if (cz+1) < int(self.corrAvg):             
+                self.init_trigger()  
+                # self.init_trigger_wcheck(True, True)  # Refcheck (Y), Trigcheck (N)
+
+            # Process OFF data
+            if self._takeBG:                
+                self.process_data()  # Processing digitizer data                
                 self.driveOFF.add_avg()  # store OFF data
 
                 
-            if (cz+1) < int(self.corrAvg):             # send trigger for next if applicable
-                self.init_trigger()  # Initiate next measurement set
-                # self.init_trigger_wcheck(True, True)  # Refcheck (Y), Trigcheck (N)
 
     def full_aqc(self, kk, jj, ii):
         ''' This it the function to run
