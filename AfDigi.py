@@ -193,7 +193,7 @@ class instrument():
                     elif str(e) == 'ADC overflow occurred in reclaimed buffer':
                         print e.message
                         s.ACDoverflow += 1
-                        if s.ACDoverflow > 2:
+                        if s.ACDoverflow > 3:
                             raise e
                         break
                     else:
@@ -277,8 +277,8 @@ class instrument():
             self.Overload = self.Overload + 1
             print 'Overload number:', self.Overload
             sleep(0.2)
-            if self.Overload > 1:
+            if self.Overload > 3:
                 self.digitizer.rf_rf_input_level_set(30)
-                raise Exception('ADC overloaded 2x in a row')
+                raise Exception('ADC overloaded 4x in a row')
         else:
             self.Overload = 0

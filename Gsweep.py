@@ -24,15 +24,15 @@ import sys
 
 
 thisfile = __file__
-filen_0 = '1048'
+filen_0 = '1052'
 folder = 'data\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
-lags = 50
-BW = 1e5
+lags = 30
+BW = 5e5
 lsamples = 1e5
 corrAvg = 1
 
@@ -57,35 +57,35 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=-0.0, stop=0.05, pt=1,
+                start=-0.0, stop=0.0, pt=1,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.5, stop=-0.5, pt=1,
+               start=-0.5, stop=-0.6, pt=3,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=0.3, stop=0.03, pt=541,
+                 start=3, stop=0.030, pt=15,
                  sstep=30e-3, stime=1e-3)
+#-30 dB at output
 
 sgen = None
 
 pFlux.set_power_mode(1)  # Linear mode in mV
 pFlux.set_freq(8.9e9)
-pFlux.set_power(pFlux.start)
 pFlux.sweep_par='power'  # Power sweep
 
 dim_1 = pFlux
+dim_1.defval = 0.03 #pFlux
 dim_2 = vBias
-dim_3 = vMag
-dim_1.defval = 0.0
 dim_2.defval = 0.0
+dim_3 = vMag
 dim_3.defval = 0.0
 dim_1.UD = False
 recordD12 = True  # activates /deactivates all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
 D12.doHist2d = False  # Plot 2d Histograms ??
-
+D12._takeBG = False
 
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)

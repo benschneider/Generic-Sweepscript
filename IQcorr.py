@@ -123,52 +123,55 @@ class Process():
         self.driveON.data_variables()
         self.driveOFF.data_variables()
 
-    def update_data(self, cz, averages):
+    def download_data(self, cz, averages):
         '''This downloads data from D1 and D2,
-        once downloaded, data acquisition continues.
-        At the same time D1 and D2 data is being processed
+        once downloaded, data acquisition can continue.
+        At the same time D1 and D2 data can be processed
         '''
         self.D1.get_Levelcorr()  # update level correction value
         self.D2.get_Levelcorr()
         self.D1.downl_data_buff()
         self.D2.downl_data_buff()
-        if self._takeBG:
-            self.change_system_environment(cz)
+
+    def process_data(self):
         self.D1.process_data()  # process data, while measurement is running
-        self.D2.process_data()
-        if (cz+1) < averages:
-            #print 'send trigger from update data'
-            self.init_trigger()  # Initiate next measurement set
-            #self.init_trigger_wcheck(True, True)  # Refcheck (Y), Trigcheck (N)
-            
-    def change_system_environment(self, cz):
-            if (cz % 2 == 0):
-                self.pflux.output(0)  # now switch drive OFF
-                print 'output off'
-            else:
-                self.pflux.output(1)  # now switch drive OFF
-                print 'output on'
-            sleep(0.1)
-       
+        self.D2.process_data()       
 
     def avg_corr(self):
         '''init_trigger() should have run once before. This is the averaging,
         processing and measurement main loop '''
-        averages = int(self.corrAvg)
-        if self._takeBG:
-            averages *= 2
 
-        for cz in range(averages):
-            self.update_data(cz, averages)  # downloading new data is the same for all
-            if self._takeBG:                
-                if (cz % 2 == 0):
-                    self.driveON.add_avg()
-                    #print 'Got ON Data'
-                else:
-                    self.driveOFF.add_avg()
-                    #print 'Got OFF data'
-            else:
-                self.driveON.add_avg()
+        for cz in range(int(self.corrAvg)):
+
+            self.download_data(cz)  # Download data from digitizer
+
+            if self._takeBG:
+                # Measure OFF data now
+                self.pflux.output(0)
+                print 'output off'
+                sleep(0.1)
+                self.init_trigger()  # Initiate next measurement set
+
+            self.process_dataD1D2() # Process digitizer ON data
+            self.driveON.add_avg()  # store ON data
+
+            if self._takeBG:
+                # Download OFF data
+                self.download_data(cz)  # Download data from digitizer
+
+                #switch back to ON state for ON data
+                self.pflux.output(1)
+                print 'output on'
+                sleep(0.1)
+                
+                # Process OFF data
+                self.process_dataD1D2()  # Processing digitizer data                
+                self.driveOFF.add_avg()  # store OFF data
+
+                
+            if (cz+1) < int(self.corrAvg):             # send trigger for next if applicable
+                self.init_trigger()  # Initiate next measurement set
+                # self.init_trigger_wcheck(True, True)  # Refcheck (Y), Trigcheck (N)
 
     def full_aqc(self, kk, jj, ii):
         ''' This it the function to run
