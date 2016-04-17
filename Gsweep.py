@@ -24,16 +24,16 @@ import sys
 
 
 thisfile = __file__
-filen_0 = '1047'
+filen_0 = '1048'
 folder = 'data\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
-lags = 30
+lags = 50
 BW = 1e5
-lsamples = 5e5
+lsamples = 1e5
 corrAvg = 1
 
 #BPF implemented to kill noise sideband,
@@ -57,7 +57,7 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=-0.05, stop=0.05, pt=11,
+                start=-0.0, stop=0.05, pt=1,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
@@ -65,7 +65,7 @@ vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=0.3, stop=0.03, pt=2,
+                 start=0.3, stop=0.03, pt=541,
                  sstep=30e-3, stime=1e-3)
 
 sgen = None
@@ -116,7 +116,7 @@ def record_data(kk, jj, ii, back):
     '''
     if recordD12:
         D12.init_trigger()  # Trigger and check D1 & D2
-        print 'send trigger from loop'
+        #print 'send trigger from loop'
     vdata = vm.get_val()  # aquire voltage data point
     if back is True:
         return DS.record_data2(vdata, kk, jj, ii)

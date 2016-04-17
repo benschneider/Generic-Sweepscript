@@ -137,7 +137,7 @@ class Process():
         self.D1.process_data()  # process data, while measurement is running
         self.D2.process_data()
         if (cz+1) < averages:
-            print 'send trigger from update data'
+            #print 'send trigger from update data'
             self.init_trigger()  # Initiate next measurement set
             #self.init_trigger_wcheck(True, True)  # Refcheck (Y), Trigcheck (N)
             
@@ -163,10 +163,10 @@ class Process():
             if self._takeBG:                
                 if (cz % 2 == 0):
                     self.driveON.add_avg()
-                    print 'Got ON Data'
+                    #print 'Got ON Data'
                 else:
                     self.driveOFF.add_avg()
-                    print 'Got OFF data'
+                    #print 'Got OFF data'
             else:
                 self.driveON.add_avg()
 
