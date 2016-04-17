@@ -25,6 +25,7 @@ class instrument():
                  start=4.43e9, stop=0, pt=1, nSample=1e6, sampFreq=1e5,
                  buffmode=True):
         self.capture_ref = None
+        self.ADCoverflow = 0
         self.buffmode = buffmode
         self.bandwidth = sampFreq
         self.removeDCoff = 0
@@ -191,19 +192,19 @@ class instrument():
                         sleep(0.05)
                         continue
                     elif str(e) == 'ADC overflow occurred in reclaimed buffer':
+                        s.ADCFAIL = True
                         print e.message
-                        s.ACDoverflow += 1
-                        if s.ACDoverflow > 3:
-                            raise e
-                        break
+                        s.ADCoverflow += 1
+                        if s.ADCoverflow > 4:
+                            raise e.message
                     else:
                         raise e
-                s.ACDoverflow = 0
                 break
         return new_func
 
     @downl_data_check
     def downl_data_buff(self):
+        self.ADCoverflow = 0
         a = self.digitizer.capture_iq_reclaim_buffer(
             capture_ref=self.capture_ref, buffer_ref_pointer=self.buffer_ref_pointer)
         if a == 0:

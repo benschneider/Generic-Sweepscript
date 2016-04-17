@@ -24,7 +24,7 @@ import sys
 
 
 thisfile = __file__
-filen_0 = '1053'
+filen_0 = '1066'
 folder = 'data\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
@@ -32,22 +32,23 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 5e5
+BW = 2e5
 lsamples = 1e5
 corrAvg = 1
+f1 = 4.79999e9
+f2 = 4.1e9
 
 #BPF implemented to kill noise sideband,
 #FFT filtering not yet working, possibly BW not large enough
 #D1 4670MHZ Edge (4.8GHz) LO above
 #D2 4330MHz Edge (4.1GHz) LO below
-
 D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=1, LoRef=3,
-           name='D1 Lags (sec)', cfreq=4.8e9, inputlvl=0,
+           name='D1 Lags (sec)', cfreq=f1, inputlvl=-7,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 
 D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=0,
-           name='D2 Lags (sec)', cfreq=4.1e9, inputlvl=0,
+           name='D2 Lags (sec)', cfreq=f2, inputlvl=-7,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 
@@ -61,18 +62,19 @@ vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.5, stop=-0.7, pt=21,
+               start=-0.59, stop=-0.59, pt=1,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=3, stop=0.030, pt=15,
+                 start=2.0, stop=2.0, pt=100,
                  sstep=30e-3, stime=1e-3)
 #-30 dB at output
 
 sgen = None
 
 pFlux.set_power_mode(1)  # Linear mode in mV
-pFlux.set_freq(8.9e9)
+# f1+f2
+pFlux.set_freq(8.89999e9)
 pFlux.sweep_par='power'  # Power sweep
 
 dim_1 = pFlux

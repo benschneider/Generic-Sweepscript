@@ -28,7 +28,6 @@ class Process():
         pstar: Trigger source (PXI-Star)
         '''
         # Make some object references
-        self.ACDoverflow = 0
         self.D1 = D1
         self.D2 = D2
         self.D1w = self.D1.digitizer
@@ -136,6 +135,13 @@ class Process():
         self.D2.get_Levelcorr()
         self.D1.downl_data_buff()
         self.D2.downl_data_buff()
+        if (bool(self.D1.ADCoverflow) or bool(self.D1.ADCoverflow)):
+            self.nnnnn += 1
+            print 'remeasure this: '+str(self.nnnnn)
+            if self.nnnnn > 7:
+                raise Exception('Continuous ADC-overflow')
+            self.init_trigger()
+            self.download_data(cz)
 
     def process_data(self):
         self.D1.process_data()  # process data, while measurement is running
@@ -147,6 +153,7 @@ class Process():
 
         for cz in range(int(self.corrAvg)):
             # Download ON data
+            self.nnnnn = 0
             self.download_data(cz)  
             
             # Initiate OFF data aquisition

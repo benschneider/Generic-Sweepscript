@@ -167,7 +167,7 @@ def getCovMatrix(I1, Q1, I2, Q2, lags=20):
             CovMat[10, :] = (abs(1j*(CovMat[8, :]+CovMat[9, :])
                                  + (CovMat[6, :] - CovMat[7, :])))
             # 10: <Squeezing> Angle
-            CovMat[11, :] = (np.angle(1j*(CovMat[8, :]+CovMat[9, :]) + (CovMat[6, :] - CovMat[7, :])))
+            CovMat[11, :] = np.angle(1j*(CovMat[8, :]+CovMat[9, :]) + (CovMat[6, :] - CovMat[7, :]))
             
             return CovMat
 

@@ -75,13 +75,10 @@ class afDigitizer_BS():
             _lib.afDigitizerDll_ClearErrors(ses)
             a = func(*args, **kwargs)
             _lib.afDigitizerDll_ErrorCode_Get(ses, byref(err))
-            if err.value < 0 :
-                _lib.afDigitizerDll_ErrorMessage_Get(ses, msgBuff, buffLen)
-                raise Exception(msgBuff.value)
-            if err.value > 0 :
-                _lib.afDigitizerDll_ErrorMessage_Get(ses, msgBuff, buffLen)
-                print 'Warning ' + str(msgBuff.value)
-            return a
+            if err.value == 0 :
+                return a
+            _lib.afDigitizerDll_ErrorMessage_Get(ses, msgBuff, buffLen)
+            raise Exception(msgBuff.value)
         return new_func
 
     def __init__(self):
