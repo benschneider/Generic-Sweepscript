@@ -24,7 +24,7 @@ import sys
 
 
 thisfile = __file__
-filen_0 = '1073'
+filen_0 = '1078_np6np5'
 folder = 'data\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
@@ -43,12 +43,12 @@ f2 = 4.1e9
 #D1 4670MHZ Edge (4.8GHz) LO above
 #D2 4330MHz Edge (4.1GHz) LO below
 D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=1, LoRef=0,
-           name='D1 Lags (sec)', cfreq=f1, inputlvl=-6,
+           name='D1 Lags (sec)', cfreq=f1, inputlvl=-4,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 
 D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=3,
-           name='D2 Lags (sec)', cfreq=f2, inputlvl=-6,
+           name='D2 Lags (sec)', cfreq=f2, inputlvl=-4,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 
@@ -58,15 +58,15 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=-0.1, stop=0.1, pt=21,
+                start=-0.0, stop=0.0, pt=1,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.59, stop=-0.59, pt=1,
+               start=-0.6, stop=-0.5, pt=11,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=0.03, stop=2.0, pt=201,
+                 start=2.0, stop=0.03, pt=101,
                  sstep=30e-3, stime=1e-3)
 #-30 dB at output
 
@@ -79,10 +79,10 @@ pFlux.sweep_par='power'  # Power sweep
 
 dim_1 = pFlux
 dim_1.defval = 0.03 #pFlux
-dim_2 = vBias
-dim_2.defval = 0.0
-dim_3 = vMag
+dim_3 = vBias
 dim_3.defval = 0.0
+dim_2 = vMag
+dim_2.defval = 0.0
 dim_1.UD = False
 recordD12 = True  # activates /deactivates all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
@@ -126,7 +126,7 @@ def record_data(kk, jj, ii, back):
     DS.record_data(vdata, kk, jj, ii)
     if recordD12:
         D12.full_aqc(kk, jj, ii)  # Records and calc D1 & D2
-        if (lsamples/BW > 10):
+        if (lsamples/BW > 30):
             # save data at each point if it takes longer than 1min per point
             save_recorded()
 
@@ -157,7 +157,7 @@ dim_2.output(1)
 dim_3.output(1)
 
 print 'Executing sweep'
-texp = (2.0*dim_3.pt*dim_2.pt*dim_1.pt*(0.132+corrAvg*lsamples/BW)/60)
+texp = (2.0*dim_3.pt*dim_2.pt*dim_1.pt*(0.032+corrAvg*lsamples/BW)/60.0)
 # print 'req time (min):'+str(2.0*dim_3.pt*dim_2.pt*dim_1.pt*0.032/60)
 print 'req time (min):' + str(texp)
 

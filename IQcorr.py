@@ -159,7 +159,7 @@ class Process():
             # Initiate OFF data aquisition
             if self._takeBG:
                 self.pflux.output(0)
-                print 'output off'
+                # print 'output off'
                 sleep(0.1)
                 self.init_trigger()  # Initiate next measurement set
 
@@ -173,7 +173,7 @@ class Process():
 
                 #After download Drive can be switched ON again
                 self.pflux.output(1)
-                print 'output on'
+                # print 'output on'
                 sleep(0.1)
 
             # Initiate trigger for next average
