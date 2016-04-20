@@ -24,6 +24,7 @@ class instrument():
                  LoPosAB=1, LoRef=0, name='D', cfreq=4.57e9, inputlvl=30,
                  start=4.43e9, stop=0, pt=1, nSample=1e6, sampFreq=1e5,
                  buffmode=True):
+        self.ADCFAIL = False
         self.capture_ref = None
         self.ADCoverflow = 0
         self.buffmode = buffmode
@@ -193,6 +194,7 @@ class instrument():
                         continue
                     elif str(e) == 'ADC overflow occurred in reclaimed buffer':
                         s.ADCFAIL = True
+                        print 'handle'
                         print e.message
                         s.ADCoverflow += 1
                         if s.ADCoverflow > 4:

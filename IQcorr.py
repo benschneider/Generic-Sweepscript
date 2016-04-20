@@ -135,7 +135,13 @@ class Process():
         self.D2.get_Levelcorr()
         self.D1.downl_data_buff()
         self.D2.downl_data_buff()
-        if (bool(self.D1.ADCoverflow) or bool(self.D1.ADCoverflow)):
+        if (self.D1.ADCFAIL or self.D2.ADCFAIL):
+            print 'Remeasure --'
+            self.init_trigger()
+            self.D1.ADCFAIL = False
+            self.D2.ADCFAIL = False            
+            self.download_data(cz)
+        elif (bool(self.D1.ADCoverflow) or bool(self.D1.ADCoverflow)):
             self.nnnnn += 1
             print 'remeasure this: '+str(self.nnnnn)
             if self.nnnnn > 7:
