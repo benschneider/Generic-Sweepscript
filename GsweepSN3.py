@@ -24,7 +24,7 @@ import sys
 
 
 thisfile = __file__
-filen_0 = '1095_'
+filen_0 = '1100_SN'
 folder = 'data\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
@@ -58,15 +58,15 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=0.002, stop=0.002, pt=1,
+                start=-20.0, stop=20.0, pt=201,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.85, stop=-0.57, pt=141,
+               start=-0.85, stop=-0.57, pt=5,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=2.03, stop=0.03, pt=201,
+                 start=0.03, stop=0.03, pt=1,
                  sstep=30e-3, stime=1e-3)
 #-30 dB at output
 
@@ -77,17 +77,17 @@ pFlux.set_power_mode(1)  # Linear mode in mV
 pFlux.set_freq(f1+f2)
 pFlux.sweep_par='power'  # Power sweep
 
-dim_1 = pFlux
-dim_1.defval = 0.03 #pFlux
-dim_3 = vBias
-dim_3.defval = 0.0
+dim_3 = pFlux
+dim_3.defval = 0.03 #pFlux
+dim_1 = vBias
+dim_1.defval = 0.0
 dim_2 = vMag
 dim_2.defval = 0.0
 dim_1.UD = False
 recordD12 = True  # activates /deactivates all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
 D12.doHist2d = False  # Plot 2d Histograms ??
-D12._takeBG = True
+D12._takeBG = False
 
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
@@ -154,7 +154,7 @@ sweep_dim_2(dim_2, dim_2.defval)
 sweep_dim_3(dim_3, dim_3.defval)
 dim_1.output(1)
 dim_2.output(1)
-dim_3.output(1)
+dim_3.output(0)
 
 print 'Executing sweep'
 texp = (2.0*dim_3.pt*dim_2.pt*dim_1.pt*(0.032+corrAvg*lsamples/BW)/60.0)

@@ -24,7 +24,7 @@ import sys
 
 
 thisfile = __file__
-filen_0 = '1095_'
+filen_0 = '1101_'
 folder = 'data\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
@@ -32,8 +32,8 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 2e6
-lsamples = 1e5
+BW = 1e5
+lsamples = 2e5
 corrAvg = 1
 f1 = 4.799999e9
 f2 = 4.1e9
@@ -62,7 +62,7 @@ vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.85, stop=-0.57, pt=141,
+               start=-0.80, stop=-0.80, pt=11,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
