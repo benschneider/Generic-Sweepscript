@@ -259,16 +259,6 @@ def make_header(dim_1, dim_2, dim_3, meas_data='ufo'):
     return header
 
 
-class dim():
-
-    def __init__(self, name='void', start=0, stop=0, pt=1, scale=1):
-        self.name = name
-        self.start = start
-        self.stop = stop
-        self.pt = pt
-        self.lin = np.linspace(self.start, self.stop, self.pt) * scale
-
-
 class storehdf5(object):
     def __init__(self, fname, clev=5, clib='blosc'):
         '''Class to use Pytables'''
@@ -279,14 +269,24 @@ class storehdf5(object):
         self.mode = 'w'  # write a new file
         # self.open(self.mode)
 
-    def open(self, mode='a'):
+    def open_f(self, mode='a'):
         self.hdf5 = tb.open_file(self.fname, mode)
 
     def add_data(self, data, label='label1'):
-        self.data_storage = self.hdf5.create_carray(
+        self.data_st = self.hdf5.create_carray(
             self.hdf5.root, label, tb.Atom.from_dtype(data.dtype),
             shape=data.shape, filters=self.filt)
-        self.data_storage[:] = data
+        self.data_st[:] = data
 
     def close(self):
         self.hdf5.close()
+
+
+class dim():
+
+    def __init__(self, name='void', start=0, stop=0, pt=1, scale=1):
+        self.name = name
+        self.start = start
+        self.stop = stop
+        self.pt = pt
+        self.lin = np.linspace(self.start, self.stop, self.pt) * scale

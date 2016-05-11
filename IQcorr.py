@@ -12,6 +12,7 @@ from nirack import nit  # load PXI trigger
 from covfunc import getCovMatrix  # Function to calculate Covarianve Matrixes
 import gc  # Garbage memory collection
 import os
+from parsers import storehdf5
 
 class Process():
     ''' acesses the trigger, handles the data storage, saves the data,
@@ -41,32 +42,14 @@ class Process():
         self.lsamples = lsamples
         self.pstar.send_many_triggers(10)
         self._takeBG = True
-        self.num = 0    # number of missed triggers in a row
         self.doHist2d = doHist2d
+        self.num = 0    # number of missed triggers in a row
         # Define the different measurement types here:
-        self.driveON = meastype(D1, D2, lags, 'ON', self.corrAvg)  # Pump drive ON
-        self.driveOFF = meastype(D1, D2, lags, 'OFF', self.corrAvg)  # Pump drive off
+        self.driveON = meastype(D1, D2, lags, 'ON', self.corrAvg, doHist2d)  # Pump drive ON
+        self.driveOFF = meastype(D1, D2, lags, 'OFF', self.corrAvg, doHist2d)  # Pump drive off
         # self.driveOFFf1 = meastype(D1, D2, lags, 'f1')  # Pump drive off & Probe Signal f1
         # self.driveOFFf2 = meastype(D1, D2, lags, 'f2')  # Pump drive off & Probe Signal f2
-
-        if doHist2d:
-            # hdf5 format is desired, files would become too large to address in 32bit
-            pass
-            # X = 100  # (Typical Bin size)
-            # Y = 100
-            # self.hist = np.memmap('histograms.dat', dtype=np.float32, mode='w+',
-            #                       shape=(6, X, Y, dim_3.pt, dim_2.pt, dim_1.pt))
-
-    def setup_D1D2(self):
-        '''
-        Trigger on PXI-Star
-        Enable pipelining
-        '''
-        # self.D1w.trigger_source_set(8)
-        # self.D2w.trigger_source_set(8)
-        # self.D1w.set_piplining(1)
-        # self.D2w.set_piplining(1)
-
+            
     def init_trigger_wcheck(self, Refcheck=True, Trigcheck=False):
         if Refcheck is True:
             ref1 = bool(self.D1w.ref_is_locked())
@@ -209,21 +192,6 @@ class Process():
         self.D2.checkADCOverload()
         self.avg_corr()  # 3
         self.data_record(kk, jj, ii)  # 4
-        if self.doHist2d:
-            self.make_densityM(kk, jj, ii)
-
-    def make_densityM(self, kk, jj, ii):
-        ''' This creates a figure of the histogram at one specific point'''
-        I1 = self.D1.scaledI
-        Q1 = self.D1.scaledQ
-        I2 = self.D2.scaledI
-        Q2 = self.D2.scaledQ
-        histI1Q1, xl, yl = np.histogram2d(I1, Q1)
-        histI2Q2, xl, yl = np.histogram2d(I2, Q2)
-        histI1I2, xl, yl = np.histogram2d(I1, I2)
-        histQ1Q2, xl, yl = np.histogram2d(Q1, Q2)
-        histI1Q2, xl, yl = np.histogram2d(I1, Q2)
-        histQ1I2, xl, yl = np.histogram2d(Q1, I2)
 
 
 class meastype(object):
@@ -231,7 +199,7 @@ class meastype(object):
         one where the Drive is switched off, one, where its on,
         one where a Probe signal is present at f1 one at f2... '''
 
-    def __init__(self, D1, D2, lags, name, corrAvg):
+    def __init__(self, D1, D2, lags, name, corrAvg, doHist2d):
         gc.collect()
         self.D1 = D1
         self.D2 = D2
@@ -239,7 +207,32 @@ class meastype(object):
         self.name = name
         self.corrAvg = corrAvg
         self.data_variables()
-        
+        self.doHist2d = doHist2d
+        #if doHist2d:
+        #    self.setup_Hist2d()
+
+    def create_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
+        ''' Prepare Data files, where processed information will be stored '''
+        nfolder = folder+filen_0+self.name+'\\'
+        if not os.path.exists(nfolder):
+            os.makedirs(nfolder)
+        self.DSP_PD1 = DataStoreSP(nfolder, filen_0, dim_1, dim_2, dim_3, 'D1Pow', cname='Watts')
+        self.DSP_PD2 = DataStoreSP(nfolder, filen_0, dim_1, dim_2, dim_3, 'D2Pow', cname='Watts')
+        self.DSP_LD1 = DataStoreSP(nfolder, filen_0, dim_1, dim_2, dim_3, 'D1LevCorr', cname='LvLCorr')
+        self.DSP_LD2 = DataStoreSP(nfolder, filen_0, dim_1, dim_2, dim_3, 'D2LevCorr', cname='LvLCorr')
+        self.DS2vD1 = DataStore2Vec(nfolder, filen_0, dim_1, dim_2, dim_3, 'D1vAvg')
+        self.DS2vD2 = DataStore2Vec(nfolder, filen_0, dim_1, dim_2, dim_3, 'D2vAvg')
+        self.DS2mD1 = DataStore2Vec(nfolder, filen_0, dim_1, dim_2, dim_3, 'D1mAvg')
+        self.DS2mD2 = DataStore2Vec(nfolder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
+        self.DS11 = DataStore11Vec(nfolder, filen_0, dim_1, dim_2, self.D1, 'CovMat')
+        # Cov Matrix D1 has dim_3 info
+        if self.doHist2d:
+            '''If doHist2d is set to True, a hdf5 file will be created
+            to save the histogram data.'''
+            Hname = folder+'Hist2d.hdf5'
+            self.Hdata = storehdf5(Hname)
+            self.Hdata.open_f(mode='w')  # create a new empty file
+            
     def data_variables(self):
         ''' create empty variables to store average values '''
         self.D1Ma = np.float(0.0)
@@ -270,22 +263,6 @@ class meastype(object):
                                        self.D2.scaledI, self.D2.scaledQ,
                                        self.lags)
 
-    def create_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
-        ''' Prepare Digitizer data files '''
-        folder = folder+filen_0+self.name+'\\'
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-        self.DSP_PD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1Pow', cname='Watts')
-        self.DSP_PD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2Pow', cname='Watts')
-        self.DSP_LD1 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D1LevCorr', cname='LvLCorr')
-        self.DSP_LD2 = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'D2LevCorr', cname='LvLCorr')
-        self.DS2vD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1vAvg')
-        self.DS2vD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2vAvg')
-        self.DS2mD1 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D1mAvg')
-        self.DS2mD2 = DataStore2Vec(folder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
-        self.DS11 = DataStore11Vec(folder, filen_0, dim_1, dim_2, self.D1, 'CovMat')
-        # Cov Matrix D1 has dim_3 info
-
     def data_record(self, kk, jj, ii):
         '''This loads the new information into the matices'''
         corrAvg = np.float(self.corrAvg)
@@ -298,6 +275,21 @@ class meastype(object):
         self.DS2mD1.record_data(self.D1Ma / corrAvg, self.D1Pha / corrAvg, kk, jj, ii)
         self.DS2vD1.record_data(self.D1vMa / corrAvg, self.D1vPha / corrAvg, kk, jj, ii)
         self.DS2vD2.record_data(self.D2vMa / corrAvg, self.D2vPha / corrAvg, kk, jj, ii)
+        if self.doHist2d:
+            self.make_densityM(kk, jj, ii)
+
+    def make_densityM(self, kk, jj, ii):
+        ''' This creates a figure of the histogram at one specific point'''
+        I1 = self.D1.scaledI
+        Q1 = self.D1.scaledQ
+        I2 = self.D2.scaledI
+        Q2 = self.D2.scaledQ
+        histI1Q1, xl, yl = np.histogram2d(I1, Q1)
+        histI2Q2, xl, yl = np.histogram2d(I2, Q2)
+        histI1I2, xl, yl = np.histogram2d(I1, I2)
+        histQ1Q2, xl, yl = np.histogram2d(Q1, Q2)
+        histI1Q2, xl, yl = np.histogram2d(I1, Q2)
+        histQ1I2, xl, yl = np.histogram2d(Q1, I2)
 
     def data_save(self):
         '''save the data in question, at the moment these functions rewrite the matrix eachtime,
