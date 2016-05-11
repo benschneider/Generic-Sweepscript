@@ -14,6 +14,7 @@ import gc  # Garbage memory collection
 import os
 from parsers import storehdf5
 
+
 class Process():
     ''' acesses the trigger, handles the data storage, saves the data,
         acesses the procedure to calculate covariance Matrixes
@@ -122,7 +123,7 @@ class Process():
             print 'Remeasure --'
             self.init_trigger()
             self.D1.ADCFAIL = False
-            self.D2.ADCFAIL = False            
+            self.D2.ADCFAIL = False
             self.download_data(cz)
         elif (bool(self.D1.ADCoverflow) or bool(self.D1.ADCoverflow)):
             self.nnnnn += 1
@@ -134,7 +135,7 @@ class Process():
 
     def process_data(self):
         self.D1.process_data()  # process data, while measurement is running
-        self.D2.process_data()       
+        self.D2.process_data()
 
     def avg_corr(self):
         '''init_trigger() should have run once before. This is the averaging,
@@ -143,8 +144,8 @@ class Process():
         for cz in range(int(self.corrAvg)):
             # Download ON data
             self.nnnnn = 0
-            self.download_data(cz)  
-            
+            self.download_data(cz)
+
             # Initiate OFF data aquisition
             if self._takeBG:
                 self.pflux.output(0)
@@ -153,29 +154,27 @@ class Process():
                 self.init_trigger()  # Initiate next measurement set
 
             # Process digitizer ON data
-            self.process_data() 
+            self.process_data()
             self.driveON.add_avg()  # store ON data
 
             # Download OFF data
             if self._takeBG:
                 self.download_data(cz)  # Download data from digitizer
 
-                #After download Drive can be switched ON again
+                # After download Drive can be switched ON again
                 self.pflux.output(1)
                 # print 'output on'
                 sleep(0.1)
 
             # Initiate trigger for next average
-            if (cz+1) < int(self.corrAvg):             
-                self.init_trigger()  
+            if (cz+1) < int(self.corrAvg):
+                self.init_trigger()
                 # self.init_trigger_wcheck(True, True)  # Refcheck (Y), Trigcheck (N)
 
             # Process OFF data
-            if self._takeBG:                
-                self.process_data()  # Processing digitizer data                
+            if self._takeBG:
+                self.process_data()  # Processing digitizer data
                 self.driveOFF.add_avg()  # store OFF data
-
-                
 
     def full_aqc(self, kk, jj, ii):
         ''' This it the function to run
@@ -207,6 +206,7 @@ class meastype(object):
         self.name = name
         self.corrAvg = corrAvg
         self.data_variables()
+<<<<<<< HEAD
         self.doHist2d = doHist2d
         #if doHist2d:
         #    self.setup_Hist2d()
@@ -233,6 +233,9 @@ class meastype(object):
             self.Hdata = storehdf5(Hname)
             self.Hdata.open_f(mode='w')  # create a new empty file
             
+=======
+
+>>>>>>> refs/remotes/origin/master
     def data_variables(self):
         ''' create empty variables to store average values '''
         self.D1Ma = np.float(0.0)
