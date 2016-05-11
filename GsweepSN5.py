@@ -24,7 +24,7 @@ import sys
 
 
 thisfile = __file__
-filen_0 = '1104_SN'
+#filen_0 = '1103_SN'
 folder = 'data\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
@@ -32,7 +32,7 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 5e5
+BW = 5e4
 lsamples = 1e6
 corrAvg = 1
 f1 = 4.799999e9
