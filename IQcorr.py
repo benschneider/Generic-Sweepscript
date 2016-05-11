@@ -46,8 +46,8 @@ class Process():
         self.doHist2d = doHist2d
         self.num = 0    # number of missed triggers in a row
         # Define the different measurement types here:
-        self.driveON = meastype(D1, D2, lags, 'ON', self.corrAvg, doHist2d)  # Pump drive ON
-        self.driveOFF = meastype(D1, D2, lags, 'OFF', self.corrAvg, doHist2d)  # Pump drive off
+        self.driveON = meastype(D1, D2, lags, 'ON', self.corrAvg)  # Pump drive ON
+        self.driveOFF = meastype(D1, D2, lags, 'OFF', self.corrAvg)  # Pump drive off
         # self.driveOFFf1 = meastype(D1, D2, lags, 'f1')  # Pump drive off & Probe Signal f1
         # self.driveOFFf2 = meastype(D1, D2, lags, 'f2')  # Pump drive off & Probe Signal f2
             
@@ -91,9 +91,9 @@ class Process():
         self.pstar.send_software_trigger()
 
     def create_datastore_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
-        self.driveON.create_objs(folder, filen_0, dim_1, dim_2, dim_3)
+        self.driveON.create_objs(folder, filen_0, dim_1, dim_2, dim_3, self.doHist2d)
         if self._takeBG:
-            self.driveOFF.create_objs(folder, filen_0, dim_1, dim_2, dim_3)
+            self.driveOFF.create_objs(folder, filen_0, dim_1, dim_2, dim_3, self.doHist2d)
 
     def data_save(self):
         self.driveON.data_save()
@@ -198,7 +198,7 @@ class meastype(object):
         one where the Drive is switched off, one, where its on,
         one where a Probe signal is present at f1 one at f2... '''
 
-    def __init__(self, D1, D2, lags, name, corrAvg, doHist2d):
+    def __init__(self, D1, D2, lags, name, corrAvg):
         gc.collect()
         self.D1 = D1
         self.D2 = D2
@@ -206,14 +206,13 @@ class meastype(object):
         self.name = name
         self.corrAvg = corrAvg
         self.data_variables()
-<<<<<<< HEAD
-        self.doHist2d = doHist2d
-        #if doHist2d:
-        #    self.setup_Hist2d()
+        self.doHist2d = False  # Default is Nope
+        self.bin_size = [200, 200]  # Estimated to be ok for 1e6 data points
 
-    def create_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
+    def create_objs(self, folder, filen_0, dim_1, dim_2, dim_3, doHist2d):
+        self.doHist2d = doHist2d
         ''' Prepare Data files, where processed information will be stored '''
-        nfolder = folder+filen_0+self.name+'\\'
+        nfolder = folder+filen_0+self.name+'\\'  #-> data\\subfolder\\
         if not os.path.exists(nfolder):
             os.makedirs(nfolder)
         self.DSP_PD1 = DataStoreSP(nfolder, filen_0, dim_1, dim_2, dim_3, 'D1Pow', cname='Watts')
@@ -229,13 +228,24 @@ class meastype(object):
         if self.doHist2d:
             '''If doHist2d is set to True, a hdf5 file will be created
             to save the histogram data.'''
-            Hname = folder+'Hist2d.hdf5'
+            Hname = nfolder+'Hist2d.hdf5'
             self.Hdata = storehdf5(Hname)
+            self.Hdata.clev = 1  # Compression level to a minimum for speed
             self.Hdata.open_f(mode='w')  # create a new empty file
-            
-=======
+            self.create_Htables(dim_1.pt, dim_2.pt, dim_3.pt)      
 
->>>>>>> refs/remotes/origin/master
+    def create_Htables(self, d1pt, d2pt, d3pt):
+        zshape = [d1pt, d2pt, d3pt, self.bin_size[0], self.bin_size[1]]
+        zarray = np.zeros(zshape)
+        xylist = np.zeros([6,2])
+        self.histI1Q1 = self.Hdata.create_dset(zarray, label='I1Q1_0')
+        self.histI2Q2 = self.Hdata.create_dset(zarray, label='I2Q2_1')
+        self.histI1I2 = self.Hdata.create_dset(zarray, label='I1I2_2')
+        self.histQ1Q2 = self.Hdata.create_dset(zarray, label='Q1Q2_3')
+        self.histI1Q2 = self.Hdata.create_dset(zarray, label='I1Q2_4')
+        self.histQ1I2 = self.Hdata.create_dset(zarray, label='Q1I2_5')
+        self.xylist = self.Hdata.create_dset(xylist, label='XY_05')
+
     def data_variables(self):
         ''' create empty variables to store average values '''
         self.D1Ma = np.float(0.0)
@@ -279,20 +289,26 @@ class meastype(object):
         self.DS2vD1.record_data(self.D1vMa / corrAvg, self.D1vPha / corrAvg, kk, jj, ii)
         self.DS2vD2.record_data(self.D2vMa / corrAvg, self.D2vPha / corrAvg, kk, jj, ii)
         if self.doHist2d:
-            self.make_densityM(kk, jj, ii)
+            self.make_histM(kk, jj, ii)
 
-    def make_densityM(self, kk, jj, ii):
+    def make_histM(self, kk, jj, ii):
         ''' This creates a figure of the histogram at one specific point'''
         I1 = self.D1.scaledI
         Q1 = self.D1.scaledQ
         I2 = self.D2.scaledI
         Q2 = self.D2.scaledQ
-        histI1Q1, xl, yl = np.histogram2d(I1, Q1)
-        histI2Q2, xl, yl = np.histogram2d(I2, Q2)
-        histI1I2, xl, yl = np.histogram2d(I1, I2)
-        histQ1Q2, xl, yl = np.histogram2d(Q1, Q2)
-        histI1Q2, xl, yl = np.histogram2d(I1, Q2)
-        histQ1I2, xl, yl = np.histogram2d(Q1, I2)
+        self.histI1Q1[:][kk, jj, ii], xl, yl = np.histogram2d(I1, Q1, bins=self.bin_size)
+        self.xylist[0] = [xl, yl]
+        self.histI2Q2[:][kk, jj, ii], xl, yl = np.histogram2d(I2, Q2, bins=self.bin_size)
+        self.xylist[1] = [xl, yl]
+        self.histI1I2[:][kk, jj, ii], xl, yl = np.histogram2d(I1, I2, bins=self.bin_size)
+        self.xylist[2] = [xl, yl]
+        self.histQ1Q2[:][kk, jj, ii], xl, yl = np.histogram2d(Q1, Q2, bins=self.bin_size)
+        self.xylist[3] = [xl, yl]
+        self.histI1Q2[:][kk, jj, ii], xl, yl = np.histogram2d(I1, Q2, bins=self.bin_size)
+        self.xylist[4] = [xl, yl]
+        self.histQ1I2[:][kk, jj, ii], xl, yl = np.histogram2d(Q1, I2, bins=self.bin_size)
+        self.xylist[5] = [xl, yl]
 
     def data_save(self):
         '''save the data in question, at the moment these functions rewrite the matrix eachtime,

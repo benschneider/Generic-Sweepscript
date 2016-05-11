@@ -272,6 +272,20 @@ class storehdf5(object):
     def open_f(self, mode='a'):
         self.hdf5 = tb.open_file(self.fname, mode)
 
+    def create_dset(self, data, label='label1', ddtype='fl'):
+        ''' # 
+            create a table with shape label, and dtype
+            containted in the hdf5 file
+            simply returns the reference to it.
+           Example:
+            data1 = create_dset(data1, dtype='float64')
+            data1[:][0,0] = 1.1
+            '''
+        self.data_st = self.hdf5.create_carray(
+            self.hdf5.root, label, tb.Atom.from_dtype(data.dtype),
+            shape=data.shape, filters=self.filt)
+        return self.data_st
+
     def add_data(self, data, label='label1'):
         self.data_st = self.hdf5.create_carray(
             self.hdf5.root, label, tb.Atom.from_dtype(data.dtype),

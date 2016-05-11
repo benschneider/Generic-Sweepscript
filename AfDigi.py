@@ -116,7 +116,6 @@ class instrument():
             self.cfftsig = np.memmap(self.name[:2]+'.FFT.mem', dtype='complex64', mode='w+', shape=self.nSamples)
             self.i_buffer = np.memmap(self.name[:2]+'.IB.mem', dtype=c_float, mode='w+', shape=self.nSamples)
             self.q_buffer = np.memmap(self.name[:2]+'.QB.mem', dtype=c_float, mode='w+', shape=self.nSamples)
-
         else:
             self.i_buffer = np.zeros(self.nSamples, dtype=c_float)
             self.q_buffer = np.zeros(self.nSamples, dtype=c_float)
