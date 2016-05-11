@@ -2,6 +2,7 @@ from time import sleep
 import numpy as np
 
 class instrument():
+    """This dummy has no comment. Test of forking on github"""
 
     def __init__(self, adress='dummy' , name = 'D', start = 0, stop = 0, pt = 1, sstep = 20e-3, stime = 1e-3):
         self.adress = adress
