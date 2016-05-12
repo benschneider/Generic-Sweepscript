@@ -4,8 +4,8 @@ Created on Wed May 04 17:34:26 2016
 
 @author: Ben
 """
-from parsers import copy_file
-folder = 'data\\'
+from parsers import copy_file_interminal
+folder = 'data_May12\\'
 
 #execfile('GsweepSN1.py')  # 1096_SN shotnoise calibration
 #copy_file('GsweepSN1.py', filen_0, folder)
@@ -22,12 +22,13 @@ folder = 'data\\'
 #execfile('GsweepSN4.py')  # 1102_SN
 #copy_file('GsweepSN4.py', filen_0, folder)
 
-filen_0 = '1105_SN'
-copy_file('GsweepSN5.py', filen_0, folder)
-execfile('GsweepSN5.py')
-filen_0 = '1105_'
-copy_file('Gsweep4.py', filen_0, folder)
-execfile('Gsweep4.py')
-filen_0 = '1106_SN'
-copy_file('GsweepSN5.py', filen_0, folder)
-execfile('GsweepSN5.py')
+filen_0 = '1108_SN0'
+copy_file_interminal('GsweepSN1.py', filen_0, folder)
+# copy_file('GsweepSN5.py', filen_0, folder)
+execfile('GsweepSN1.py')
+filen_0 = '1108_'
+copy_file_interminal('Gsweep.py', filen_0, folder)
+execfile('Gsweep.py')
+filen_0 = '1108_SN1'
+copy_file_interminal('GsweepSN1.py', filen_0, folder)
+execfile('GsweepSN1.py')
