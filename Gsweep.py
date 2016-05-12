@@ -24,7 +24,7 @@ import sys
 
 
 thisfile = __file__
-filen_0 = '1110_'
+# filen_0 = '1110_'
 folder = 'data_May12\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
@@ -62,11 +62,11 @@ vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.8, stop=-0.8, pt=1,
+               start=-0.85, stop=-0.75, pt=6,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=0.03, stop=2.03, pt=21,
+                 start=0.03, stop=2.03, pt=101,
                  sstep=30e-3, stime=1e-3)
 #-30 dB at output
 

@@ -296,13 +296,13 @@ class meastype(object):
             self.make_histM(kk, jj, ii)
 
     def make_histM(self, kk, jj, ii):
-        t00 = time()
+        # t00 = time()
         ''' This creates a figure of the histogram at one specific point'''
         I1 = self.D1.scaledI
         Q1 = self.D1.scaledQ
         I2 = self.D2.scaledI
         Q2 = self.D2.scaledQ
-        #self.Hdata.open_f()  # opens the file to be edited
+        self.Hdata.open_f()  # opens the file to be edited
         h5 = self.Hdata.h5.root
         h5.I1Q1_0[kk, jj, ii], xl, yl = np.histogram2d(I1, Q1, bins=self.bin_size)
         h5.XminXmaxXNum[0] = [xl[0], xl[-1], len(xl)]  # axis: Xmin Xmax XNum
@@ -322,8 +322,8 @@ class meastype(object):
         h5.Q1I2_5[kk, jj, ii], xl, yl = np.histogram2d(Q1, I2, bins=self.bin_size)
         h5.XminXmaxXNum[5] = [xl[0], xl[-1], len(xl)]
         h5.YminYmaxYNum[5] = [yl[0], yl[-1], len(yl)]
-        #self.Hdata.close()
-        print time() - t00
+        self.Hdata.close()
+        # print time() - t00
 
     def data_save(self):
         '''save the data in question, at the moment these functions rewrite the matrix eachtime,

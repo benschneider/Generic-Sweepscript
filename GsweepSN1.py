@@ -24,7 +24,7 @@ import sys
 
 
 thisfile = __file__
-filen_0 = '1110_SN'
+# filen_0 = '1111_SN'
 folder = 'data_May12\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')

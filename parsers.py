@@ -45,7 +45,7 @@ def copy_file_interminal(thisfile, file_add, folder=''):
     # filen = path.basename(thisfile)     # something.py
     ffile = path.abspath(thisfile)     # D:\something.py
     ffolder = path.dirname(thisfile)    # EMPTY
-    new_ffile = ffolder + folder + thisfile[:-3] + '_' + file_add + thisfile[-3:]
+    new_ffile = ffolder + folder + file_add + '_' + thisfile[:-3] + thisfile[-3:]
     copy(ffile, new_ffile)
 
 
