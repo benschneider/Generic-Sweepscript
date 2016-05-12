@@ -260,40 +260,39 @@ def make_header(dim_1, dim_2, dim_3, meas_data='ufo'):
 
 
 class storehdf5(object):
-    def __init__(self, fname, clev=5, clib='blosc'):
+    def __init__(self, fname, clev=1, clib='blosc'):
         '''Class to use Pytables'''
         self.fname = fname
         self.clev = clev  # compression level
         self.clib = clib  # compression library / type
         self.filt = tb.Filters(complevel=clev, complib=clib)
-        self.mode = 'w'  # write a new file
         # self.open(self.mode)
 
     def open_f(self, mode='a'):
-        self.hdf5 = tb.open_file(self.fname, mode)
+        ''' opens the file to edit
+            mode='w' can be used to create a new clean file'''
+        self.mode = mode
+        self.h5 = tb.open_file(self.fname, mode)
 
-    def create_dset(self, data, label='label1', ddtype='fl'):
-        ''' # 
-            create a table with shape label, and dtype
-            containted in the hdf5 file
-            simply returns the reference to it.
+    def create_dset(self, shape, label='carray', atom=tb.Float64Atom()):
+        ''' create_dset(self, shape, label='carray', atom=tb.Float64Atom()):
+            create a table with shape label, and atom(for dtype)
+            returns reference
            Example:
-            data1 = create_dset(data1, dtype='float64')
-            data1[:][0,0] = 1.1
-            '''
-        self.data_st = self.hdf5.create_carray(
-            self.hdf5.root, label, tb.Atom.from_dtype(data.dtype),
-            shape=data.shape, filters=self.filt)
-        return self.data_st
+            data1 = create_dset((3,3),label='myarray')
+            data1[:][2,2] = 1.1  # to assign data '''
+        ca = self.h5.create_carray(
+                self.h5.root, label, atom, shape, filters=self.filt)
+        return ca
 
     def add_data(self, data, label='label1'):
-        self.data_st = self.hdf5.create_carray(
-            self.hdf5.root, label, tb.Atom.from_dtype(data.dtype),
+        self.data_st = self.h5.create_carray(
+            self.h5.root, label, tb.Atom.from_dtype(data.dtype),
             shape=data.shape, filters=self.filt)
         self.data_st[:] = data
 
     def close(self):
-        self.hdf5.close()
+        self.h5.close()
 
 
 class dim():

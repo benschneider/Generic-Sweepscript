@@ -24,16 +24,16 @@ import sys
 
 
 thisfile = __file__
-filen_0 = '1096_SN'
-folder = 'data\\'
+filen_0 = '1110_SN'
+folder = 'data_May12\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 2e6
-lsamples = 1e5
+BW = 5e5
+lsamples = 1e6
 corrAvg = 1
 f1 = 4.799999e9
 f2 = 4.1e9
@@ -62,7 +62,7 @@ vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.85, stop=-0.57, pt=5,
+               start=-0.8, stop=-0.8, pt=1,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
@@ -78,7 +78,7 @@ pFlux.set_freq(f1+f2)
 pFlux.sweep_par='power'  # Power sweep
 
 dim_3 = pFlux
-dim_3.defval = 0.03 #pFlux
+dim_3.defval = 0.03  # pFlux
 dim_1 = vBias
 dim_1.defval = 0.0
 dim_2 = vMag
@@ -86,7 +86,7 @@ dim_2.defval = 0.0
 dim_1.UD = False
 recordD12 = True  # activates /deactivates all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
-D12.doHist2d = False  # Plot 2d Histograms ??
+D12.doHist2d = True
 D12._takeBG = False
 
 def sweep_dim_1(obj, value):

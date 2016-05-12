@@ -24,8 +24,8 @@ import sys
 
 
 thisfile = __file__
-filen_0 = '1108_'
-folder = 'data\\'
+filen_0 = '1110_'
+folder = 'data_May12\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
@@ -87,7 +87,7 @@ dim_1.UD = False
 recordD12 = True  # activates /deactivates all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
 D12.doHist2d = True  # Record Histograms
-D12._takeBG = True
+D12.takeBG = True
 
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
@@ -103,16 +103,14 @@ def sweep_dim_3(obj, value):
 
 # This describes how data is saved
 DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Vx1k')
+DS.ask_overwrite()
+copy_file(thisfile, filen_0, folder)
+
 # CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
 if recordD12:
     D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
 
-DS.ask_overwrite()
-copy_file(thisfile, filen_0, folder)
-
-
 # describe how data is to be stored
-t00 = time()
 def record_data(kk, jj, ii, back):
     '''This function is called with each change in ii,jj,kk
         content: what to measure each time
@@ -123,14 +121,14 @@ def record_data(kk, jj, ii, back):
     vdata = vm.get_val()  # aquire voltage data point
     if back is True:
         return DS.record_data2(vdata, kk, jj, ii)
+        # didnt implement backsweep with Digitizers yet
 
     DS.record_data(vdata, kk, jj, ii)
     if recordD12:
         D12.full_aqc(kk, jj, ii)  # Records and calc D1 & D2
-        if (time() - t00) > 30:
+        if (lsamples/BW > 30):
             # save data every 30 seconds
             save_recorded()
-            t00 = time()
 
 def save_recorded():
     '''
