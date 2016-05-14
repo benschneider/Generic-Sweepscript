@@ -24,16 +24,16 @@ import sys
 
 
 thisfile = __file__
-filen_0 = '1096_SN'
-folder = 'data\\'
+filen_0 = '1118_SN_wide'
+folder = 'data_May12\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 2e6
-lsamples = 1e5
+BW = 1e5
+lsamples = 1e6
 corrAvg = 1
 f1 = 4.799999e9
 f2 = 4.1e9
@@ -57,16 +57,16 @@ nothing = dummy('none', name='nothing',
                 start=0, stop=1, pt=1,
                 sstep=20e-3, stime=0.0)
 
-vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=-20.0, stop=20.0, pt=201,
+vBias = sim928c(sim900, name='V 1Mohm', sloti=2, 
+                start=-20.0, stop=20.0, pt=101, 
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.85, stop=-0.57, pt=5,
+               start=-0.8, stop=-0.8, pt=1,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=0.03, stop=0.03, pt=1,
+                 start=0.03, stop=2.03, pt=41,
                  sstep=30e-3, stime=1e-3)
 #-30 dB at output
 
@@ -77,17 +77,18 @@ pFlux.set_power_mode(1)  # Linear mode in mV
 pFlux.set_freq(f1+f2)
 pFlux.sweep_par='power'  # Power sweep
 
-dim_3 = pFlux
-dim_3.defval = 0.03 #pFlux
 dim_1 = vBias
 dim_1.defval = 0.0
-dim_2 = vMag
-dim_2.defval = 0.0
+dim_3 = vMag
+dim_3.defval = 0.0
+dim_2 = pFlux
+dim_2.defval = 0.03
 dim_1.UD = False
 recordD12 = True  # activates /deactivates all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
-D12.doHist2d = False  # Plot 2d Histograms ??
-D12._takeBG = False
+D12.doHist2d = True
+D12.takeBG = True
+
 
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
@@ -103,12 +104,12 @@ def sweep_dim_3(obj, value):
 
 # This describes how data is saved
 DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Vx1k')
-# CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
-if recordD12:
-    D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
-
 DS.ask_overwrite()
 copy_file(thisfile, filen_0, folder)
+
+if recordD12:
+    # CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
+    D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
 
 
 # describe how data is to be stored
@@ -154,7 +155,7 @@ sweep_dim_2(dim_2, dim_2.defval)
 sweep_dim_3(dim_3, dim_3.defval)
 dim_1.output(1)
 dim_2.output(1)
-dim_3.output(0)
+dim_3.output(1)
 
 print 'Executing sweep'
 texp = (2.0*dim_3.pt*dim_2.pt*dim_1.pt*(0.032+corrAvg*lsamples/BW)/60.0)
@@ -211,6 +212,6 @@ finally:
     gc.collect()
     # D1.downl_data_buff()
     # D2.downl_data_buff()
-    # D1.performClose()
-    # D2.performClose()
+    D1.performClose()
+    D2.performClose()
     print 'done'

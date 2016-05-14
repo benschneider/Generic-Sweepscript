@@ -25,7 +25,7 @@ import sys
 
 thisfile = __file__
 filen_0 = '1097_'
-folder = 'data\\'
+folder = 'data_May12\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
@@ -211,6 +211,6 @@ finally:
     gc.collect()
     # D1.downl_data_buff()
     # D2.downl_data_buff()
-    # D1.performClose()
-    # D2.performClose()
+    D1.performClose()
+    D2.performClose()
     print 'done'

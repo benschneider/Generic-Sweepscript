@@ -211,6 +211,6 @@ finally:
     gc.collect()
     # D1.downl_data_buff()
     # D2.downl_data_buff()
-    # D1.performClose()
-    # D2.performClose()
+    D1.performClose()
+    D2.performClose()
     print 'done'

@@ -44,7 +44,6 @@ class instrument():
         self.stop = stop
         self.pt = pt
         self.lin = np.linspace(self.start, self.stop, self.pt)
-        self.digitizer = PXIDigitizer_wrapper.afDigitizer_BS()
         self.prep_data()
         self.performOpen()
         self.set_settings()
@@ -52,6 +51,12 @@ class instrument():
             self.setup_buffer()
 
     def performOpen(self):
+        if hasattr(self, 'digitizer'):
+            ''' If Digitizer exists then close it first 
+            and then reopen it '''
+            self.performClose()
+
+        self.digitizer = PXIDigitizer_wrapper.afDigitizer_BS()
         try:
             # self.digitizer.create_object()
             self.digitizer.boot_instrument(self.adressLo, self.adressDigi)
@@ -111,7 +116,6 @@ class instrument():
             self.cfftsig = np.memmap(self.name[:2]+'.FFT.mem', dtype='complex64', mode='w+', shape=self.nSamples)
             self.i_buffer = np.memmap(self.name[:2]+'.IB.mem', dtype=c_float, mode='w+', shape=self.nSamples)
             self.q_buffer = np.memmap(self.name[:2]+'.QB.mem', dtype=c_float, mode='w+', shape=self.nSamples)
-
         else:
             self.i_buffer = np.zeros(self.nSamples, dtype=c_float)
             self.q_buffer = np.zeros(self.nSamples, dtype=c_float)

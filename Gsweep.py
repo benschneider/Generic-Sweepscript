@@ -24,16 +24,16 @@ import sys
 
 
 thisfile = __file__
-filen_0 = '1095_'
-folder = 'data\\'
+# filen_0 = '1110_'
+folder = 'data_May12\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 2e6
-lsamples = 1e5
+BW = 1e5
+lsamples = 1e6
 corrAvg = 1
 f1 = 4.799999e9
 f2 = 4.1e9
@@ -58,15 +58,15 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=0.002, stop=0.002, pt=1,
+                start=-0.020, stop=0.020, pt=21,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.85, stop=-0.57, pt=141,
+               start=-0.8, stop=-0.8, pt=1,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=2.03, stop=0.03, pt=201,
+                 start=0.03, stop=2.03, pt=51,
                  sstep=30e-3, stime=1e-3)
 #-30 dB at output
 
@@ -79,15 +79,15 @@ pFlux.sweep_par='power'  # Power sweep
 
 dim_1 = pFlux
 dim_1.defval = 0.03 #pFlux
-dim_3 = vBias
-dim_3.defval = 0.0
-dim_2 = vMag
+dim_2 = vBias
 dim_2.defval = 0.0
+dim_3 = vMag
+dim_3.defval = 0.0
 dim_1.UD = False
 recordD12 = True  # activates /deactivates all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
-D12.doHist2d = False  # Plot 2d Histograms ??
-D12._takeBG = True
+D12.doHist2d = True  # Record Histograms
+D12.takeBG = True
 
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
@@ -103,13 +103,12 @@ def sweep_dim_3(obj, value):
 
 # This describes how data is saved
 DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Vx1k')
-# CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
-if recordD12:
-    D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
-
 DS.ask_overwrite()
 copy_file(thisfile, filen_0, folder)
 
+# CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
+if recordD12:
+    D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
 
 # describe how data is to be stored
 def record_data(kk, jj, ii, back):
@@ -122,12 +121,13 @@ def record_data(kk, jj, ii, back):
     vdata = vm.get_val()  # aquire voltage data point
     if back is True:
         return DS.record_data2(vdata, kk, jj, ii)
+        # didnt implement backsweep with Digitizers yet
 
     DS.record_data(vdata, kk, jj, ii)
     if recordD12:
         D12.full_aqc(kk, jj, ii)  # Records and calc D1 & D2
         if (lsamples/BW > 30):
-            # save data at each point if it takes longer than 1min per point
+            # save data every 30 seconds
             save_recorded()
 
 def save_recorded():
@@ -211,6 +211,6 @@ finally:
     gc.collect()
     # D1.downl_data_buff()
     # D2.downl_data_buff()
-    # D1.performClose()
-    # D2.performClose()
+    D1.performClose()
+    D2.performClose()
     print 'done'

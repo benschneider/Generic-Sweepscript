@@ -54,3 +54,5 @@ test.dat
 afDigitizerDll.lib
 *.mem
 cov.dat
+data_May12
+*.hdf5

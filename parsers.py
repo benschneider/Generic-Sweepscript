@@ -23,6 +23,8 @@ import csv
 from os import path
 import sys
 from shutil import copy
+# import h5py
+import tables as tb
 
 
 def ask_overwrite(filename):
@@ -43,7 +45,7 @@ def copy_file_interminal(thisfile, file_add, folder=''):
     # filen = path.basename(thisfile)     # something.py
     ffile = path.abspath(thisfile)     # D:\something.py
     ffolder = path.dirname(thisfile)    # EMPTY
-    new_ffile = ffolder+folder+thisfile[:-3]+'_'+file_add+thisfile[-3:]
+    new_ffile = ffolder + folder + file_add + '_' + thisfile[:-3] + thisfile[-3:]
     copy(ffile, new_ffile)
 
 
@@ -57,7 +59,7 @@ def copy_file(thisfile, file_add, folder=''):
     filen = path.basename(thisfile)     # something.py
     ffile = path.abspath(thisfile)     # D:\something.py
     ffolder = path.dirname(thisfile)    # EMPTY
-    new_ffile = ffolder+'\\'+folder+file_add+'_'+filen[:-3]+thisfile[-3:]
+    new_ffile = ffolder + '\\' + folder + file_add + '_' + filen[:-3] + thisfile[-3:]
     copy(ffile, new_ffile)
 
 
@@ -78,10 +80,18 @@ def loaddat(*inputs):
     >> A = loaddat('1.dat')
     >> A[0]
     (1,3,c,7)
-    '''
+
     file_data = np.genfromtxt(*inputs)
     outputs = zip(*file_data)
     return outputs
+    '''
+    file_data = np.genfromtxt(*inputs)
+    output = file_data
+    try:
+        # basically failes if only one dimension is present
+        output = zip(*file_data)
+    finally:
+        return np.array(output)
 
 
 def savedat(filename1, data1, **quarks):
@@ -97,10 +107,10 @@ def savedat(filename1, data1, **quarks):
     if 'delimiter' in quarks:
         np.savetxt(filename1, data1, **quarks)
     else:
-        np.savetxt(filename1, data1, delimiter = '\t', **quarks)
+        np.savetxt(filename1, data1, delimiter='\t', **quarks)
 
 
-def loadcsv(filename, delim =';'):
+def loadcsv(filename, delim=';'):
     # open file (using with to make sure file is closed afer use)
     with open(filename, 'Ur') as f:
         # collect tuples as a list in data, then convert to an np.array and return
@@ -124,8 +134,8 @@ def loadmtx(filename):
     with open(filename, 'rb') as f:
 
         line = f.readline()
-        header = line[:-1].split(',')
-        # header = line
+        # header = line[:-1].split(',')
+        header = line[:-1]
 
         line = f.readline()
         a = line[:-1].split(' ')
@@ -135,10 +145,10 @@ def loadmtx(filename):
         f.close()
 
     if s[3] == 4:
-        data = unpack('f'*(s[2]*s[1]*s[0]), raw)  # uses float
+        data = unpack('f' * (s[2] * s[1] * s[0]), raw)  # uses float
         M = np.reshape(data, (s[2], s[1], s[0]), order="F")
     else:
-        data = unpack('d'*(s[2]*s[1]*s[0]), raw)  # uses double
+        data = unpack('d' * (s[2] * s[1] * s[0]), raw)  # uses double
         M = np.reshape(data, (s[2], s[1], s[0]), order="F")
     return M, header
 
@@ -187,7 +197,7 @@ def farray2mtx(farrayfn, shape, header='Units,ufo,d1,0,1,d2,0,1,d3,0,1'):
     changes the farray file into an mtx file for spyview
     '''
     newfile = farrayfn + '.mtx'
-    line = str(shape[2])+' '+str(shape[1])+' '+str(shape[0])+' '+'8'
+    line = str(shape[2]) + ' ' + str(shape[1]) + ' ' + str(shape[0]) + ' ' + '8'
     fp = np.memmap(farrayfn, dtype='float32', mode='r', shape=shape, order='C')
     with open(newfile, 'wb') as f:
         f.write(header + '\n')
@@ -215,7 +225,7 @@ def savemtx(filename, data, header='Units,ufo,d1,0,1,d2,0,1,d3,0,1'):
         f.write(header + '\n')
 
         mtxshape = data.shape
-        line = str(mtxshape[2])+' '+str(mtxshape[1])+' '+str(mtxshape[0])+' '+'8'
+        line = str(mtxshape[2]) + ' ' + str(mtxshape[1]) + ' ' + str(mtxshape[0]) + ' ' + '8'
         f.write(line + '\n')  # 'x y z 8 \n'
 
         # raw2 = np.reshape(
@@ -242,16 +252,54 @@ def make_header(dim_1, dim_2, dim_3, meas_data='ufo'):
     dim_3.name = RF Power (dB)
     returns a text string used as 1st line of an mtx file
     '''
-    header = ('Units,'+ meas_data +','+
-                dim_1.name+','+str(dim_1.start)+','+ str(dim_1.stop)+','+
-                dim_2.name+','+str(dim_2.start)+','+ str(dim_2.stop)+','+
-                dim_3.name+','+str(dim_3.start)+','+ str(dim_3.stop))
+    header = ('Units,' + meas_data + ',' +
+              dim_1.name + ',' + str(dim_1.start) + ',' + str(dim_1.stop) + ',' +
+              dim_2.name + ',' + str(dim_2.start) + ',' + str(dim_2.stop) + ',' +
+              dim_3.name + ',' + str(dim_3.start) + ',' + str(dim_3.stop))
     return header
 
+
+class storehdf5(object):
+    def __init__(self, fname, clev=1, clib='blosc'):
+        '''Class to use Pytables'''
+        self.fname = fname
+        self.clev = clev  # compression level
+        self.clib = clib  # compression library / type
+        self.filt = tb.Filters(complevel=clev, complib=clib)
+        # self.open(self.mode)
+
+    def open_f(self, mode='a'):
+        ''' opens the file to edit
+            mode='w' can be used to create a new clean file'''
+        self.mode = mode
+        self.h5 = tb.open_file(self.fname, mode)
+
+    def create_dset(self, shape, label='carray', atom=tb.Float64Atom()):
+        ''' create_dset(self, shape, label='carray', atom=tb.Float64Atom()):
+            create a table with shape label, and atom(for dtype)
+            returns reference
+           Example:
+            data1 = create_dset((3,3),label='myarray')
+            data1[:][2,2] = 1.1  # to assign data '''
+        ca = self.h5.create_carray(
+                self.h5.root, label, atom, shape, filters=self.filt)
+        return ca
+
+    def add_data(self, data, label='label1'):
+        self.data_st = self.h5.create_carray(
+            self.h5.root, label, tb.Atom.from_dtype(data.dtype),
+            shape=data.shape, filters=self.filt)
+        self.data_st[:] = data
+
+    def close(self):
+        self.h5.close()
+
+
 class dim():
-    def __init__(self, name = 'void' ,start = 0, stop = 0, pt = 1, scale = 1):
+
+    def __init__(self, name='void', start=0, stop=0, pt=1, scale=1):
         self.name = name
         self.start = start
         self.stop = stop
         self.pt = pt
-        self.lin = np.linspace(self.start,self.stop,self.pt)*scale
+        self.lin = np.linspace(self.start, self.stop, self.pt) * scale
