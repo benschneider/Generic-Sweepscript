@@ -24,7 +24,7 @@ import sys
 
 
 thisfile = __file__
-filen_0 = '1118_SN_wide'
+filen_0 = '1119_SN'
 folder = 'data_May12\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
@@ -58,7 +58,7 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2, 
-                start=-20.0, stop=20.0, pt=101, 
+                start=-20.0, stop=20.0, pt=201, 
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
@@ -66,7 +66,7 @@ vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=0.03, stop=2.03, pt=41,
+                 start=0.03, stop=2.03, pt=1,
                  sstep=30e-3, stime=1e-3)
 #-30 dB at output
 
@@ -79,15 +79,15 @@ pFlux.sweep_par='power'  # Power sweep
 
 dim_1 = vBias
 dim_1.defval = 0.0
-dim_3 = vMag
-dim_3.defval = 0.0
-dim_2 = pFlux
-dim_2.defval = 0.03
+dim_2 = vMag
+dim_2.defval = 0.0
+dim_3 = pFlux
+dim_3.defval = 0.03
 dim_1.UD = False
 recordD12 = True  # activates /deactivates all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
 D12.doHist2d = True
-D12.takeBG = True
+D12.takeBG = False
 
 
 def sweep_dim_1(obj, value):
@@ -155,7 +155,7 @@ sweep_dim_2(dim_2, dim_2.defval)
 sweep_dim_3(dim_3, dim_3.defval)
 dim_1.output(1)
 dim_2.output(1)
-dim_3.output(1)
+dim_3.output(0)
 
 print 'Executing sweep'
 texp = (2.0*dim_3.pt*dim_2.pt*dim_1.pt*(0.032+corrAvg*lsamples/BW)/60.0)

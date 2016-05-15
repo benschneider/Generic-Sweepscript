@@ -208,7 +208,7 @@ class meastype(object):
         self.corrAvg = corrAvg
         self.data_variables()
         self.doHist2d = False  # Default is Nope
-        self.bin_size = [200, 200]  # Estimated to be ok for 1e6 data points
+        self.bin_size = [100, 100]  # Estimated to be ok for 1e6 data points
 
     def create_objs(self, folder, filen_0, dim_1, dim_2, dim_3, doHist2d):
         self.doHist2d = doHist2d
