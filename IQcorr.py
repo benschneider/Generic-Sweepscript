@@ -144,38 +144,28 @@ class Process():
 
         for cz in range(int(self.corrAvg)):
             # Download ON data
+            # t00 = time()
             self.nnnnn = 0
-            self.download_data(cz)
-
-            # Initiate OFF data aquisition
+            self.download_data(cz)  # grab digitizer data
+            # t11 = time()
             if self.takeBG:
                 self.pflux.output(0)
-                # print 'output off'
-                sleep(0.1)
-                self.init_trigger()  # Initiate next measurement set
-
-            # Process digitizer ON data
-            self.process_data()
-            self.driveON.add_avg()  # store ON data
-
-            # Download OFF data
+            self.process_data()  # Process digitizer ON data
+            self.driveON.add_avg()  # store ON data        
             if self.takeBG:
-                self.download_data(cz)  # Download data from digitizer
-
-                # After download Drive can be switched ON again
+                self.init_trigger()  # Initiate OFF data aquisition
+            # slot for calculations
+            if self.takeBG:
+                self.download_data(cz)  # Download OFF data
                 self.pflux.output(1)
-                # print 'output on'
-                sleep(0.1)
-
-            # Initiate trigger for next average
-            if (cz+1) < int(self.corrAvg):
-                self.init_trigger()
-                # self.init_trigger_wcheck(True, True)  # Refcheck (Y), Trigcheck (N)
-
-            # Process OFF data
+                # sleep(0.1)            
             if self.takeBG:
-                self.process_data()  # Processing digitizer data
+                self.process_data()  # Process OFF data
                 self.driveOFF.add_avg()  # store OFF data
+            if (cz+1) < int(self.corrAvg):
+                self.init_trigger() # Initiate trigger for next average
+            # t22 = time()
+            # print  'download ',t11-t00, 'rest ',t22-t11,
 
     def full_aqc(self, kk, jj, ii):
         ''' This it the function to run
@@ -185,14 +175,15 @@ class Process():
         4. record data to memory
         still needs data_save to be run to save the data file in the end.
         '''
+        # t33 = time()
         self.data_variables()  # 1 clears temp data
         # self.init_trigger()  # 2
         # self.init_trigger_wcheck(True, False)  # Refcheck (Y), Trigcheck (N)
         self.D1.checkADCOverload()
         self.D2.checkADCOverload()
         self.avg_corr()  # 3
-        self.data_record(kk, jj, ii)  # 4
-
+        self.data_record(kk, jj, ii)  # 4 (This is fast !)
+        # print 'D12 aq ', time()-t33
 
 class meastype(object):
     ''' This class contains the different types of measurements done:
@@ -208,7 +199,7 @@ class meastype(object):
         self.corrAvg = corrAvg
         self.data_variables()
         self.doHist2d = False  # Default is Nope
-        self.bin_size = [100, 100]  # Estimated to be ok for 1e6 data points
+        self.bin_size = [50, 50]  # Estimated to be ok for 1e6 data points
 
     def create_objs(self, folder, filen_0, dim_1, dim_2, dim_3, doHist2d):
         self.doHist2d = doHist2d
@@ -231,7 +222,7 @@ class meastype(object):
             to save the histogram data.'''
             Hname = nfolder+'Hist2d.hdf5'
             self.Hdata = storehdf5(Hname)
-            self.Hdata.clev = 1  # Compression level to a minimum for speed
+            self.Hdata.clev = 0  # Compression level to a minimum for speed
             self.Hdata.open_f(mode='w')  # create a new empty file
             self.create_Htables(dim_3.pt, dim_2.pt, dim_1.pt)      
 

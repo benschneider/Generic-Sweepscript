@@ -24,7 +24,7 @@ import sys
 
 
 thisfile = __file__
-# filen_0 = '1120_'
+filen_0 = '1122_'
 folder = 'data_May12\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
@@ -32,8 +32,8 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 1e5
-lsamples = 1e6
+BW = 1e6
+lsamples = 5e4
 corrAvg = 1
 f1 = 4.799999e9
 f2 = 4.1e9
@@ -58,16 +58,16 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=-0.020, stop=0.020, pt=21,
+                start=0.002, stop=0.002, pt=1,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.8, stop=-0.8, pt=1,
+               start=-1.5, stop=4.5, pt=301,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=0.03, stop=2.03, pt=51,
-                 sstep=30e-3, stime=1e-3)
+                 start=0.03, stop=6.03, pt=301,
+                 sstep=1, stime=0)
 #-30 dB at output
 
 sgen = None
@@ -79,15 +79,15 @@ pFlux.sweep_par='power'  # Power sweep
 
 dim_1 = pFlux
 dim_1.defval = 0.03 #pFlux
-dim_2 = vBias
+dim_2 = vMag
 dim_2.defval = 0.0
-dim_3 = vMag
-dim_3.defval = 0.0
+dim_3 = vBias
+dim_3.defval = 0.002
 dim_1.UD = False
-recordD12 = True  # activates /deactivates all D1 D2 data storage
+recordD12 = True  # all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
-D12.doHist2d = True  # Record Histograms
-D12.takeBG = True
+D12.doHist2d = False  # Record Histograms (Larger -> Slower)
+D12.takeBG = False
 
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
@@ -126,9 +126,9 @@ def record_data(kk, jj, ii, back):
     DS.record_data(vdata, kk, jj, ii)
     if recordD12:
         D12.full_aqc(kk, jj, ii)  # Records and calc D1 & D2
-        if (lsamples/BW > 30):
-            # save data every 30 seconds
-            save_recorded()
+        #if (lsamples/BW > 30):
+        #    # save data every 30 seconds
+        #    save_recorded()
 
 def save_recorded():
     '''
@@ -174,23 +174,24 @@ try:
             sleep(0.2)
             print 'Up Trace'
             for ii in range(dim_1.pt):
+                #txx = time()
                 sweep_dim_1(dim_1, dim_1.lin[ii])
                 record_data(kk, jj, ii, False)
+                #print 'sweep+record ', time()-txx
 
             if dim_1.UD is True:
                 sweep_dim_1(dim_1, dim_1.stop)
                 sleep(0.1)
                 print 'Down Trace'
                 for ii in range((dim_1.pt - 1), -1, -1):
-                    # progresbar(kk, jj, ii)
                     sweep_dim_1(dim_1, dim_1.lin[ii])
                     record_data(kk, jj, ii, True)
 
             save_recorded()
-            t1 = time()
-            t_rem = ((t1 - t0) / (jj + 1) * dim_2.pt * dim_3.pt - (t1 - t0))
-            print 'req time (h):' + str(t_rem / 3600)
-            gc.collect()
+            runt = time()-t0  # time run so far
+            avgtime = runt / ((kk+1)*(jj+1)*(ii+1))  # per point
+            t_rem = avgtime*dim_3.pt*dim_2.pt*dim_1.pt - runt  # time left
+            print 'req time (h):' + str(t_rem / 3600) + ' atpp: ' + str(avgtime)
     print 'Measurement Finished'
 
 finally:

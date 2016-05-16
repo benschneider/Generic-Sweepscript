@@ -109,7 +109,7 @@ class instrument():
 
     def create_memfiles(self):
         '''This creates on DISK Temp files to store large data chunks '''
-        if self.nSamples > 1e5:
+        if self.nSamples > 9e5:
             self.cIQ = np.memmap(self.name[:2]+'.cIQ.mem', dtype='complex64', mode='w+', shape=self.nSamples)
             self.scaledI = np.memmap(self.name[:2]+'.I.mem', dtype=np.float32, mode='w+', shape=self.nSamples)
             self.scaledQ = np.memmap(self.name[:2]+'.Q.mem', dtype=np.float32, mode='w+', shape=self.nSamples)

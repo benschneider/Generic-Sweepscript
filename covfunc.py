@@ -62,7 +62,6 @@ def get_g2(P1, P2, lags=20):
 
  
 
-
 def getCovMatrix(I1, Q1, I2, Q2, lags=20):
     '''
     This function was adaped from scipy.signal.fft.convolve.
