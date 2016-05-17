@@ -22,13 +22,13 @@ folder = 'data_May12\\'
 #execfile('GsweepSN4.py')  # 1102_SN
 #copy_file('GsweepSN4.py', filen_0, folder)
 
-filen_0 = '1116_SN0'
+filen_0 = '1128_SN0_'
 copy_file_interminal('GsweepSN1.py', filen_0, folder)
 # copy_file('GsweepSN5.py', filen_0, folder)
 execfile('GsweepSN1.py')
-filen_0 = '1116_'
+filen_0 = '1128'
 copy_file_interminal('Gsweep.py', filen_0, folder)
 execfile('Gsweep.py')
-filen_0 = '1116_SN1'
+filen_0 = '1128_SN1_'
 copy_file_interminal('GsweepSN1.py', filen_0, folder)
 execfile('GsweepSN1.py')

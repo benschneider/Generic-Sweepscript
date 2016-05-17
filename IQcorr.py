@@ -199,7 +199,7 @@ class meastype(object):
         self.corrAvg = corrAvg
         self.data_variables()
         self.doHist2d = False  # Default is Nope
-        self.bin_size = [50, 50]  # Estimated to be ok for 1e6 data points
+        self.bin_size = [60, 60]  # Estimated to be ok for 1e6 data points
 
     def create_objs(self, folder, filen_0, dim_1, dim_2, dim_3, doHist2d):
         self.doHist2d = doHist2d
@@ -229,7 +229,7 @@ class meastype(object):
     def create_Htables(self, d3pt, d2pt, d1pt):
         shape = (d3pt, d2pt, d1pt, self.bin_size[0], self.bin_size[1])
         # atom = tb.Float64Atom()  # kind of defines the file dtype def 64Float
-        xyshape = (6,3)
+        xyshape = (d3pt, d2pt, d1pt, 6,3)
         self.Hdata.create_dset(shape, label='I1Q1_0')
         self.Hdata.create_dset(shape, label='I2Q2_1')
         self.Hdata.create_dset(shape, label='I1I2_2')
@@ -288,32 +288,38 @@ class meastype(object):
 
     def make_histM(self, kk, jj, ii):
         # t00 = time()
+        # the resulting histogram matrix has a large number of zeros (sparse)
+        # and can easily be compressed. Question is: how best to handle those? 
+        # MAT1 = scipy.sparse.csr_matrix(matrix) ?
+        # Or Pytables, as data needs to be stored on HDD in the end...
         ''' This creates a figure of the histogram at one specific point'''
         I1 = self.D1.scaledI
         Q1 = self.D1.scaledQ
         I2 = self.D2.scaledI
         Q2 = self.D2.scaledQ
-        self.Hdata.open_f()  # opens the file to be edited
+        if bool(self.Hdata.h5.isopen) is False:
+            self.Hdata.open_f()  # opens the file to be edited
+        
         h5 = self.Hdata.h5.root
         h5.I1Q1_0[kk, jj, ii], xl, yl = np.histogram2d(I1, Q1, bins=self.bin_size)
-        h5.XminXmaxXNum[0] = [xl[0], xl[-1], len(xl)]  # axis: Xmin Xmax XNum
-        h5.YminYmaxYNum[0] = [yl[0], yl[-1], len(yl)]
+        h5.XminXmaxXNum[kk, jj, ii, 0] = [xl[0], xl[-1], len(xl)]  # axis: Xmin Xmax XNum
+        h5.YminYmaxYNum[kk, jj, ii, 0] = [yl[0], yl[-1], len(yl)]
         h5.I2Q2_1[kk, jj, ii], xl, yl = np.histogram2d(I2, Q2, bins=self.bin_size)
-        h5.XminXmaxXNum[1] = [xl[0], xl[-1], len(xl)]
-        h5.YminYmaxYNum[1] = [yl[0], yl[-1], len(yl)]
+        h5.XminXmaxXNum[kk, jj, ii, 1] = [xl[0], xl[-1], len(xl)]
+        h5.YminYmaxYNum[kk, jj, ii, 1] = [yl[0], yl[-1], len(yl)]
         h5.I1I2_2[kk, jj, ii], xl, yl = np.histogram2d(I1, I2, bins=self.bin_size)
-        h5.XminXmaxXNum[2] = [xl[0], xl[-1], len(xl)]
-        h5.YminYmaxYNum[2] = [yl[0], yl[-1], len(yl)]
+        h5.XminXmaxXNum[kk, jj, ii, 2] = [xl[0], xl[-1], len(xl)]
+        h5.YminYmaxYNum[kk, jj, ii, 2] = [yl[0], yl[-1], len(yl)]
         h5.Q1Q2_3[kk, jj, ii], xl, yl = np.histogram2d(Q1, Q2, bins=self.bin_size)
-        h5.XminXmaxXNum[3] = [xl[0], xl[-1], len(xl)]
-        h5.YminYmaxYNum[3] = [yl[0], yl[-1], len(yl)]
+        h5.XminXmaxXNum[kk, jj, ii, 3] = [xl[0], xl[-1], len(xl)]
+        h5.YminYmaxYNum[kk, jj, ii, 3] = [yl[0], yl[-1], len(yl)]
         h5.I1Q2_4[kk, jj, ii], xl, yl = np.histogram2d(I1, Q2, bins=self.bin_size)
-        h5.XminXmaxXNum[4] = [xl[0], xl[-1], len(xl)]
-        h5.YminYmaxYNum[4] = [yl[0], yl[-1], len(yl)]
+        h5.XminXmaxXNum[kk, jj, ii, 4] = [xl[0], xl[-1], len(xl)]
+        h5.YminYmaxYNum[kk, jj, ii, 4] = [yl[0], yl[-1], len(yl)]
         h5.Q1I2_5[kk, jj, ii], xl, yl = np.histogram2d(Q1, I2, bins=self.bin_size)
-        h5.XminXmaxXNum[5] = [xl[0], xl[-1], len(xl)]
-        h5.YminYmaxYNum[5] = [yl[0], yl[-1], len(yl)]
-        self.Hdata.close()
+        h5.XminXmaxXNum[kk, jj, ii, 5] = [xl[0], xl[-1], len(xl)]
+        h5.YminYmaxYNum[kk, jj, ii, 5] = [yl[0], yl[-1], len(yl)]
+        # self.Hdata.close()
         # print time() - t00
 
     def data_save(self):
@@ -328,3 +334,5 @@ class meastype(object):
         self.DS2mD1.save_data()
         self.DS2vD1.save_data()
         self.DS2vD2.save_data()
+        if self.doHist2d:
+            self.Hdata.close()
