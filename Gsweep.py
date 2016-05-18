@@ -32,8 +32,8 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 5e4
-lsamples = 1e6
+BW = 1e6
+lsamples = 1e5
 corrAvg = 1
 f1 = 4.799999e9
 f2 = 4.1e9
@@ -66,7 +66,7 @@ vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=0.03, stop=2.0, pt=101,
+                 start=2.03, stop=0.03, pt=101,
                  sstep=10, stime=0)
 #-30 dB at output
 
