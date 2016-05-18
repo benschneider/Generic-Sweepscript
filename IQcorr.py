@@ -222,7 +222,7 @@ class meastype(object):
             to save the histogram data.'''
             Hname = nfolder+'Hist2d.hdf5'
             self.Hdata = storehdf5(Hname)
-            self.Hdata.clev = 0  # Compression level to a minimum for speed
+            self.Hdata.clev = 1  # Compression level to a minimum for speed
             self.Hdata.open_f(mode='w')  # create a new empty file
             self.create_Htables(dim_3.pt, dim_2.pt, dim_1.pt)      
 
