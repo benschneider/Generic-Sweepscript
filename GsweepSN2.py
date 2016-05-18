@@ -24,16 +24,16 @@ import sys
 
 
 thisfile = __file__
-filen_0 = '1098_SN'
-folder = 'data\\'
+filen_0 = '1129_SN1'
+folder = 'data_May12\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 2e6
-lsamples = 1e5
+BW = 5e4
+lsamples = 1e6
 corrAvg = 1
 f1 = 4.799999e9
 f2 = 4.1e9
@@ -43,12 +43,12 @@ f2 = 4.1e9
 #D1 4670MHZ Edge (4.8GHz) LO above
 #D2 4330MHz Edge (4.1GHz) LO below
 D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=1, LoRef=0,
-           name='D1 Lags (sec)', cfreq=f1, inputlvl=-2,
+           name='D1 Lags (sec)', cfreq=f1, inputlvl=-3,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 
 D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=3,
-           name='D2 Lags (sec)', cfreq=f2, inputlvl=-2,
+           name='D2 Lags (sec)', cfreq=f2, inputlvl=-3,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 
@@ -57,16 +57,16 @@ nothing = dummy('none', name='nothing',
                 start=0, stop=1, pt=1,
                 sstep=20e-3, stime=0.0)
 
-vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=-20.0, stop=20.0, pt=201,
+vBias = sim928c(sim900, name='V 1Mohm', sloti=2, 
+                start=-20.0, stop=20.0, pt=101, 
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.85, stop=-0.57, pt=5,
+               start=-0.58, stop=-0.58, pt=1,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=0.03, stop=0.03, pt=1,
+                 start=0.03, stop=2.03, pt=1,
                  sstep=30e-3, stime=1e-3)
 #-30 dB at output
 
@@ -77,17 +77,18 @@ pFlux.set_power_mode(1)  # Linear mode in mV
 pFlux.set_freq(f1+f2)
 pFlux.sweep_par='power'  # Power sweep
 
-dim_3 = pFlux
-dim_3.defval = 0.03 #pFlux
 dim_1 = vBias
 dim_1.defval = 0.0
 dim_2 = vMag
 dim_2.defval = 0.0
+dim_3 = pFlux
+dim_3.defval = 0.03
 dim_1.UD = False
 recordD12 = True  # activates /deactivates all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
-D12.doHist2d = False  # Plot 2d Histograms ??
-D12._takeBG = False
+D12.doHist2d = False
+D12.takeBG = False
+
 
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
@@ -103,12 +104,12 @@ def sweep_dim_3(obj, value):
 
 # This describes how data is saved
 DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Vx1k')
-# CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
-if recordD12:
-    D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
-
 DS.ask_overwrite()
 copy_file(thisfile, filen_0, folder)
+
+if recordD12:
+    # CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
+    D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
 
 
 # describe how data is to be stored

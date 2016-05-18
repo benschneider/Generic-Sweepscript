@@ -32,7 +32,7 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 1e6
+BW = 5e4
 lsamples = 1e6
 corrAvg = 1
 f1 = 4.799999e9
@@ -43,12 +43,12 @@ f2 = 4.1e9
 #D1 4670MHZ Edge (4.8GHz) LO above
 #D2 4330MHz Edge (4.1GHz) LO below
 D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=1, LoRef=0,
-           name='D1 Lags (sec)', cfreq=f1, inputlvl=-7,
+           name='D1 Lags (sec)', cfreq=f1, inputlvl=-6,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 
 D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=3,
-           name='D2 Lags (sec)', cfreq=f2, inputlvl=-7,
+           name='D2 Lags (sec)', cfreq=f2, inputlvl=-6,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 
@@ -62,7 +62,7 @@ vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.58, stop=-0.58, pt=51,
+               start=-0.58, stop=-0.58, pt=21,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
