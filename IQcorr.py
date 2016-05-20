@@ -44,8 +44,9 @@ class Process():
         self.BW = BW
         self.lsamples = lsamples
         self.pstar.send_many_triggers(10)
-        self.takeBG = False
+        self.doBG = False
         self.doHist2d = False
+        self.doRaw = False
         self.num = 0    # number of missed triggers in a row
         # Define the different measurement types here:
         self.driveON = meastype(D1, D2, lags, 'ON', self.corrAvg)  # Pump drive ON
@@ -93,23 +94,23 @@ class Process():
         self.pstar.send_software_trigger()
 
     def create_datastore_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
-        self.driveON.create_objs(folder, filen_0, dim_1, dim_2, dim_3, self.doHist2d)
-        if self.takeBG:
-            self.driveOFF.create_objs(folder, filen_0, dim_1, dim_2, dim_3, self.doHist2d)
+        self.driveON.create_objs(folder, filen_0, dim_1, dim_2, dim_3, self.doHist2d, self.doRaw)
+        if self.doBG:
+            self.driveOFF.create_objs(folder, filen_0, dim_1, dim_2, dim_3, self.doHist2d, self.doRaw)
 
     def data_save(self):
         self.driveON.data_save()
-        if self.takeBG:
+        if self.doBG:
             self.driveOFF.data_save()
 
     def data_record(self, kk, jj, ii):
         self.driveON.data_record(kk, jj, ii)
-        if self.takeBG:
+        if self.doBG:
             self.driveOFF.data_record(kk, jj, ii)
 
     def data_variables(self):
         self.driveON.data_variables()
-        if self.takeBG:
+        if self.doBG:
             self.driveOFF.data_variables()
 
     def download_data(self, cz):
@@ -145,17 +146,17 @@ class Process():
             self.nnnnn = 0
             self.download_data(cz)  # grab digitizer data
             # t11 = time()
-            if self.takeBG:
+            if self.doBG:
                 self.pflux.output(0)
             self.driveON.process_data()  # process and store ON data
-            if self.takeBG:
+            if self.doBG:
                 self.init_trigger()  # Initiate OFF data aquisition
             # slot for calculations
-            if self.takeBG:
+            if self.doBG:
                 self.download_data(cz)  # Download OFF data
                 self.pflux.output(1)
                 # sleep(0.1)
-            if self.takeBG:
+            if self.doBG:
                 self.driveOFF.process_data()  # process and store OFF data
             if (cz+1) < int(self.corrAvg):
                 self.init_trigger()  # Initiate trigger for next average
