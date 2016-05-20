@@ -24,8 +24,8 @@ import sys
 
 
 thisfile = __file__
-#filen_0 = '1124_'
-folder = 'data_May12\\'
+filen_0 = '1131_'
+folder = 'data_May20\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
