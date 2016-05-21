@@ -88,9 +88,9 @@ class Process():
         self.num = 0
 
     def init_trigger(self):
-        self.D1.init_trigger_buff()
-        self.D2.init_trigger_buff()
-        sleep(0.022)
+        self.D1.init_trigger()
+        self.D2.init_trigger()
+        sleep(0.025)
         self.pstar.send_software_trigger()
 
     def create_datastore_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
@@ -120,8 +120,8 @@ class Process():
         '''
         self.D1.get_Levelcorr()  # update level correction value
         self.D2.get_Levelcorr()
-        self.D1.downl_data_buff()
-        self.D2.downl_data_buff()
+        self.D1.downl_data()
+        self.D2.downl_data()
         if (self.D1.ADCFAIL or self.D2.ADCFAIL):
             print 'Remeasure --'
             self.init_trigger()

@@ -4,7 +4,6 @@ from DataStorer import DataStoreSP, DataStore2Vec, DataStore11Vec
 import os
 from parsers import storehdf5
 from covfunc import getCovMatrix  # Function to calculate Covarianve Matrixes
-import tables as tb
 
 class meastype(object):
     ''' This class contains the different types of measurements done:
@@ -57,6 +56,30 @@ class meastype(object):
             self.Rdata.open_f(mode='w')  # create a new empty file
             self.create_Rtables(dim_3.pt, dim_2.pt, dim_1.pt)            
 
+    def create_Htables(self, d3pt, d2pt, d1pt):
+        shape = (d3pt, d2pt, d1pt, self.bin_size[0], self.bin_size[1])
+        # atom = tb.Float64Atom()  # kind of defines the file dtype def 64Float
+        xyshape = (d3pt, d2pt, d1pt, 6, 3)
+        self.Hdata.create_dset(shape, label='I1Q1_0')
+        self.Hdata.create_dset(shape, label='I2Q2_1')
+        self.Hdata.create_dset(shape, label='I1I2_2')
+        self.Hdata.create_dset(shape, label='Q1Q2_3')
+        self.Hdata.create_dset(shape, label='I1Q2_4')
+        self.Hdata.create_dset(shape, label='Q1I2_5')
+        self.Hdata.create_dset(xyshape, label='XminXmaxXNum')
+        self.Hdata.create_dset(xyshape, label='YminYmaxYNum')
+        self.Hdata.close()
+        self.Hdata.open_f()  # opens and keeps open
+
+    def create_Rtables(self, d3pt, d2pt, d1pt):
+        shapeD12 = (0, 4, self.nSamples)
+        shapeCoords = (0, 3)
+        es = d3pt*d2pt*d1pt
+        # a32 =  tb.Float32Atom()  # Digitizer data is 32 bit not 64
+        self.Rdata.create_dset2(shapeD12, label='D12raw', esize=es)
+        self.Rdata.create_dset2(shapeCoords, label='ijk', esize=es)
+        self.Rdata.close()
+        self.Rdata.open_f()  # opens and keeps open
 
     def process_data(self):
         self.D1.process_data()  # process data, while measurement is running
@@ -81,7 +104,8 @@ class meastype(object):
         self.ArrD12[0,2] = I2
         self.ArrD12[0,3] = Q2
         r5.D12raw.append(self.ArrD12)
-        
+        r5.D12raw.flush()
+        self.Rdata.h5.flush()       
 
     def calculate_histograms(self):
         I1 = self.D1.scaledI
@@ -94,31 +118,6 @@ class meastype(object):
         self.hmap[3], self.xl[3], self.yl[3] = np.histogram2d(Q1, Q2, bins=self.bin_size)
         self.hmap[4], self.xl[4], self.yl[4] = np.histogram2d(I1, Q2, bins=self.bin_size)
         self.hmap[5], self.xl[5], self.yl[5] = np.histogram2d(Q1, I2, bins=self.bin_size)
-
-    def create_Htables(self, d3pt, d2pt, d1pt):
-        shape = (d3pt, d2pt, d1pt, self.bin_size[0], self.bin_size[1])
-        # atom = tb.Float64Atom()  # kind of defines the file dtype def 64Float
-        xyshape = (d3pt, d2pt, d1pt, 6, 3)
-        self.Hdata.create_dset(shape, label='I1Q1_0')
-        self.Hdata.create_dset(shape, label='I2Q2_1')
-        self.Hdata.create_dset(shape, label='I1I2_2')
-        self.Hdata.create_dset(shape, label='Q1Q2_3')
-        self.Hdata.create_dset(shape, label='I1Q2_4')
-        self.Hdata.create_dset(shape, label='Q1I2_5')
-        self.Hdata.create_dset(xyshape, label='XminXmaxXNum')
-        self.Hdata.create_dset(xyshape, label='YminYmaxYNum')
-        self.Hdata.close()
-        self.Hdata.open_f()  # opens and keeps open
-
-    def create_Rtables(self, d3pt, d2pt, d1pt):
-        shapeD12 = (0, 4, self.nSamples)
-        shapeCoords = (0, 3)
-        es = d3pt*d2pt*d1pt
-        a32 =  tb.Float32Atom()  # Digitizer data is 32 bit not 64
-        self.Rdata.create_dset2(shapeD12, label='D12raw', atom=a32, esize=es)
-        self.Rdata.create_dset2(shapeCoords, label='ijk', atom=a32, esize=es)
-        self.Rdata.close()
-        self.Rdata.open_f()  # opens and keeps open
 
     def data_variables(self):
         ''' create empty variables to store average values '''
@@ -178,6 +177,7 @@ class meastype(object):
             self.ijk[0, 1] = jj
             self.ijk[0, 2] = kk
             self.Rdata.h5.root.ijk.append(self.ijk)
+            self.Rdata.h5.flush()
 
     def record_histM(self, kk, jj, ii):
         ''' This creates a figure of the histogram at one specific point'''
@@ -193,6 +193,7 @@ class meastype(object):
         h5.Q1Q2_3[kk, jj, ii] = self.hmap[3]
         h5.I1Q2_4[kk, jj, ii] = self.hmap[4]
         h5.Q1I2_5[kk, jj, ii] = self.hmap[5]
+        self.Hdata.h5.flush()
 
     def data_save(self):
         '''save the data in question, at the moment these functions rewrite the matrix eachtime,
@@ -207,4 +208,8 @@ class meastype(object):
         self.DS2vD1.save_data()
         self.DS2vD2.save_data()
         if self.doHist2d:
+            self.Hdata.h5.flush()
             self.Hdata.close()
+        if self.doRaw:
+            self.Rdata.h5.flush()
+            self.Rdata.close()

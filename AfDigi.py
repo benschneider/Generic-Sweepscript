@@ -1,4 +1,4 @@
-from ctypes import c_float, POINTER, pointer, c_long
+from ctypes import c_float, POINTER, pointer
 from time import sleep
 import numpy as np
 import PXIDigitizer_wrapper
@@ -21,9 +21,9 @@ class instrument():
     '''
 
     def __init__(self, adressDigi='3036D1', adressLo='3011D1',
-                 LoPosAB=1, LoRef=0, name='D', cfreq=4.57e9, inputlvl=30,
-                 start=4.43e9, stop=0, pt=1, nSample=1e6, sampFreq=1e5,
-                 buffmode=True):
+                 LoPosAB=1, LoRef=0, name='D', cfreq=4.57e9, inputlvl=0,
+                 start=4.43e9, stop=0, pt=1, nSample=1e6, sampFreq=1e6,
+                 buffmode=False):
         self.ADCFAIL = False
         self.capture_ref = None
         self.ADCoverflow = 0
@@ -49,6 +49,8 @@ class instrument():
         self.set_settings()
         if self.buffmode:
             self.setup_buffer()
+        else:
+            self.setup_captmem()
 
     def performOpen(self):
         if hasattr(self, 'digitizer'):
@@ -109,16 +111,19 @@ class instrument():
 
     def create_memfiles(self):
         '''This creates on DISK Temp files to store large data chunks '''
-        if self.nSamples > 9e5:
+        if self.buffmode:
+            self.i_buffer = np.zeros(self.nSamples, dtype=c_float)
+            self.q_buffer = np.zeros(self.nSamples, dtype=c_float)
+        if self.nSamples > 1e6:
             self.cIQ = np.memmap(self.name[:2]+'.cIQ.mem', dtype='complex64', mode='w+', shape=self.nSamples)
             self.scaledI = np.memmap(self.name[:2]+'.I.mem', dtype=np.float32, mode='w+', shape=self.nSamples)
             self.scaledQ = np.memmap(self.name[:2]+'.Q.mem', dtype=np.float32, mode='w+', shape=self.nSamples)
             self.cfftsig = np.memmap(self.name[:2]+'.FFT.mem', dtype='complex64', mode='w+', shape=self.nSamples)
-            self.i_buffer = np.memmap(self.name[:2]+'.IB.mem', dtype=c_float, mode='w+', shape=self.nSamples)
-            self.q_buffer = np.memmap(self.name[:2]+'.QB.mem', dtype=c_float, mode='w+', shape=self.nSamples)
+            # self.i_buffer = np.memmap(self.name[:2]+'.IB.mem', dtype=c_float, mode='w+', shape=self.nSamples)
+            # self.q_buffer = np.memmap(self.name[:2]+'.QB.mem', dtype=c_float, mode='w+', shape=self.nSamples)
         else:
-            self.i_buffer = np.zeros(self.nSamples, dtype=c_float)
-            self.q_buffer = np.zeros(self.nSamples, dtype=c_float)
+            # self.i_buffer = np.zeros(self.nSamples, dtype=c_float)
+            # self.q_buffer = np.zeros(self.nSamples, dtype=c_float)
             self.cIQ = np.zeros(self.nSamples, dtype='complex64')
             self.scaledI = np.zeros(self.nSamples, dtype=np.float32)
             self.scaledQ = np.zeros(self.nSamples, dtype=np.float32)
@@ -146,18 +151,10 @@ class instrument():
         ''' below(0), above(1) '''
         self.digitizer.rf_userLOPosition_set(val)
 
-    def init_trigger(self):
-        self.digitizer.trigger_arm_set(self.nSamples * 2)
-
     def wait_capture_complete(self):
         while self.digitizer.data_capture_complete_get() is False:
             sleep(10e-3)
         pass
-
-    def downl_data(self):
-        '''grabs the biggest chunks of data '''
-        self.checkADCOverload()
-        (self.scaledI[:], self.scaledQ[:]) = self.digitizer.capture_iq_capt_mem(self.nSamples)
 
     def setup_buffer(self):
         '''
@@ -173,6 +170,14 @@ class instrument():
         self.buffer_ref_pointer = pointer(self.buffer_ref)
         # print 'buffer setup'
 
+    def setup_captmem(self):
+        typeBuffer=c_float*self.nSamples
+        self.i_buffer=typeBuffer()
+        self.q_buffer=typeBuffer()
+        
+    def trigger_arm(self):
+        self.digitizer.TriggerArmIQ(2*self.nSamples)
+
     def init_trigger_IF(self):
         return self.digitizer.TriggerArmIF(self.nSamples)
 
@@ -181,6 +186,12 @@ class instrument():
         once a trigger signal is received  '''
         self.digitizer.capture_iq_issue_buffer(
             buffer_ref=self.buffer_ref, capture_ref=self.capture_ref, timeout=self.timeout)
+
+    def init_trigger(self):
+        if self.buffmode:
+            self.init_trigger_buff()
+        else: 
+            self.digitizer.trigger_arm_set(self.nSamples * 2)
 
     def downl_data_check(func):
         '''This is a property used when downloading data from the buffer.
@@ -215,8 +226,27 @@ class instrument():
             capture_ref=self.capture_ref, buffer_ref_pointer=self.buffer_ref_pointer)
         if a == 0:
             '''for successfull download of buffer store IQ as complex array'''
-            self.scaledI[:] = self.i_buffer
-            self.scaledQ[:] = self.q_buffer
+            self.scaledI[:] = self.i_buffer[:]
+            self.scaledQ[:] = self.q_buffer[:]
+
+    def downl_data_old(self):
+        '''grabs the biggest chunks of data '''
+        self.checkADCOverload()
+        (self.scaledI[:], self.scaledQ[:]) = self.digitizer.capture_iq_capt_mem(self.nSamples)
+
+    @downl_data_check
+    def downl_data_IQmem(self):
+        a = self.digitizer.Capture_IQ_Mem(self.nSamples, self.i_buffer, self.q_buffer)
+        if a == 0:
+            '''for successfull download of buffer store IQ as complex array'''
+            self.scaledI[:] = self.i_buffer[:]
+            self.scaledQ[:] = self.q_buffer[:]
+
+    def downl_data(self):
+        if self.buffmode:
+            self.downl_data_buff()
+        else:
+            self.downl_data_IQmem()
 
     def get_data_complete(self):
         ''' Downloads Data, Lvl Correction and processes the data
@@ -282,10 +312,33 @@ class instrument():
     def checkADCOverload(self):
         if self.digitizer.check_ADCOverload():
             self.Overload = self.Overload + 1
-            print 'Overload number:', self.Overload
-            sleep(0.2)
-            if self.Overload > 3:
-                self.digitizer.rf_rf_input_level_set(30)
-                raise Exception('ADC overloaded 4x in a row')
+            print 'Overload number:', self.Overload, self.name
+            if self.Overload > 4:
+                self.inputLvl +=1
+                self.digitizer.rf_rf_input_level_set(self.inputLvl)
+                print 'ajdust input level to:', self.inputLvl
+            #     raise Exception('ADC overloaded 4x in a row')
         else:
             self.Overload = 0
+
+if __name__ == '__main__':
+    from nirack import nit
+    pstar = nit()
+    lags = 30
+    BW = 10e6
+    lsamples = 1e5
+    corrAvg = 1
+    f1 = 4.799999e9
+    D1 = instrument(adressDigi='3036D1', adressLo='3011D1', LoPosAB=1, LoRef=0,
+           name='D1 Lags (sec)', cfreq=f1, inputlvl=-6,
+           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
+           nSample=lsamples, sampFreq=BW)
+
+    D1.setup_captmem()
+    D1.init_trigger()
+    pstar.send_software_trigger()
+    sleep(1)
+    D1.digitizer.get_IQ_trigger_detected()
+    D1.downl_data()
+    D1.get_Levelcorr()
+    D1.process_data()

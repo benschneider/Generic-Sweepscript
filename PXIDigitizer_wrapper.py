@@ -392,10 +392,19 @@ class afDigitizer_BS():
         return bool(self.state.value)
 
     @error_check
-    def get_trigger_detected(self):
+    def get_IF_trigger_detected(self):
         _lib.afDigitizerDll_Capture_IF_TriggerDetected_Get(self.session, byref(self.state))
         return bool(self.state.value)
+
+    @error_check
+    def get_IQ_trigger_detected(self):
+        _lib.afDigitizerDll_Capture_IQ_TriggerDetected_Get(self.session, byref(self.state))
+        return bool(self.state.value)
  
+    @error_check
+    def TriggerArmIQ(self, nsamp):
+        _lib.afDigitizerDll_Capture_IQ_TriggerArm(self.session, c_int(nsamp))
+
     @error_check
     def TriggerArmIF(self, nsamp):
         _lib.afDigitizerDll_Capture_IF_TriggerArm(self.session, c_int(nsamp))
@@ -404,6 +413,10 @@ class afDigitizer_BS():
     def Capture_IF_Mem(self, sampleNum, ifBuffer):
         _lib.afDigitizerDll_Capture_IF_CaptMem(self.session, sampleNum, byref(ifBuffer))
         return ifBuffer
+
+    @error_check
+    def Capture_IQ_Mem(self, sampleNum, i_buffer, q_buffer):
+        return _lib.afDigitizerDll_Capture_IQ_CaptMem(self.session, sampleNum, byref(i_buffer), byref(q_buffer))
        
     def trigger_pre_edge_trigger_samples_get(self):
         afDigitizerDll_Trigger_PreEdgeTriggerSamples_Get = getDllObject('afDigitizerDll_Trigger_PreEdgeTriggerSamples_Get',

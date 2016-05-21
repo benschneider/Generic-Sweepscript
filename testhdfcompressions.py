@@ -29,11 +29,18 @@ coord[0, 1] = jj
 coord[0, 2] = kk
 
 f1 = storehdf5('test.hdf5')
-f1.open_f(mode='w')
-shapeD1D2 = (0, 4, 1e6)
-shapeCord = (0, 3)
-f1.create_dset2(shapeD1D2, label='D12raw', esize=(ii*jj*kk))
-f1.create_dset2(shapeCord, label='ijk', esize=(ii*jj*kk))
+f1.open_f(mode='r')
+#shapeD1D2 = (0, 4, 1e6)
+#shapeCord = (0, 3)
+#f1.create_dset2(shapeD1D2, label='D12raw', esize=(ii*jj*kk))
+#f1.create_dset2(shapeCord, label='ijk', esize=(ii*jj*kk))
 
 ca = f1.h5.root.D12raw
 ca2 = f1.h5.root.ijk
+
+#ca.append(ArrD1D2)
+#ca2.append(coord)
+#ca.flush()
+#ca2.flush()
+
+# f1.close()
