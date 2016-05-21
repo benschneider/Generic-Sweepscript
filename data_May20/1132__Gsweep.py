@@ -66,7 +66,7 @@ vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=2.03, stop=0.03, pt=11,
+                 start=2.03, stop=0.03, pt=101,
                  sstep=10, stime=0)
 #-30 dB at output
 
