@@ -313,7 +313,7 @@ class instrument():
         if self.digitizer.check_ADCOverload():
             self.Overload = self.Overload + 1
             print 'Overload number:', self.Overload, self.name
-            if self.Overload > 4:
+            if self.Overload > 3:
                 self.inputLvl +=1
                 self.digitizer.rf_rf_input_level_set(self.inputLvl)
                 print 'ajdust input level to:', self.inputLvl
