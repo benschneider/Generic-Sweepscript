@@ -32,7 +32,7 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 5e5
+BW = 1e6
 lsamples = 1e6
 corrAvg = 1
 f1 = 4.799999e9
@@ -58,15 +58,15 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=0.002, stop=0.002, pt=1,
+                start=-0.018, stop=0.022, pt=21,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.67, stop=-0.67, pt=11,
+               start=-0.67, stop=-0.67, pt=1,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=2.03, stop=0.03, pt=201,
+                 start=2.03, stop=0.03, pt=101,
                  sstep=10, stime=0)
 
 sgen = None
@@ -78,10 +78,10 @@ pFlux.sweep_par='power'  # Power sweep
 
 dim_1 = pFlux
 dim_1.defval = 0.03 #pFlux
-dim_2 = vMag
-dim_2.defval = -0.67
-dim_3 = vBias
-dim_3.defval = 0.002
+dim_2 = vBias
+dim_2.defval = 0.002
+dim_3 = vMag
+dim_3.defval = -0.67
 dim_1.UD = False
 recordD12 = True  # all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)

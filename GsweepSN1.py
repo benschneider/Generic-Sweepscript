@@ -32,7 +32,7 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 5e5
+BW = 1e6
 lsamples = 1e6
 corrAvg = 1
 f1 = 4.799999e9
