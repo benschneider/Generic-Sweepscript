@@ -21,10 +21,11 @@ from AfDigi import instrument as AfDig  # Digitizer driver
 import gc  # Garbage memory collection
 from IQcorr import Process as CorrProc  # Handle Correlation measurements
 import sys
+from RSZNB20 import instrument as ZNB20
 
 
 thisfile = __file__
-# filen_0 = '1153_'
+filen_0 = '1167_'
 folder = 'data_May20\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
@@ -42,6 +43,8 @@ f2 = 4.1e9
 #FFT filtering not yet working, possibly BW not large enough
 #D1 4670MHZ Edge (4.8GHz) LO above
 #D2 4330MHz Edge (4.1GHz) LO below
+
+
 D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=1, LoRef=0,
            name='D1 Lags (sec)', cfreq=f1, inputlvl=-9,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),

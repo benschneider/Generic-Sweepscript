@@ -119,3 +119,11 @@ class instrument():
         
     def get_phaseOffset(self):
         return self.a('OPO')
+        
+        
+if __name__ == '__main__':
+    pFlux = instrument('GPIB0::17::INSTR', name='FluxPump',
+                 start=2.03, stop=0.03, pt=101,
+                 sstep=10, stime=0)
+                
+    pFlux.set_power_mode(False)

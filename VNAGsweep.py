@@ -17,42 +17,44 @@ from AnritzuSig import instrument as AnSigGen
 from SRsim import instrument as sim900c
 from Sim928 import instrument as sim928c
 # from Yoko import instrument as yoko
-from AfDigi import instrument as AfDig  # Digitizer driver
+# from AfDigi import instrument as AfDig  # Digitizer driver
 import gc  # Garbage memory collection
 from IQcorr import Process as CorrProc  # Handle Correlation measurements
 import sys
+from RSZNB20 import instrument as ZNB20
 
 
 thisfile = __file__
-filen_0 = '1166_S11_f1_'
+filen_0 = '1167_'
 folder = 'data_May20\\'
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
+VNA = ZNB20('')
 
 # Digitizer setup
 lags = 30
-BW = 5e5
-lsamples = 1e4
+BW = 1e6
+lsamples = 1e6
 corrAvg = 1
-f1 = 4.8e9 #4.799999e9
+f1 = 4.799999e9
 f2 = 4.1e9
-
-#SGEN at 4.8e9 Hz power -30dBm
 
 #BPF implemented to kill noise sideband,
 #FFT filtering not yet working, possibly BW not large enough
 #D1 4670MHZ Edge (4.8GHz) LO above
 #D2 4330MHz Edge (4.1GHz) LO below
-D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=1, LoRef=0,
-           name='D1 Lags (sec)', cfreq=f1, inputlvl=0,
-           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
-           nSample=lsamples, sampFreq=BW)
 
-D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=3,
-           name='D2 Lags (sec)', cfreq=f2, inputlvl=-3,
-           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
-           nSample=lsamples, sampFreq=BW)
+
+#D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=1, LoRef=0,
+#           name='D1 Lags (sec)', cfreq=f1, inputlvl=-9,
+#           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
+#           nSample=lsamples, sampFreq=BW)
+#
+#D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=3,
+#           name='D2 Lags (sec)', cfreq=f2, inputlvl=-9,
+#           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
+#           nSample=lsamples, sampFreq=BW)
 
 # Sweep equipment setup
 nothing = dummy('none', name='nothing',
@@ -60,37 +62,36 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=0.002, stop=0.002, pt=1,
+                start=-0.018, stop=0.022, pt=21,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-2.0, stop=5.0, pt=7001,
+               start=-0.67, stop=-0.67, pt=1,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=f2, stop=f1, pt=10,
-                 sstep=10e9, stime=0)
-                 
+                 start=2.03, stop=0.03, pt=101,
+                 sstep=10, stime=0)
+
 sgen = None
 
 pFlux.set_power_mode(1)  # Linear mode in mV
 # f1+f2
-# pFlux.set_freq(f1)
-pFlux.sweep_par='freq'  # Power sweep
-pFlux.set_power(0.03)  # Set fixed power
+pFlux.set_freq(f1+f2)
+pFlux.sweep_par='power'  # Power sweep
 
-dim_2 = pFlux
-dim_2.defval = 0.03 #pFlux
-dim_3 = vBias
-dim_3.defval = 0.0
-dim_1 = vMag
-dim_1.defval = 0.0
+dim_1 = pFlux
+dim_1.defval = 0.03 #pFlux
+dim_2 = vBias
+dim_2.defval = 0.002
+dim_3 = vMag
+dim_3.defval = -0.67
 dim_1.UD = False
-recordD12 = True  # activates /deactivates all D1 D2 data storage
+recordD12 = True  # all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
-D12.doHist2d = False  # Record Histograms (Larger -> Slower)
-D12.doRaw = False
-D12.doBG = False
+D12.doHist2d = True  # Record Histograms (Larger -> Slower)
+D12.doRaw = True
+D12.doBG = True
 
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
@@ -106,13 +107,12 @@ def sweep_dim_3(obj, value):
 
 # This describes how data is saved
 DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Vx1k')
-# CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
-if recordD12:
-    D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
-
 DS.ask_overwrite()
 copy_file(thisfile, filen_0, folder)
 
+# CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
+if recordD12:
+    D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
 
 # describe how data is to be stored
 def record_data(kk, jj, ii, back):
@@ -125,13 +125,13 @@ def record_data(kk, jj, ii, back):
     vdata = vm.get_val()  # aquire voltage data point
     if back is True:
         return DS.record_data2(vdata, kk, jj, ii)
+        # didnt implement backsweep with Digitizers yet
 
     DS.record_data(vdata, kk, jj, ii)
     if recordD12:
         D12.full_aqc(kk, jj, ii)  # Records and calc D1 & D2
-        if (lsamples/BW > 30):
-            # save data at each point if it takes longer than 1min per point
-            save_recorded()
+        #if (lsamples/BW > 30):
+        #    save_recorded()
 
 def save_recorded():
     '''
@@ -156,7 +156,7 @@ sweep_dim_1(dim_1, dim_1.defval)
 sweep_dim_2(dim_2, dim_2.defval)
 sweep_dim_3(dim_3, dim_3.defval)
 dim_1.output(1)
-dim_2.output(0)
+dim_2.output(1)
 dim_3.output(1)
 
 print 'Executing sweep'
@@ -177,23 +177,24 @@ try:
             sleep(0.2)
             print 'Up Trace'
             for ii in range(dim_1.pt):
+                #txx = time()
                 sweep_dim_1(dim_1, dim_1.lin[ii])
                 record_data(kk, jj, ii, False)
+                #print 'sweep+record ', time()-txx
 
             if dim_1.UD is True:
                 sweep_dim_1(dim_1, dim_1.stop)
                 sleep(0.1)
                 print 'Down Trace'
-                for ii in range((dim_1.pt - 1), -1, -1):
-                    # progresbar(kk, jj, ii)
-                    sweep_dim_1(dim_1, dim_1.lin[ii])
-                    record_data(kk, jj, ii, True)
+                for ii2 in range((dim_1.pt - 1), -1, -1):
+                    sweep_dim_1(dim_1, dim_1.lin[ii2])
+                    record_data(kk, jj, ii2, True)
 
             save_recorded()
-            t1 = time()
-            t_rem = ((t1 - t0) / (jj + 1) * dim_2.pt * dim_3.pt - (t1 - t0))
-            print 'req time (h):' + str(t_rem / 3600)
-            gc.collect()
+            runt = time()-t0  # time run so far
+            avgtime = runt / ((kk+1)*(jj+1)*(ii+1))  # per point
+            t_rem = avgtime*dim_3.pt*dim_2.pt*dim_1.pt - runt  # time left
+            print 'req time (h):' + str(t_rem / 3600) + ' pt: ' + str(avgtime)
     print 'Measurement Finished'
 
 finally:
@@ -205,7 +206,6 @@ finally:
     sleep(1)
     sweep_dim_3(dim_3, dim_3.defval)
     sleep(1)
-    pFlux.set_power(0.03)
     dim_1.output(0)
     sleep(1)
     dim_2.output(0)
@@ -213,8 +213,6 @@ finally:
     dim_3.output(0)
     sim900._dconn()
     gc.collect()
-    # D1.downl_data_buff()
-    # D2.downl_data_buff()
     D1.performClose()
     D2.performClose()
     print 'done'
