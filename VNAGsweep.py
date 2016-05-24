@@ -23,32 +23,25 @@ import os
 
 thisfile = __file__
 filen_0 = '1167_'
-folder = 'data_May20\\'
+folder = 'data_May24\\'
 folder = folder + filen_0 + '\\'  # in one new folder
 if not os.path.exists(folder):
     os.makedirs(folder)
 
 
-sim900 = sim900c('GPIB0::12::INSTR')
-vm = key2000('GPIB0::29::INSTR')
-VNA = ZNB20('TCPIP::129.16.115.137::INSTR')
+#sim900 = sim900c('GPIB0::12::INSTR')
+#vm = key2000('GPIB0::29::INSTR')
+vm = dummy('GPIB0::29::INSTR')
+sim900 = dummy('sim900')
+
+VNA = ZNB20('TCPIP::129.16.115.137::INSTR', name='ZNB20',
+                start=2.5e9, stop=8.5e9, pt=10001,
+                sstep=20e-3, stime=0.0, copy_setup=True)
 
 # Sweep equipment setup
-nothing = dummy('none', name='nothing',
-                start=0, stop=1, pt=1,
-                sstep=20e-3, stime=0.0)
-
-vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=0.002, stop=0.002, pt=1,
-                sstep=0.060, stime=0.020)
-
-vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.67, stop=-0.67, pt=1,
-               sstep=0.03, stime=0.020)
-
-# pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-#                  start=2.03, stop=0.03, pt=101,
-#                  sstep=10, stime=0)
+nothing = dummy(name='nothing', start=0, stop=1, pt=1, sstep=20e-3, stime=0.0)
+vBias = dummy(name='V 1Mohm', start=0.002, stop=0.002, pt=1, sstep=0.060, stime=0.020)
+vMag = dummy(name='Magnet V R=22.19KOhm', start=-0.67, stop=-0.67, pt=1, sstep=0.03, stime=0.020)
 
 dim_3 = nothing
 dim_3.defval = 0.0
@@ -58,6 +51,17 @@ dim_1 = vMag
 dim_1.defval = 0.0
 dim_1.UD = False
 
+#vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
+#                start=0.002, stop=0.002, pt=1,
+#                sstep=0.060, stime=0.020)
+#
+#vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
+#               start=-0.67, stop=-0.67, pt=1,
+#               sstep=0.03, stime=0.020)
+
+# pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
+#                  start=2.03, stop=0.03, pt=101,
+#                  sstep=10, stime=0)
 
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)

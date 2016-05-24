@@ -9,11 +9,11 @@ def ramp(inst, parameter, value, step, wait):
     step -- step size
     wait -- wait time per step
     '''
-    get_v = getattr(inst,'get_%s' % parameter)
-    set_v = getattr(inst,'set_%s' % parameter)
-    
+    get_v = getattr(inst,'get_' + str(parameter))
+    set_v = getattr(inst,'set_' + str(parameter))
+
     v_start = get_v()
-    
+
     if value > v_start:
         step = abs(step)
     else:

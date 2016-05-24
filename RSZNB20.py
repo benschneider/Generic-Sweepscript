@@ -30,17 +30,26 @@ class instrument():
     a ask
     '''
 
-    def __init__(self, adress, name='ZNB20', start=0, stop=0, pt=1):
+    def __init__(self, adress, name='ZNB20', start=0, stop=0, pt=1, 
+                 sstep=2e9, stime=0.0, copy_setup=True):
         self._adress = adress
         self._visainstrument = rm.open_resource(self._adress)
         self.name = name
+        self.w(':INIT:CONT OFF')  # switch continuous mode off
         self.init_sweep()
         self.sweeptime = self.get_sweeptime() + 0.1
-        # self._tempdata = self.get_data()
-        # self.pt = self._tempdata.shape[0]
-        self.start = start
-        self.stop = stop
-        # self.lin = np.linspace(self.start, self.stop, self.pt)
+        self._tempdata = self.get_data()
+      
+        if copy_setup:
+            self.pt = self.get_points()
+            self.start = self.get_freq_start()
+            self.stop = self.get_freq_stop()
+        else:
+            self.set_points(pt)
+            self.set_freq_start(start)
+            self.set_freq_stop(stop)
+            
+        self.lin = np.linspace(self.start, self.stop, self.pt)
 
     def w(self, write_cmd):
         self._visainstrument.write(write_cmd)
@@ -62,11 +71,21 @@ class instrument():
         self.w(':SENS:AVER:CLE')  # clear prev averages
         self.w(':SENS:SWE:COUN 1')  # set counts to 1
 
+    def set_output(self, outstate):
+        self.w(':OUTP ' + str(outstate))
+        self.output = outstate
+
+    def get_output(self):
+        self.output = self.a(':OUTP?')
+        return self.output
+
     def set_power(self, power):
         self.w(':SOUR:POW ' + str(power))
+        self.powerlvl = power
 
     def get_power(self):
-        return self.a(':SOUR:POW?')
+        self.powerlvl = eval(self.a(':SOUR:POW?'))
+        return self.powerlvl
 
     def get_error(self):
         return self.a('SYST:ERR:ALL?')
@@ -80,6 +99,60 @@ class instrument():
     def set_freq_cw(self, value):
         self.w('FREQ:CW ' + str(value))
 
+    def set_BW(self, bw):
+        self.bandwidth = bw
+        self.w(':SENS:BWID ' + str(bw))
+        
+    def get_BW(self):
+        self.bandwidth = self.a(':SENS:BWID?')
+        return self.bandwidth 
+
+    def set_avg_state(self, bool_state):
+        self.w(':SENS:AVER ' + str(bool_state))
+
+    def get_avg_state(self):
+        self.w(':SENS:AVER?')
+
+    def set_avg_num(self, avgnum):
+        self.avgn = avgnum
+        self.w(':SENS:AVER:COUN ' + str(avgnum))
+
+    def get_avg_num(self):
+        self.avgnum = self.a(':SENS:AVER:COUN?')
+        return self.avgnum
+
+    def set_freq_start(self, fstart):
+        self.w(':SENS:FREQ:STAR ' + str(fstart))
+    
+    def get_freq_start(self):
+        self.fstart = eval(self.a(':SENS:FREQ:STAR?'))
+        return self.fstart
+
+    def set_freq_stop(self, fstop):
+        self.w(':SENS:FREQ:STOP ' + str(fstop))
+    
+    def get_freq_stop(self):
+        self.fstop = eval(self.a(':SENS:FREQ:STOP?'))
+        return self.fstop
+
+    def set_freq_span(self, fspan):
+        self.w(':SENS:FREQ:SPAN ' + str(fspan))
+    
+    def get_freq_span(self):
+        return eval(self.a(':SENS:FREQ:SPAN?'))
+
+    def set_points(self, points):
+        self.pt = points
+        self.w(':SENS:SWE:POIN ' + str(points))
+    
+    def get_points(self):
+        self.pt = eval(self.a(':SENS:SWE:POIN?'))
+        return self.pt
+
+    def set_sweep_type(self, stype):
+        ''' LIN, LOG, CW '''
+        self.w(':SENS:SWE:TYPE ' + str(stype))
+
     def get_data(self):
         ''' involves some error handling
         if an error occures it returns 'Error'
@@ -88,6 +161,8 @@ class instrument():
             self.w(':FORM REAL,32;CALC:DATA? SDATA')  # grab data from VNA
             sData = self.r_raw()  # grab data from VNA
         except:
+            self.w(':FORM REAL,32;CALC:DATA? SDATA')  # grab data from VNA
+            sData = self.r_raw()  # grab data from VNA
             print 'Waiting for VNA'
             sleep(3)  # poss. asked to early for data (for now just sleep 10 sec)
             sData = self.a(':FORM REAL,32;CALC:DATA? SDATA')  # try once more after 5 seconds
@@ -109,35 +184,6 @@ class instrument():
             self.w('*CLS')  # CLear Status
             return 'Error'
         return vComplex
-        
-#    def get_data(self):
-#        ''' involves some error handling
-#        if an error occures it returns 'Error'
-#        '''
-#        try:
-#            sData = self.a(':FORM REAL,32;CALC:DATA? SDATA')  # grab data from VNA
-#        except:
-#            print 'Waiting for VNA'
-#            sleep(3)  # poss. asked to early for data (for now just sleep 10 sec)
-#            sData = self.a(':FORM REAL,32;CALC:DATA? SDATA')  # try once more after 5 seconds
-#        i0 = sData.find('#')
-#        nDig = int(sData[i0 + 1])
-#        nByte = int(sData[i0 + 2:i0 + 2 + nDig])
-#        nData = nByte / 4
-#        nPts = nData / 2
-#        data32 = sData[(i0 + 2 + nDig):(i0 + 2 + nDig + nByte)]
-#        try:
-#            vData = unpack('!' + str(nData) + 'f', data32)
-#            vData = np.array(vData)
-#            # data is in I0,Q0,I1,Q1,I2,Q2,.. format, convert to complex
-#            mC = vData.reshape((nPts, 2))
-#            vComplex = mC[:, 0] + 1j * mC[:, 1]
-#        except:
-#            print 'problem with unpack likely bad data from VNA'
-#            print self.get_error()
-#            self.w('*CLS')  # CLear Status
-#            return 'Error'
-#        return vComplex
 
     def get_data2(self):
         vnadata = self.get_data()  # np.array(real+ i* imag)
@@ -147,7 +193,11 @@ class instrument():
             vnadata = self.get_data2()
         return vnadata
 
-    def prepare_data_save(self, folder, filen_0, dim_1, dim_2, dim_3):
+    def prepare_data_save(self, folder, filen_0, dim_1, dim_2, dim3):
+        if self.pt > 1:
+            dim_3 = self
+        else:
+            dim_3 = dim3
         self._folder = folder
         self._filen_1 = filen_0 + '_r' + '.mtx'
         self._filen_2 = filen_0 + '_i' + '.mtx'
@@ -164,7 +214,7 @@ class instrument():
 
     def record_data(self, vnadata, kk, jj, ii):
         self._phase_data = np.angle(vnadata)
-        if vnadata.shape[0] == 1:
+        if self.pt == 1:
             self._matrix3d_1[kk, jj, ii] = vnadata.real
             self._matrix3d_2[kk, jj, ii] = vnadata.imag
             self._matrix3d_3[kk, jj, ii] = np.absolute(vnadata)
