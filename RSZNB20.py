@@ -15,7 +15,7 @@ from struct import unpack  # , pack
 from time import sleep
 import visa
 from parsers import savemtx, make_header, ask_overwrite
-
+rm = visa.ResourceManager()
 
 class instrument():
     # name = 'ZNB21'
@@ -24,7 +24,7 @@ class instrument():
     # pt = 1001 # number of points
     # power = -30 #rf power
     '''
-    vna = instrument1('TCPIP::129.19.115.137::INSTR')
+    vna = instrument1('TCPIP::129.16.115.137::INSTR')
     w write
     r read
     a ask
@@ -32,20 +32,24 @@ class instrument():
 
     def __init__(self, adress, name='ZNB20', start=0, stop=0, pt=1):
         self._adress = adress
-        self._visainstrument = visa.instrument(self._adress)
+        self._visainstrument = rm.open_resource(self._adress)
         self.name = name
-        self._tempdata = self.get_data()
-        self.pt = self._tempdata.shape[0]
+        self.init_sweep()
         self.sweeptime = self.get_sweeptime() + 0.1
+        # self._tempdata = self.get_data()
+        # self.pt = self._tempdata.shape[0]
         self.start = start
         self.stop = stop
-        self.lin = np.linspace(self.start, self.stop, self.pt)
+        # self.lin = np.linspace(self.start, self.stop, self.pt)
 
     def w(self, write_cmd):
         self._visainstrument.write(write_cmd)
 
     def r(self):
         return self._visainstrument.read()
+        
+    def r_raw(self):
+        return self._visainstrument.read_raw()
 
     def a(self, ask_cmd):
         return self._visainstrument.ask(ask_cmd)
@@ -81,7 +85,8 @@ class instrument():
         if an error occures it returns 'Error'
         '''
         try:
-            sData = self.a(':FORM REAL,32;CALC:DATA? SDATA')  # grab data from VNA
+            self.w(':FORM REAL,32;CALC:DATA? SDATA')  # grab data from VNA
+            sData = self.r_raw()  # grab data from VNA
         except:
             print 'Waiting for VNA'
             sleep(3)  # poss. asked to early for data (for now just sleep 10 sec)
@@ -104,6 +109,35 @@ class instrument():
             self.w('*CLS')  # CLear Status
             return 'Error'
         return vComplex
+        
+#    def get_data(self):
+#        ''' involves some error handling
+#        if an error occures it returns 'Error'
+#        '''
+#        try:
+#            sData = self.a(':FORM REAL,32;CALC:DATA? SDATA')  # grab data from VNA
+#        except:
+#            print 'Waiting for VNA'
+#            sleep(3)  # poss. asked to early for data (for now just sleep 10 sec)
+#            sData = self.a(':FORM REAL,32;CALC:DATA? SDATA')  # try once more after 5 seconds
+#        i0 = sData.find('#')
+#        nDig = int(sData[i0 + 1])
+#        nByte = int(sData[i0 + 2:i0 + 2 + nDig])
+#        nData = nByte / 4
+#        nPts = nData / 2
+#        data32 = sData[(i0 + 2 + nDig):(i0 + 2 + nDig + nByte)]
+#        try:
+#            vData = unpack('!' + str(nData) + 'f', data32)
+#            vData = np.array(vData)
+#            # data is in I0,Q0,I1,Q1,I2,Q2,.. format, convert to complex
+#            mC = vData.reshape((nPts, 2))
+#            vComplex = mC[:, 0] + 1j * mC[:, 1]
+#        except:
+#            print 'problem with unpack likely bad data from VNA'
+#            print self.get_error()
+#            self.w('*CLS')  # CLear Status
+#            return 'Error'
+#        return vComplex
 
     def get_data2(self):
         vnadata = self.get_data()  # np.array(real+ i* imag)
@@ -149,3 +183,10 @@ class instrument():
 
     def ask_overwrite(self):
         ask_overwrite(self._folder + self._filen_1)
+
+
+if __name__ == '__main__':
+    VNA = instrument('TCPIP::129.16.115.137::INSTR')
+    # Required is set VNA into trigger mode 'single'
+    
+    

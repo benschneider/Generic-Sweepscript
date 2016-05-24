@@ -31,7 +31,7 @@ if not os.path.exists(folder):
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
-VNA = ZNB20('TCPIP::129.19.115.137::INSTR')
+VNA = ZNB20('TCPIP::129.16.115.137::INSTR')
 
 # Sweep equipment setup
 nothing = dummy('none', name='nothing',
@@ -39,7 +39,7 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=0.002, stop=0.002, pt=21,
+                start=0.002, stop=0.002, pt=1,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
