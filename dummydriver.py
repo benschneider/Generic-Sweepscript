@@ -13,6 +13,7 @@ class instrument():
         self.stop = stop
         self.pt = pt
         self.lin = np.linspace(self.start,self.stop,self.pt)
+        self.sweep_par = 'var1'
 
     def instrument_1(self, adress):
         return (5,adress)
