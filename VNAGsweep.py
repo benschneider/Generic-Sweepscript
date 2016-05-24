@@ -5,7 +5,7 @@ Generic Sweep script
 20/10/2015
 - B
 '''
-#import numpy as np
+# import numpy as np
 from time import time, sleep
 from parsers import copy_file
 from ramp_mod import ramp
@@ -19,11 +19,15 @@ from Sim928 import instrument as sim928c
 from RSZNB20 import instrument as ZNB20
 # from Yoko import instrument as yoko
 import gc  # Garbage memory collection
-
+import os
 
 thisfile = __file__
-filen_0 = '1167\\1167_'
+filen_0 = '1167_'
 folder = 'data_May20\\'
+folder = folder + filen_0 + '\\'  # in one new folder
+if not os.path.exists(folder):
+    os.makedirs(folder)
+
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
@@ -42,9 +46,9 @@ vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
                start=-0.67, stop=-0.67, pt=1,
                sstep=0.03, stime=0.020)
 
-#pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-#                 start=2.03, stop=0.03, pt=101,
-#                 sstep=10, stime=0)
+# pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
+#                  start=2.03, stop=0.03, pt=101,
+#                  sstep=10, stime=0)
 
 dim_3 = nothing
 dim_3.defval = 0.0
@@ -53,6 +57,7 @@ dim_2.defval = 0.0
 dim_1 = vMag
 dim_1.defval = 0.0
 dim_1.UD = False
+
 
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
@@ -70,23 +75,29 @@ def sweep_dim_3(obj, value):
 DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Vx1k')
 DS.ask_overwrite()
 copy_file(thisfile, filen_0, folder)
+VNA.prepare_data_save(folder, filen_0, dim_1, dim_2, dim_3)
 
-# describe how data is to be stored
+
 def record_data(kk, jj, ii, back):
-    '''This function is called with each change in ii,jj,kk
+    '''describe how data is to be stored
+    This function is called with each change in ii,jj,kk
         content: what to measure each time
     '''
     vdata = vm.get_val()  # aquire voltage data point
+    vnadata = VNA.get_data2()  # take VNA sweep
     if back is True:
         return DS.record_data2(vdata, kk, jj, ii)
 
     DS.record_data(vdata, kk, jj, ii)
+    VNA.record_data(vnadata, kk, kk, ii)
+
 
 def save_recorded():
     '''
     Which functions to call to save the recored data
     '''
     DS.save_data()  # save Volt data
+    VNA.save_data()  # save VNA data
 
 # go to default value and activate output
 sweep_dim_1(dim_1, dim_1.defval)
@@ -97,7 +108,7 @@ dim_2.output(1)
 dim_3.output(1)
 
 print 'Executing sweep'
-texp = (2.0*dim_3.pt*dim_2.pt*dim_1.pt*(0.032)/60.0)
+texp = (2.0 * dim_3.pt * dim_2.pt * dim_1.pt * (0.032) / 60.0)
 # print 'req time (min):'+str(2.0*dim_3.pt*dim_2.pt*dim_1.pt*0.032/60)
 print 'req time (min):' + str(texp)
 
@@ -114,10 +125,9 @@ try:
             sleep(0.2)
             print 'Up Trace'
             for ii in range(dim_1.pt):
-                #txx = time()
                 sweep_dim_1(dim_1, dim_1.lin[ii])
                 record_data(kk, jj, ii, False)
-                #print 'sweep+record ', time()-txx
+                # print 'sweep+record ', time()-txx
 
             if dim_1.UD is True:
                 sweep_dim_1(dim_1, dim_1.stop)
@@ -128,9 +138,9 @@ try:
                     record_data(kk, jj, ii2, True)
 
             save_recorded()
-            runt = time()-t0  # time run so far
-            avgtime = runt / ((kk+1)*(jj+1)*(ii+1))  # per point
-            t_rem = avgtime*dim_3.pt*dim_2.pt*dim_1.pt - runt  # time left
+            runt = time() - t0  # time run so far
+            avgtime = runt / ((kk + 1) * (jj + 1) * (ii + 1))  # per point
+            t_rem = avgtime * dim_3.pt * dim_2.pt * dim_1.pt - runt  # time left
             print 'req time (h):' + str(t_rem / 3600) + ' pt: ' + str(avgtime)
     print 'Measurement Finished'
 

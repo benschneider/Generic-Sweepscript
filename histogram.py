@@ -13,6 +13,7 @@ def histogram2d(XX, matdd):
     # t0 = time()
     ranges = np.zeros([XX.shape[0], 3])
     pos = np.zeros_like(XX, dtype=int)
+    binweights = np.ones(matdd.shape[1], dtype=int)
     # t1 = time()
 
     for i in range(XX.shape[0]):
@@ -33,11 +34,10 @@ def histogram2d(XX, matdd):
     #     matdd[x, y] += + 1
     #     # matdd[pos[0, i], pos[1, i]] += 1
 
+    # pos[pos[:, 0] == i][:, 1]
+
     for i in range(matdd.shape[0]):
-        t0 = pos[pos[:, 0] == i][:, 1]
-        np.bincount(t0,
-
-
+        matdd[i, :] = np.bincount(pos[pos[:, 0] == i][:, 1], binweights)
 
     # print t1 - t0, t2 - t1, time() - t3
     return matdd, ranges
