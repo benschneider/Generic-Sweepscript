@@ -13,7 +13,7 @@ class instrument():
         self.stop = stop
         self.pt = pt
         self.lin = np.linspace(self.start, self.stop, self.pt)
-        self.sweep_par = 'va1'
+        self.sweep_par = 'val'
         self.sstep = sstep
         self.stime = stime
         self.var1 = 0.0

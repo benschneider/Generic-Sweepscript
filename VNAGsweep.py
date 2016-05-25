@@ -22,46 +22,45 @@ import gc  # Garbage memory collection
 import os
 
 thisfile = __file__
-filen_0 = '1167_'
+filen_0 = '1170S11'
 folder = 'data_May24\\'
 folder = folder + filen_0 + '\\'  # in one new folder
 if not os.path.exists(folder):
     os.makedirs(folder)
 
 
-#sim900 = sim900c('GPIB0::12::INSTR')
-#vm = key2000('GPIB0::29::INSTR')
-vm = dummy('GPIB0::29::INSTR')
-sim900 = dummy('sim900')
+sim900 = sim900c('GPIB0::12::INSTR')
+# sim900 = dummy('GPIB0::12::INSTR')
+vm = key2000('GPIB0::29::INSTR')
 
 VNA = ZNB20('TCPIP::129.16.115.137::INSTR', name='ZNB20',
-                start=2.5e9, stop=8.5e9, pt=10001,
-                sstep=20e-3, stime=0.0, copy_setup=True)
+                start=2.5e9, stop=8.5e9, pt=601,
+                sstep=20e-3, stime=0.0, copy_setup=False)
 
 # Sweep equipment setup
 nothing = dummy(name='nothing', start=0, stop=1, pt=1, sstep=20e-3, stime=0.0)
-vBias = dummy(name='V 1Mohm', start=0.002, stop=0.002, pt=1, sstep=0.060, stime=0.020)
-vMag = dummy(name='Magnet V R=22.19KOhm', start=-0.67, stop=-0.67, pt=1, sstep=0.03, stime=0.020)
 
-dim_3 = nothing
-dim_3.defval = 0.0
-dim_2 = vBias
-dim_2.defval = 0.0
-dim_1 = vMag
-dim_1.defval = 0.0
-dim_1.UD = False
 
-#vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-#                start=0.002, stop=0.002, pt=1,
-#                sstep=0.060, stime=0.020)
-#
-#vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-#               start=-0.67, stop=-0.67, pt=1,
-#               sstep=0.03, stime=0.020)
+vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
+                start=-5.0, stop=5.0, pt=101,
+                sstep=0.060, stime=0.020)
+
+vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
+               start=-2.0, stop=5.0, pt=281,
+               sstep=0.03, stime=0.020)
 
 # pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
 #                  start=2.03, stop=0.03, pt=101,
 #                  sstep=10, stime=0)
+
+dim_1 = nothing
+dim_1.defval = 0.0
+dim_1.UD = False
+dim_3 = vMag
+dim_3.defval = 0.0
+dim_2 = vBias
+dim_2.defval = 0.0
+
 
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
@@ -87,13 +86,15 @@ def record_data(kk, jj, ii, back):
     This function is called with each change in ii,jj,kk
         content: what to measure each time
     '''
+    VNA.init_sweep()
     vdata = vm.get_val()  # aquire voltage data point
+    sleep(VNA.sweeptime)
     vnadata = VNA.get_data2()  # take VNA sweep
     if back is True:
         return DS.record_data2(vdata, kk, jj, ii)
 
     DS.record_data(vdata, kk, jj, ii)
-    VNA.record_data(vnadata, kk, kk, ii)
+    VNA.record_data(vnadata, kk, jj, ii)
 
 
 def save_recorded():
@@ -141,11 +142,12 @@ try:
                     sweep_dim_1(dim_1, dim_1.lin[ii2])
                     record_data(kk, jj, ii2, True)
 
-            save_recorded()
             runt = time() - t0  # time run so far
             avgtime = runt / ((kk + 1) * (jj + 1) * (ii + 1))  # per point
             t_rem = avgtime * dim_3.pt * dim_2.pt * dim_1.pt - runt  # time left
             print 'req time (h):' + str(t_rem / 3600) + ' pt: ' + str(avgtime)
+
+        save_recorded()
     print 'Measurement Finished'
 
 finally:

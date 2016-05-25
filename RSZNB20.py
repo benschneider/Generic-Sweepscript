@@ -12,7 +12,7 @@ Vector Network Analyzer
 
 import numpy as np
 from struct import unpack  # , pack
-from time import sleep
+from time import sleep, time
 import visa
 from parsers import savemtx, make_header, ask_overwrite
 rm = visa.ResourceManager()
@@ -65,6 +65,10 @@ class instrument():
 
     def init_sweep(self):
         self.w(':INIT:IMM;*OPC')
+        self.sweep_t0 = time()
+
+    def init_sweep_wait(self):
+        self.w(':INIT:IMM;*WAI')
 
     def abort(self):
         self.w(':ABOR;:INIT:CONT OFF')  # abort current sweep
@@ -122,18 +126,20 @@ class instrument():
         return self.avgnum
 
     def set_freq_start(self, fstart):
+        self.start = fstart
         self.w(':SENS:FREQ:STAR ' + str(fstart))
     
     def get_freq_start(self):
-        self.fstart = eval(self.a(':SENS:FREQ:STAR?'))
-        return self.fstart
+        self.start = eval(self.a(':SENS:FREQ:STAR?'))
+        return self.start
 
     def set_freq_stop(self, fstop):
+        self.stop = fstop
         self.w(':SENS:FREQ:STOP ' + str(fstop))
     
     def get_freq_stop(self):
-        self.fstop = eval(self.a(':SENS:FREQ:STOP?'))
-        return self.fstop
+        self.stop = eval(self.a(':SENS:FREQ:STOP?'))
+        return self.stop
 
     def set_freq_span(self, fspan):
         self.w(':SENS:FREQ:SPAN ' + str(fspan))
@@ -186,6 +192,7 @@ class instrument():
         return vComplex
 
     def get_data2(self):
+        self.wait()
         vnadata = self.get_data()  # np.array(real+ i* imag)
         if vnadata == 'Error':
             sleep(0.03)
@@ -193,11 +200,22 @@ class instrument():
             vnadata = self.get_data2()
         return vnadata
 
-    def prepare_data_save(self, folder, filen_0, dim_1, dim_2, dim3):
+    def wait(self):
+        '''Waits until VNA operation is completed'''
+        #wtime = abs(self.sweep_t0 - time())  # time waited so far
+        #if wtime < self.sweeptime:
+        #    sleep(self.sweeptime-wtime)
+        OPC = bool(int(self.a('*OPC?')))
+        if OPC:
+            return
+        sleep(0.1)
+        self.wait()
+
+    def prepare_data_save(self, folder, filen_0, dim1, dim_2, dim_3):
         if self.pt > 1:
-            dim_3 = self
+            dim_1 = self
         else:
-            dim_3 = dim3
+            dim_1 = dim1
         self._folder = folder
         self._filen_1 = filen_0 + '_r' + '.mtx'
         self._filen_2 = filen_0 + '_i' + '.mtx'
@@ -207,10 +225,14 @@ class instrument():
         self._head_2 = make_header(dim_1, dim_2, dim_3, 'S11 imag')
         self._head_3 = make_header(dim_1, dim_2, dim_3, 'S11 mag')
         self._head_4 = make_header(dim_1, dim_2, dim_3, 'S11 phase')
-        self._matrix3d_1 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
-        self._matrix3d_2 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
-        self._matrix3d_3 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
-        self._matrix3d_4 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
+        self._matrix3d_1 = np.memmap('VNAreal.mem', dtype=np.float32, mode='w+', shape=(dim_3.pt, dim_2.pt, dim_1.pt))
+        self._matrix3d_2 = np.memmap('VNAimag.mem', dtype=np.float32, mode='w+', shape=(dim_3.pt, dim_2.pt, dim_1.pt))
+        self._matrix3d_3 = np.memmap('VNAmag.mem', dtype=np.float32, mode='w+', shape=(dim_3.pt, dim_2.pt, dim_1.pt))
+        self._matrix3d_4 = np.memmap('VNAphase.mem', dtype=np.float32, mode='w+', shape=(dim_3.pt, dim_2.pt, dim_1.pt))
+        #self._matrix3d_1 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
+        #self._matrix3d_2 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
+        #self._matrix3d_3 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
+        #self._matrix3d_4 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
 
     def record_data(self, vnadata, kk, jj, ii):
         self._phase_data = np.angle(vnadata)
@@ -220,10 +242,10 @@ class instrument():
             self._matrix3d_3[kk, jj, ii] = np.absolute(vnadata)
             self._matrix3d_4[kk, jj, ii] = self._phase_data
         else:
-            self._matrix3d_1[:, jj, ii] = vnadata.real
-            self._matrix3d_2[:, jj, ii] = vnadata.imag
-            self._matrix3d_3[:, jj, ii] = np.absolute(vnadata)
-            self._matrix3d_4[:, jj, ii] = np.unwrap(self._phase_data)
+            self._matrix3d_1[kk, jj, :] = vnadata.real
+            self._matrix3d_2[kk, jj, :] = vnadata.imag
+            self._matrix3d_3[kk, jj, :] = np.absolute(vnadata)
+            self._matrix3d_4[kk, jj, :] = self._phase_data
 
     def save_data(self):
         savemtx(self._folder + self._filen_1, self._matrix3d_1, header=self._head_1)
