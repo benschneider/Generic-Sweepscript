@@ -300,19 +300,19 @@ class storehdf5(object):
             returns reference
             shape requires a 0 which can then be extended
         '''
-        ca = self.h5.create_earray(self.h5.root, 
-                                   label, 
-                                   atom, 
-                                   shape, 
-                                   filters=self.filt, 
+        ca = self.h5.create_earray(self.h5.root,
+                                   label,
+                                   atom,
+                                   shape,
+                                   filters=self.filt,
                                    expectedrows=esize)
         return ca
-        
+
     def add_data2(self, data, ca):
         '''adds data to e_array'''
         ca.append(data)
-        
-        
+
+
 class dim():
 
     def __init__(self, name='void', start=0, stop=0, pt=1, scale=1):
