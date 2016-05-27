@@ -20,12 +20,14 @@ class meastype(object):
         self.corrAvg = corrAvg
         self.doHist2d = False  # Default is Nope
         self.doRaw = False
+        self.doCorrel = True
         self.bin_size = [150, 150]  # Estimated to be ok for 1e6 data points
         self.data_variables()
 
-    def create_objs(self, folder, filen_0, dim_1, dim_2, dim_3, doHist2d, doRaw):
+    def create_objs(self, folder, filen_0, dim_1, dim_2, dim_3, doHist2d, doRaw, doCorrel=True):
         self.doHist2d = doHist2d
         self.doRaw = doRaw
+        self.doCorrel = doCorrel
         ''' Prepare Data files, where processed information will be stored '''
         nfolder = folder + filen_0 + self.name + '\\'  # -> data\\subfolder\\
         self.nfolder = nfolder
@@ -39,9 +41,11 @@ class meastype(object):
         self.DS2vD2 = DataStore2Vec(nfolder, filen_0, dim_1, dim_2, dim_3, 'D2vAvg')
         self.DS2mD1 = DataStore2Vec(nfolder, filen_0, dim_1, dim_2, dim_3, 'D1mAvg')
         self.DS2mD2 = DataStore2Vec(nfolder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
-        self.DS11 = DataStore11Vec(nfolder, filen_0, dim_1, dim_2, self.D1, 'CovMat')
-        # Cov Matrix D1 has dim_3 info
-        if doHist2d:
+        if self.doCorrel:
+            self.DS11 = DataStore11Vec(nfolder, filen_0, dim_1, dim_2, 
+                                       self.D1, 'CovMat')  
+                                       # Cov Matrix D1 has dim_3 info
+        if self.doHist2d:
             '''If doHist2d is set to True, a hdf5 file will be created
             to save the histogram data.'''
             Hname = nfolder+'Hist2d'+self.name+'.hdf5'
@@ -49,7 +53,7 @@ class meastype(object):
             self.Hdata.clev = 1  # Compression level to a minimum for speed
             self.Hdata.open_f(mode='w')  # create a new empty file
             self.create_Htables(dim_3.pt, dim_2.pt, dim_1.pt)
-        if doRaw:
+        if self.doRaw:
             Rname = nfolder+'Raw'+self.name+'.hdf5'
             self.Rdata = storehdf5(Rname)
             self.Rdata.clev = 1  # Compression level to a minimum for speed
@@ -72,12 +76,10 @@ class meastype(object):
         self.Hdata.open_f()  # opens and keeps open
 
     def create_Rtables(self, d3pt, d2pt, d1pt):
-        shapeD12 = (0, 4, self.nSamples)
-        shapeCoords = (0, 3)
         es = d3pt*d2pt*d1pt
-        # a32 =  tb.Float32Atom()  # Digitizer data is 32 bit not 64
-        self.Rdata.create_dset2(shapeD12, label='D12raw', esize=es)
-        self.Rdata.create_dset2(shapeCoords, label='ijk', esize=es)
+        self.Rdata.create_dset2((0, 4, self.nSamples), label='D12raw', esize=es)
+        self.Rdata.create_dset2((0, 3), label='ijk', esize=es)
+        self.Rdata.create_dset2((0, 2), label='D12freq', esize=es)
         self.Rdata.close()
         self.Rdata.open_f()  # opens and keeps open
 
@@ -138,7 +140,8 @@ class meastype(object):
             self.yl = np.zeros([6, self.bin_size[1]+1])
         if self.doRaw:
             self.ArrD12 = np.zeros([1, 4, self.nSamples])
-            self.ijk = np.zeros([1,3])
+            self.ijk = np.zeros([1, 3])
+            self.D12freq = np.zeros([1, 2])
 
     def add_avg(self):
         self.D1Ma += self.D1.AvgMag
@@ -152,14 +155,14 @@ class meastype(object):
         self.D2vMa += self.D2.vAvgMag
         self.D2vPha += self.D2.vAvgPh
         self.D2aPow += self.D2.vAvgPow
-        self.covAvgMat += getCovMatrix(self.D1.scaledI, self.D1.scaledQ,
-                                       self.D2.scaledI, self.D2.scaledQ,
-                                       self.lags)
+        if self.doCorrel:
+            self.covAvgMat += getCovMatrix(self.D1.scaledI, self.D1.scaledQ, 
+                                           self.D2.scaledI, self.D2.scaledQ, 
+                                           self.lags)
 
     def data_record(self, kk, jj, ii):
         '''This loads the new information into the matices'''
         corrAvg = np.float(self.corrAvg)
-        self.DS11.record_data(self.covAvgMat / corrAvg, kk, jj, ii)
         self.DSP_PD1.record_data((self.D1aPow / corrAvg), kk, jj, ii)
         self.DSP_PD2.record_data((self.D2aPow / corrAvg), kk, jj, ii)
         self.DSP_LD1.record_data(self.D1.levelcorr, kk, jj, ii)
@@ -168,6 +171,8 @@ class meastype(object):
         self.DS2mD1.record_data(self.D1Ma / corrAvg, self.D1Pha / corrAvg, kk, jj, ii)
         self.DS2vD1.record_data(self.D1vMa / corrAvg, self.D1vPha / corrAvg, kk, jj, ii)
         self.DS2vD2.record_data(self.D2vMa / corrAvg, self.D2vPha / corrAvg, kk, jj, ii)
+        if self.doCorrel:
+            self.DS11.record_data(self.covAvgMat / corrAvg, kk, jj, ii)
         if self.doHist2d:
             self.record_histM(kk, jj, ii)
         if self.doRaw:
@@ -176,7 +181,10 @@ class meastype(object):
             self.ijk[0, 0] = ii
             self.ijk[0, 1] = jj
             self.ijk[0, 2] = kk
+            self.D12freq[0, 0] = self.D1.freq/1e9
+            self.D12freq[0, 1] = self.D2.freq/1e9
             self.Rdata.h5.root.ijk.append(self.ijk)
+            self.Rdata.h5.root.D12freq.append(self.D12freq)
             self.Rdata.h5.flush()
 
     def record_histM(self, kk, jj, ii):
@@ -198,7 +206,6 @@ class meastype(object):
     def data_save(self):
         '''save the data in question, at the moment these functions rewrite the matrix eachtime,
         instead of just appending to it.'''
-        self.DS11.save_data()
         self.DSP_PD1.save_data()
         self.DSP_PD2.save_data()
         self.DSP_LD1.save_data()
@@ -207,6 +214,8 @@ class meastype(object):
         self.DS2mD1.save_data()
         self.DS2vD1.save_data()
         self.DS2vD2.save_data()
+        if self.doCorrel:
+            self.DS11.save_data()            
         if self.doHist2d:
             self.Hdata.h5.flush()
             self.Hdata.close()

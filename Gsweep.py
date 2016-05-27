@@ -20,13 +20,16 @@ from Sim928 import instrument as sim928c
 from AfDigi import instrument as AfDig  # Digitizer driver
 import gc  # Garbage memory collection
 from IQcorr import Process as CorrProc  # Handle Correlation measurements
-import sys
-from RSZNB20 import instrument as ZNB20
-
+# import sys
+# from RSZNB20 import instrument as ZNB20
+import os
 
 thisfile = __file__
-filen_0 = '1167_'
-folder = 'data_May20\\'
+filen_0 = '1173_NIRF'
+folder = 'data_May27\\'
+folder = folder + filen_0 + '\\'  # in one new folder
+if not os.path.exists(folder):
+    os.makedirs(folder)
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
@@ -39,58 +42,16 @@ corrAvg = 1
 f1 = 4.799999e9
 f2 = 4.1e9
 
-#BPF implemented to kill noise sideband,
-#FFT filtering not yet working, possibly BW not large enough
-#D1 4670MHZ Edge (4.8GHz) LO above
-#D2 4330MHz Edge (4.1GHz) LO below
-
-
 D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=1, LoRef=0,
-           name='D1 Lags (sec)', cfreq=f1, inputlvl=-9,
+           name='D1 Lags (sec)', cfreq=f1, inputlvl=0,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 
 D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=3,
-           name='D2 Lags (sec)', cfreq=f2, inputlvl=-9,
+           name='D2 Lags (sec)', cfreq=f2, inputlvl=0,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 
-# Sweep equipment setup
-nothing = dummy('none', name='nothing',
-                start=0, stop=1, pt=1,
-                sstep=20e-3, stime=0.0)
-
-vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=-0.018, stop=0.022, pt=21,
-                sstep=0.060, stime=0.020)
-
-vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.67, stop=-0.67, pt=1,
-               sstep=0.03, stime=0.020)
-
-pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=2.03, stop=0.03, pt=101,
-                 sstep=10, stime=0)
-
-sgen = None
-
-pFlux.set_power_mode(1)  # Linear mode in mV
-# f1+f2
-pFlux.set_freq(f1+f2)
-pFlux.sweep_par='power'  # Power sweep
-
-dim_1 = pFlux
-dim_1.defval = 0.03 #pFlux
-dim_2 = vBias
-dim_2.defval = 0.002
-dim_3 = vMag
-dim_3.defval = -0.67
-dim_1.UD = False
-recordD12 = True  # all D1 D2 data storage
-D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
-D12.doHist2d = True  # Record Histograms (Larger -> Slower)
-D12.doRaw = True
-D12.doBG = True
 
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
@@ -102,6 +63,48 @@ def sweep_dim_2(obj, value):
 
 def sweep_dim_3(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
+
+# Sweep equipment setup
+pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
+                 start=2.03, stop=0.03, pt=2,
+                 sstep=10, stime=0)
+
+D12spacing = dummy(name='D1D2-fdiff',
+                start=-1e9, stop=3e9, pt=401,
+                sstep=4e9, stime=0.0)
+
+vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
+                start=0.002, stop=0.002, pt=1,
+                sstep=0.060, stime=0.020)
+
+vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
+               start=-0.67, stop=-0.67, pt=1,
+               sstep=0.03, stime=0.020)
+
+pFlux.set_power_mode(1)  # Linear mode in mV
+pFlux.set_freq(f1+f2)
+pFlux.sweep_par='power'  # Power sweep
+D12spacing.D1 = D2  # assign objects (in reverse D1 f > D2 f)
+D12spacing.D2 = D1
+D12spacing.sweep_par = 'fspacing'
+D12spacing.cfreq = f1+f2
+sweep_dim_1(vBias, 0.002)
+
+dim_1 = D12spacing
+dim_1.defval = 4e9
+dim_2 = pFlux
+dim_2.defval = 0.03
+dim_3 = vMag
+dim_3.defval = -0.67
+dim_1.UD = False
+
+sgen = None
+recordD12 = True  # all D1 D2 data storage
+D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
+D12.doHist2d = False  # Record Histograms (Larger -> Slower)
+D12.doCorrel = False
+D12.doRaw = True
+D12.doBG = True
 
 
 # This describes how data is saved
@@ -139,16 +142,6 @@ def save_recorded():
     DS.save_data()  # save Volt data
     if recordD12:
         D12.data_save()  # save Digitizer data
-
-def progresbar(kk, jj, ii):
-    ''' shows the progress (only from cmd line) '''
-    sys.stdout.write('\r')
-    pgsk = 100.0*(kk/dim_3.pt)
-    pgsj = 100.0*(jj/dim_2.pt)
-    pgsi = 100.0*(ii/dim_1.pt)
-    sys.stdout.write('kk ' + str(pgsk) + ' jj ' + str(pgsj) + ' ii ' + str(pgsi))
-    sys.stdout.flush()
-
 
 # go to default value and activate output
 sweep_dim_1(dim_1, dim_1.defval)
@@ -214,4 +207,6 @@ finally:
     gc.collect()
     D1.performClose()
     D2.performClose()
+    sweep_dim_1(vBias, 0.0)
+    # pFlux.output(0)
     print 'done'

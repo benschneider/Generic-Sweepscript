@@ -5,14 +5,14 @@ Digitizers, a signal source and
 31/03/2016
 - B
 '''
-import numpy as np
+# import numpy as np
 from time import sleep  # , time
 # from DataStorer import DataStoreSP, DataStore2Vec, DataStore11Vec
 from nirack import nit  # load PXI trigger
 # import gc  # Garbage memory collection
 # import os
 # from parsers import storehdf5
-from time import time
+# from time import time
 # from tables import tb
 from D1D2meastype import meastype
 
@@ -47,6 +47,7 @@ class Process():
         self.doBG = False
         self.doHist2d = False
         self.doRaw = False
+        self.doCorrel = True
         self.num = 0    # number of missed triggers in a row
         # Define the different measurement types here:
         self.driveON = meastype(D1, D2, lags, 'ON', self.corrAvg)  # Pump drive ON
@@ -94,9 +95,11 @@ class Process():
         self.pstar.send_software_trigger()
 
     def create_datastore_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
-        self.driveON.create_objs(folder, filen_0, dim_1, dim_2, dim_3, self.doHist2d, self.doRaw)
+        self.driveON.create_objs(folder, filen_0, dim_1, dim_2, dim_3, 
+                                 self.doHist2d, self.doRaw, self.doCorrel)
         if self.doBG:
-            self.driveOFF.create_objs(folder, filen_0, dim_1, dim_2, dim_3, self.doHist2d, self.doRaw)
+            self.driveOFF.create_objs(folder, filen_0, dim_1, dim_2, dim_3, 
+                                      self.doHist2d, self.doRaw, self.doCorrel)
 
     def data_save(self):
         self.driveON.data_save()

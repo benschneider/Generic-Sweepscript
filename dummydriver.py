@@ -17,6 +17,9 @@ class instrument():
         self.sstep = sstep
         self.stime = stime
         self.var1 = 0.0
+        self.D1 = None
+        self.D2 = None
+        self.cfreq = None
 
     def instrument_1(self, adress):
         return (5, adress)
@@ -35,3 +38,18 @@ class instrument():
         
     def _dconn(self):
         return
+
+    def get_fspacing(self):
+        f1 = self.D1.digitizer.rf_centre_frequency_get()
+        f2 = self.D2.digitizer.rf_centre_frequency_get()
+        return f2-f1
+    
+    def set_fspacing(self, spacing):        
+        self.f1 = (self.cfreq - spacing)/2.0
+        self.f2 = (self.cfreq + spacing)/2.0
+        self.D1.digitizer.rf_centre_frequency_set(self.f1)
+        self.D2.digitizer.rf_centre_frequency_set(self.f2)
+        self.D1.freq = self.f1
+        self.D2.freq = self.f2
+        sleep(0.5)
+

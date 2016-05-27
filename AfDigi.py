@@ -23,7 +23,7 @@ class instrument():
     def __init__(self, adressDigi='3036D1', adressLo='3011D1',
                  LoPosAB=1, LoRef=0, name='D', cfreq=4.8e9, inputlvl=0,
                  start=4.1e9, stop=0, pt=1, nSample=1e6, sampFreq=1e6,
-                 buffmode=True):
+                 buffmode=False):
         self.ADCFAIL = False
         self.capture_ref = None
         self.ADCoverflow = 0
@@ -313,8 +313,8 @@ class instrument():
         if self.digitizer.check_ADCOverload():
             self.Overload = self.Overload + 1
             print 'Overload number:', self.Overload, self.name
-            if self.Overload > 3:
-                self.inputLvl +=1
+            if self.Overload > 2:
+                self.inputLvl +=2
                 self.digitizer.rf_rf_input_level_set(self.inputLvl)
                 print 'ajdust input level to:', self.inputLvl
             #     raise Exception('ADC overloaded 4x in a row')
