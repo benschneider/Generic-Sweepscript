@@ -314,7 +314,7 @@ class instrument():
             self.Overload = self.Overload + 1
             print 'Overload number:', self.Overload, self.name
             if self.Overload > 2:
-                self.inputLvl +=2
+                self.inputLvl +=1
                 self.digitizer.rf_rf_input_level_set(self.inputLvl)
                 print 'ajdust input level to:', self.inputLvl
             #     raise Exception('ADC overloaded 4x in a row')

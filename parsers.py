@@ -294,7 +294,21 @@ class storehdf5(object):
     def close(self):
         self.h5.close()
 
-    def create_dset2(self, shape, label='earray', atom=tb.Float64Atom(), esize=100):
+    def create_dset64(self, shape, label='earray', atom=tb.Float64Atom(), esize=100):
+        ''' create_dset2(self, shape, label='carray', atom=tb.Float64Atom()):
+            create a table with shape label, and atom(for dtype)
+            returns reference
+            shape requires a 0 which can then be extended
+        '''
+        ca = self.h5.create_earray(self.h5.root,
+                                   label,
+                                   atom,
+                                   shape,
+                                   filters=self.filt,
+                                   expectedrows=esize)
+        return ca
+
+    def create_dset32(self, shape, label='earray', atom=tb.Float32Atom(), esize=100):
         ''' create_dset2(self, shape, label='carray', atom=tb.Float64Atom()):
             create a table with shape label, and atom(for dtype)
             returns reference

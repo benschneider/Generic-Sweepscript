@@ -25,8 +25,8 @@ from IQcorr import Process as CorrProc  # Handle Correlation measurements
 import os
 
 thisfile = __file__
-filen_0 = '1173_NIRF'
-folder = 'data_May27\\'
+#filen_0 = '1176_18GLP'
+folder = 'data_May29\\'
 folder = folder + filen_0 + '\\'  # in one new folder
 if not os.path.exists(folder):
     os.makedirs(folder)
@@ -39,16 +39,16 @@ lags = 30
 BW = 1e6
 lsamples = 1e6
 corrAvg = 1
-f1 = 4.799999e9
+f1 = 4.8e9  # 4.799999e9
 f2 = 4.1e9
 
-D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=1, LoRef=0,
-           name='D1 Lags (sec)', cfreq=f1, inputlvl=0,
+D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0,
+           name='D1 Lags (sec)', cfreq=f1, inputlvl=-3,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 
-D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=3,
-           name='D2 Lags (sec)', cfreq=f2, inputlvl=0,
+D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=1, LoRef=3,
+           name='D2 Lags (sec)', cfreq=f2, inputlvl=-3,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 
@@ -66,11 +66,11 @@ def sweep_dim_3(obj, value):
 
 # Sweep equipment setup
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=2.03, stop=0.03, pt=2,
+                 start=1.03, stop=0.03, pt=1,
                  sstep=10, stime=0)
 
-D12spacing = dummy(name='D1D2-fdiff',
-                start=-1e9, stop=3e9, pt=401,
+D12spacing = dummy(name='D1-f',
+                start=7e9, stop=3.5e9, pt=351,
                 sstep=4e9, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
@@ -78,31 +78,31 @@ vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.67, stop=-0.67, pt=1,
+               start=-0.8, stop=-0.65, pt=16,
                sstep=0.03, stime=0.020)
 
 pFlux.set_power_mode(1)  # Linear mode in mV
 pFlux.set_freq(f1+f2)
 pFlux.sweep_par='power'  # Power sweep
-D12spacing.D1 = D2  # assign objects (in reverse D1 f > D2 f)
-D12spacing.D2 = D1
-D12spacing.sweep_par = 'fspacing'
+D12spacing.D1 = D1  # assign objects (in reverse D1 f > D2 f)
+D12spacing.D2 = D2
+D12spacing.sweep_par = 'f12'
 D12spacing.cfreq = f1+f2
 sweep_dim_1(vBias, 0.002)
 
 dim_1 = D12spacing
 dim_1.defval = 4e9
-dim_2 = pFlux
-dim_2.defval = 0.03
-dim_3 = vMag
-dim_3.defval = -0.67
+dim_3 = pFlux
+dim_3.defval = 0.03
+dim_2 = vMag
+dim_2.defval = -0.67
 dim_1.UD = False
 
 sgen = None
 recordD12 = True  # all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
 D12.doHist2d = False  # Record Histograms (Larger -> Slower)
-D12.doCorrel = False
+D12.doCorrel = True
 D12.doRaw = True
 D12.doBG = True
 

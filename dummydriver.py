@@ -46,7 +46,25 @@ class instrument():
     
     def set_fspacing(self, spacing):        
         self.f1 = (self.cfreq - spacing)/2.0
-        self.f2 = (self.cfreq + spacing)/2.0
+        self.f2 = (self.cfreq + spacing)/2.0        
+        self.D1.digitizer.rf_centre_frequency_set(self.f1)
+        self.D2.digitizer.rf_centre_frequency_set(self.f2)
+        self.D1.freq = self.f1
+        self.D2.freq = self.f2
+        sleep(0.5)
+
+    def get_f12(self):
+        f1 = self.D1.digitizer.rf_centre_frequency_get()
+        f2 = self.D2.digitizer.rf_centre_frequency_get()
+        if (f2+f1) == self.cfreq:
+            return f1
+        else :
+            print 'f2+f1 is not equal to pumpfreq'        
+        return f1
+    
+    def set_f12(self, f1):        
+        self.f1 = f1
+        self.f2 = self.cfreq - f1
         self.D1.digitizer.rf_centre_frequency_set(self.f1)
         self.D2.digitizer.rf_centre_frequency_set(self.f2)
         self.D1.freq = self.f1
