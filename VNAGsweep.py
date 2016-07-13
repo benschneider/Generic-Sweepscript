@@ -21,9 +21,11 @@ from RSZNB20 import instrument as ZNB20
 import gc  # Garbage memory collection
 import os
 
+''' DC and VNA (1KHz IF) sweep S4A4 '''
+
 thisfile = __file__
-filen_0 = '1171S21'
-folder = 'data_May24\\'
+filen_0 = '1201'
+folder = 'data_Jul12\\'
 folder = folder + filen_0 + '\\'  # in one new folder
 if not os.path.exists(folder):
     os.makedirs(folder)
@@ -34,7 +36,7 @@ sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 VNA = ZNB20('TCPIP::129.16.115.137::INSTR', name='ZNB20',
-                start=2.5e9, stop=8.5e9, pt=601,
+                start=2.5e9, stop=8.5e9, pt=301, BW=1e3, power=-10,
                 sstep=20e-3, stime=0.0, copy_setup=False)
 
 # Sweep equipment setup
@@ -42,11 +44,11 @@ nothing = dummy(name='nothing', start=0, stop=1, pt=1, sstep=20e-3, stime=0.0)
 
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=-5.0, stop=5.0, pt=101,
+                start=-5.0, stop=5.0, pt=51,
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-2.0, stop=5.0, pt=281,
+               start=-2.0, stop=5.0, pt=71,
                sstep=0.03, stime=0.020)
 
 # pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
@@ -89,7 +91,7 @@ def record_data(kk, jj, ii, back):
     VNA.init_sweep()
     vdata = vm.get_val()  # aquire voltage data point
     sleep(VNA.sweeptime)
-    vnadata = VNA.get_data2()  # take VNA sweep
+    vnadata = VNA.get_data()  # take VNA sweep
     if back is True:
         return DS.record_data2(vdata, kk, jj, ii)
 

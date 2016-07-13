@@ -23,7 +23,7 @@ class instrument():
     def __init__(self, adressDigi='3036D1', adressLo='3011D1',
                  LoPosAB=1, LoRef=0, name='D', cfreq=4.8e9, inputlvl=0,
                  start=4.1e9, stop=0, pt=1, nSample=1e6, sampFreq=1e6,
-                 buffmode=False):
+                 buffmode=True):
         self.ADCFAIL = False
         self.capture_ref = None
         self.ADCoverflow = 0

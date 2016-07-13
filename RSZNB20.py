@@ -17,6 +17,12 @@ import visa
 from parsers import savemtx, make_header, ask_overwrite
 rm = visa.ResourceManager()
 
+
+# def isNaN(num):
+#       ''' this only detects some nan values
+#        use numpy.isnan instead '''
+#     return num.max() != num.max()
+
 class instrument():
     # name = 'ZNB21'
     # start = -30e-3
@@ -30,25 +36,28 @@ class instrument():
     a ask
     '''
 
-    def __init__(self, adress, name='ZNB20', start=0, stop=0, pt=1, 
-                 sstep=2e9, stime=0.0, copy_setup=True):
+    def __init__(self, adress, name='ZNB20', start=0, stop=0, pt=1, BW=1e3, 
+                 power=-30, sstep=2e9, stime=0.0, copy_setup=True):
+                     
         self._adress = adress
         self._visainstrument = rm.open_resource(self._adress)
-        self.name = name
-        self.w(':INIT:CONT OFF')  # switch continuous mode off
-        self.init_sweep()
-        self.sweeptime = self.get_sweeptime() + 0.1
-        self._tempdata = self.get_data()
-      
+        self.name = name      
         if copy_setup:
-            self.pt = self.get_points()
-            self.start = self.get_freq_start()
-            self.stop = self.get_freq_stop()
+            self.get_points()
+            self.get_freq_start()
+            self.get_freq_stop()
+            self.get_BW()
+            self.get_power()
         else:
             self.set_points(pt)
             self.set_freq_start(start)
             self.set_freq_stop(stop)
-            
+            self.set_BW(BW)
+            self.set_power(power)
+        self.w(':INIT:CONT OFF')  # switch continuous mode off
+        self.init_sweep()
+        self.sweeptime = self.get_sweeptime() + 0.1
+        self._tempdata = self.get_data()            
         self.lin = np.linspace(self.start, self.stop, self.pt)
 
     def w(self, write_cmd):
@@ -62,6 +71,9 @@ class instrument():
 
     def a(self, ask_cmd):
         return self._visainstrument.ask(ask_cmd)
+        
+    def aBin(self, ask_cmd):
+        return self._visainstrument.query_binary_values(ask_cmd)
 
     def init_sweep(self):
         self.w(':INIT:IMM;*OPC')
@@ -104,18 +116,20 @@ class instrument():
         self.w('FREQ:CW ' + str(value))
 
     def set_BW(self, bw):
-        self.bandwidth = bw
+        self.BW = bw
         self.w(':SENS:BWID ' + str(bw))
         
     def get_BW(self):
-        self.bandwidth = self.a(':SENS:BWID?')
-        return self.bandwidth 
+        self.BW = self.a(':SENS:BWID?')
+        return self.BW
 
     def set_avg_state(self, bool_state):
         self.w(':SENS:AVER ' + str(bool_state))
+        self.avgState = bool_state
 
     def get_avg_state(self):
-        self.w(':SENS:AVER?')
+        self.avgState = self.w(':SENS:AVER?')
+        return self.avgState
 
     def set_avg_num(self, avgnum):
         self.avgn = avgnum
@@ -160,45 +174,13 @@ class instrument():
         self.w(':SENS:SWE:TYPE ' + str(stype))
 
     def get_data(self):
-        ''' involves some error handling
-        if an error occures it returns 'Error'
-        '''
         try:
-            self.w(':FORM REAL,32;CALC:DATA? SDATA')  # grab data from VNA
-            sData = self.r_raw()  # grab data from VNA
+            vdata = np.array(self.aBin(':FORM REAL,32;CALC:DATA? SDATA'))
         except:
-            self.w(':FORM REAL,32;CALC:DATA? SDATA')  # grab data from VNA
-            sData = self.r_raw()  # grab data from VNA
-            print 'Waiting for VNA'
-            sleep(3)  # poss. asked to early for data (for now just sleep 10 sec)
-            sData = self.a(':FORM REAL,32;CALC:DATA? SDATA')  # try once more after 5 seconds
-        i0 = sData.find('#')
-        nDig = int(sData[i0 + 1])
-        nByte = int(sData[i0 + 2:i0 + 2 + nDig])
-        nData = nByte / 4
-        nPts = nData / 2
-        data32 = sData[(i0 + 2 + nDig):(i0 + 2 + nDig + nByte)]
-        try:
-            vData = unpack('!' + str(nData) + 'f', data32)
-            vData = np.array(vData)
-            # data is in I0,Q0,I1,Q1,I2,Q2,.. format, convert to complex
-            mC = vData.reshape((nPts, 2))
-            vComplex = mC[:, 0] + 1j * mC[:, 1]
-        except:
-            print 'problem with unpack likely bad data from VNA'
             print self.get_error()
-            self.w('*CLS')  # CLear Status
-            return 'Error'
-        return vComplex
-
-    def get_data2(self):
-        self.wait()
-        vnadata = self.get_data()  # np.array(real+ i* imag)
-        if vnadata == 'Error':
-            sleep(0.03)
-            print 'retake VNA Data'
-            vnadata = self.get_data2()
-        return vnadata
+            sleep(3)
+            self.get_data()
+        return vdata[::2] + 1j * vdata[1::2]
 
     def wait(self):
         '''Waits until VNA operation is completed'''

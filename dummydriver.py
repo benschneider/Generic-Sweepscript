@@ -69,5 +69,6 @@ class instrument():
         self.D2.digitizer.rf_centre_frequency_set(self.f2)
         self.D1.freq = self.f1
         self.D2.freq = self.f2
+        print self.D1.name, self.f1/1e9, self.D2.name, self.f2/1e9
         sleep(0.5)
 
