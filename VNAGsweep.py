@@ -21,10 +21,10 @@ from RSZNB20 import instrument as ZNB20
 import gc  # Garbage memory collection
 import os
 
-''' DC and VNA (1KHz IF) sweep S4A4 '''
+''' DC and VNA (1KHz IF) sweep S2A4 '''
 
 thisfile = __file__
-filen_0 = '1201'
+filen_0 = '1203S2A4'
 folder = 'data_Jul12\\'
 folder = folder + filen_0 + '\\'  # in one new folder
 if not os.path.exists(folder):
@@ -43,7 +43,7 @@ VNA = ZNB20('TCPIP::129.16.115.137::INSTR', name='ZNB20',
 nothing = dummy(name='nothing', start=0, stop=1, pt=1, sstep=20e-3, stime=0.0)
 
 
-vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
+vBias = sim928c(sim900, name='V 1Mohm', sloti=4,
                 start=-5.0, stop=5.0, pt=51,
                 sstep=0.060, stime=0.020)
 

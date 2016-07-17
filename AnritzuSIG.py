@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Apr 12 20:13:10 2016
-
 @author: Ben
 
 MG3692C Signal Generator 
 Driver
 """
-
 
 import visa
 import numpy as np
@@ -38,15 +36,16 @@ class instrument():
         self.lin = np.linspace(self.start,self.stop,self.pt)
         self.sstep = sstep
         self.stime = stime
+        self.w('SYST:LANG "Native"')
         self.powerlevel = self.get_power()
-        self.phaseOffset = self.get_phaseOffset()
+        # self.phaseOffset = self.get_phaseOffset()
         self.sweep_par = 'power'
         self.output_val = None
 
     def get_freq(self):
         '''Return in Hz'''
         # return eval(self.a('OM1')*1e3)
-        return eval(self.a('OF1'))*1e3
+        return eval(self.a('OF0'))*1e3
 
     def set_freq(self, freq):
         '''Set in Hz'''
@@ -68,26 +67,26 @@ class instrument():
 
     def set_pulse_width(self, period):
         ''' in mu sec'''
-        return self.w('W1 '+str(period)+' US')
+        return self.w('W0 '+str(period)+' US')
 
     def get_pulse_width(self):
-        return self.a('OW1')
+        return self.a('OW0')
 
     def set_pulse_delay(self, period):
         ''' in mu sec'''
-        return self.w('D1 '+str(period)+' US')
+        return self.w('D0 '+str(period)+' US')
 
     def get_pulse_delay(self, period):
-        return self.a('OD1')
+        return self.a('OD0')
 
     def set_power(self, power):
         ''' sets the output power'''
         self.pow = power
-        return self.w('L1 '+str(power)+' DMCLOCF1')
+        return self.w('L0 '+str(power)+' DMCLOCF1')
 
     def get_power(self):
         ''' reads the output power'''
-        return eval(self.a('OL1'))
+        return eval(self.a('OL0'))
 
     def set_power_mode(self, state):
         ''' 1 LIN (mV), 0 LOG (dBm)'''
@@ -115,15 +114,17 @@ class instrument():
     def set_phaseOffset(self, phaseOffs):
         '''Phase Offset in Degrees'''
         self.phaseOffset = phaseOffs
-        return self.w('PS1 PSO '+str(phaseOffs)+' DG') 
+        return self.w('PS0 PSO '+str(phaseOffs)+' DG') 
         
     def get_phaseOffset(self):
         return self.a('OPO')
         
         
 if __name__ == '__main__':
-    pFlux = instrument('GPIB0::17::INSTR', name='FluxPump',
+    pFlux = instrument('GPIB0::8::INSTR', name='FluxPump',
                  start=2.03, stop=0.03, pt=101,
                  sstep=10, stime=0)
                 
     pFlux.set_power_mode(False)
+    pFlux.set_power_mode(1)
+    pFlux.get_power()

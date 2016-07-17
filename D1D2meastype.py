@@ -25,10 +25,10 @@ class meastype(object):
         self.data_variables()
 
     def create_objs(self, folder, filen_0, dim_1, dim_2, dim_3, doHist2d, doRaw, doCorrel=True):
+        ''' Prepare Data files, where processed information will be stored '''
         self.doHist2d = doHist2d
         self.doRaw = doRaw
         self.doCorrel = doCorrel
-        ''' Prepare Data files, where processed information will be stored '''
         nfolder = folder + filen_0 + self.name + '\\'  # -> data\\subfolder\\
         self.nfolder = nfolder
         if not os.path.exists(nfolder):
@@ -94,17 +94,9 @@ class meastype(object):
 
     def record_raw(self):
         ''' Records raw IQ data without the sweep coordinates'''
-        # I1 = self.D1.scaledI
-        # Q1 = self.D1.scaledQ
-        # I2 = self.D2.scaledI
-        # Q2 = self.D2.scaledQ
         if bool(self.Rdata.h5.isopen) is False:
             self.Rdata.open_f()  # opens the file to be edited
         r5 = self.Rdata.h5.root
-        # self.ArrD12[0,0] = I1
-        # self.ArrD12[0,1] = Q1
-        # self.ArrD12[0,2] = I2
-        # self.ArrD12[0,3] = Q2
         r5.D12raw.append([[self.D1.scaledI, self.D1.scaledQ, self.D2.scaledI, self.D2.scaledQ]])
         r5.D12raw.flush()
         self.Rdata.h5.flush()       
@@ -139,7 +131,6 @@ class meastype(object):
             self.xl = np.zeros([6, self.bin_size[0]+1])
             self.yl = np.zeros([6, self.bin_size[1]+1])
         if self.doRaw:
-            # self.ArrD12 = np.zeros([1, 4, self.nSamples])
             self.ijk = np.zeros([1, 3])
             self.D12freq = np.zeros([1, 2])
 
@@ -149,7 +140,6 @@ class meastype(object):
         self.D1vMa += self.D1.vAvgMag
         self.D1vPha += self.D1.vAvgPh
         self.D1aPow += self.D1.vAvgPow
-        # Digitizer 2 Values
         self.D2Ma += self.D2.AvgMag
         self.D2Pha += self.D2.AvgPhase
         self.D2vMa += self.D2.vAvgMag

@@ -25,7 +25,7 @@ import sys
 from shutil import copy
 # import h5py
 import tables as tb
-
+import os
 
 def ask_overwrite(filename):
     if path.isfile(filename):
@@ -45,6 +45,8 @@ def copy_file_interminal(thisfile, file_add, folder=''):
     # filen = path.basename(thisfile)     # something.py
     ffile = path.abspath(thisfile)     # D:\something.py
     ffolder = path.dirname(thisfile)    # EMPTY
+    if not os.path.exists(ffolder+folder):
+        os.makedirs(ffolder+folder)
     new_ffile = ffolder + folder + file_add + '_' + thisfile[:-3] + thisfile[-3:]
     copy(ffile, new_ffile)
 

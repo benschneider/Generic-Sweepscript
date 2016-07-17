@@ -259,6 +259,8 @@ class instrument():
         '''
         Generates complex FFT of the data and kills the side-band.
         cleared FFT data is stored in self.cfftsig
+        #Easier to kill the sidbands and a lot of Noise 
+        by using two Digitizers and correlating the data.
         '''
         self.cfftsig[:] = np.fft.fft(self.cIQ)
         self.cfftsig[:] = np.fft.fftshift(self.cfftsig)  # temporarily used for bug hunting
@@ -322,6 +324,7 @@ class instrument():
             self.Overload = 0
 
 if __name__ == '__main__':
+    ''' Test code to see if this Driver works on its own '''
     from nirack import nit
     pstar = nit()
     lags = 30
@@ -342,3 +345,4 @@ if __name__ == '__main__':
     D1.downl_data()
     D1.get_Levelcorr()
     D1.process_data()
+    #D1.set_freq(f1)

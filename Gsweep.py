@@ -13,22 +13,22 @@ from DataStorer import DataStoreSP  # , DataStore2Vec, DataStore11Vec
 # Drivers
 from dummydriver import instrument as dummy
 from keithley2000 import instrument as key2000
-# from AnritzuSig import instrument as AnSigGen
+from AnritzuSig import instrument as AnSigGen
 from SRsim import instrument as sim900c
 from Sim928 import instrument as sim928c
 # from Yoko import instrument as yoko
-# from AfDigi import instrument as AfDig  # Digitizer driver
+from AfDigi import instrument as AfDig  # Digitizer driver
 import gc  # Garbage memory collection
-# from IQcorr import Process as CorrProc  # Handle Correlation measurements
+from IQcorr import Process as CorrProc  # Handle Correlation measurements
 # import sys
 # from RSZNB20 import instrument as ZNB20
 import os
 
 
-''' DC test sweep '''
+''' Testing D1, D2 photon correlations (Same freq.) '''
 
 thisfile = __file__
-filen_0 = '1200'
+filen_0 = '1204'
 folder = 'data_Jul12\\'
 folder = folder + filen_0 + '\\'  # in one new folder
 if not os.path.exists(folder):
@@ -39,21 +39,81 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 1e6
+BW = 1e4
 lsamples = 1e4
 corrAvg = 1
-f1 = 4.8e9  # 4.799999e9
-f2 = 4.1e9
-#
-#D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0,
-#           name='D1', cfreq=f1, inputlvl=2,
-#           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
-#           nSample=lsamples, sampFreq=BW)
-#
-#D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=1, LoRef=3,
-#           name='D2', cfreq=f2, inputlvl=2,
-#           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
-#           nSample=lsamples, sampFreq=BW)
+f1 = 4.45e9  # 4.799999e9
+f2 = 4.45e9
+
+# Start with both having the same frequency
+
+D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0,
+           name='D1', cfreq=f1, inputlvl=-10,
+           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
+           nSample=lsamples, sampFreq=BW)
+
+D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=1, LoRef=3,
+           name='D2', cfreq=f2, inputlvl=-10,
+           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
+           nSample=lsamples, sampFreq=BW)
+
+
+# Sweep equipment setup
+pFlux = AnSigGen('GPIB0::8::INSTR', name='FluxPump',
+                 start=0.04, stop=0.001, pt=41,
+                 sstep=10, stime=0)
+
+#D12spacing = dummy(name='D1-f',
+#                start=5.4e9, stop=3.5e9, pt=1,
+#                sstep=4e9, stime=0.0)
+
+vBias = sim928c(sim900, name='V 1Mohm', sloti=4,
+                start=0.0, stop=0.0, pt=1,
+                sstep=0.060, stime=0.020)
+
+vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
+               start=-1.2, stop=-0.8, pt=41,
+               sstep=0.03, stime=0.020)
+
+nothing = dummy(name='nothing',
+                start=0, stop=1, pt=1,
+                sstep=1.0, stime=0.0)
+
+
+pFlux.set_power_mode(1)  # Linear mode in mV
+pFlux.set_freq(8.9e9)  # f1+f2)
+pFlux.sweep_par='power'  # Power sweep
+# D12spacing.D1 = D1  # assign objects (in reverse D1 f > D2 f)
+# D12spacing.D2 = D2
+# D12spacing.sweep_par = 'f12'
+# D12spacing.cfreq = f1+f2
+# sweep_dim_1(vBias, 0.002)
+
+dim_1 = pFlux
+dim_1.UD = False
+dim_1.defval = 0.001
+dim_2 = vMag
+dim_2.defval = 0.0
+dim_3 = nothing
+dim_3.defval = 0.0
+
+sgen = None
+recordD12 = True  # all D1 D2 data storage
+D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
+D12.doHist2d = False  # Record Histograms (Larger -> Slower)
+D12.doCorrel = True
+D12.doRaw = False
+D12.doBG = True
+
+
+# This describes how data is saved
+DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Vx1k')
+DS.ask_overwrite()
+copy_file(thisfile, filen_0, folder)
+
+# CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
+if recordD12:
+    D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
 
 
 def sweep_dim_1(obj, value):
@@ -66,64 +126,7 @@ def sweep_dim_2(obj, value):
 
 def sweep_dim_3(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
-
-# Sweep equipment setup
-#pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-#                 start=0.03, stop=0.03, pt=1,
-#                 sstep=10, stime=0)
-#
-#D12spacing = dummy(name='D1-f',
-#                start=5.4e9, stop=3.5e9, pt=1,
-#                sstep=4e9, stime=0.0)
-
-vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
-                start=-5, stop=5, pt=201,
-                sstep=0.060, stime=0.020)
-
-vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-2.0, stop=2.0, pt=401,
-               sstep=0.03, stime=0.020)
-
-nothing = dummy(name='nothing',
-                start=0, stop=1, pt=1,
-                sstep=1.0, stime=0.0)
-
-
-#pFlux.set_power_mode(1)  # Linear mode in mV
-#pFlux.set_freq(f1+f2)
-#pFlux.sweep_par='power'  # Power sweep
-#D12spacing.D1 = D1  # assign objects (in reverse D1 f > D2 f)
-#D12spacing.D2 = D2
-#D12spacing.sweep_par = 'f12'
-#D12spacing.cfreq = f1+f2
-# sweep_dim_1(vBias, 0.002)
-
-dim_1 = vBias
-dim_1.UD = True
-dim_1.defval = 0.0
-dim_2 = vMag
-dim_2.defval = 0.0
-dim_3 = nothing
-dim_3.defval = 0.0
-
-#sgen = None
-recordD12 = False  # all D1 D2 data storage
-#D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
-#D12.doHist2d = False  # Record Histograms (Larger -> Slower)
-#D12.doCorrel = False
-#D12.doRaw = False
-#D12.doBG = False
-#
-#
-# This describes how data is saved
-DS = DataStoreSP(folder, filen_0, dim_1, dim_2, dim_3, 'Vx1k')
-DS.ask_overwrite()
-copy_file(thisfile, filen_0, folder)
-
-# CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
-if recordD12:
-    D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
-
+    
 # describe how data is to be stored
 def record_data(kk, jj, ii, back):
     '''This function is called with each change in ii,jj,kk
@@ -213,8 +216,8 @@ finally:
     dim_3.output(0)
     sim900._dconn()
     gc.collect()
-#    D1.performClose()
-#    D2.performClose()
+    D1.performClose()
+    D2.performClose()
 #    sweep_dim_1(vBias, 0.0)
-    # pFlux.output(0)
+    pFlux.output(0)
     print 'done'

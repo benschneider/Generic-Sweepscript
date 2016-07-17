@@ -5,12 +5,10 @@ Generic Sweep script
 20/10/2015
 - B
 '''
-#import numpy as np
 from time import time, sleep
 from parsers import copy_file
 from ramp_mod import ramp
 from DataStorer import DataStoreSP  # , DataStore2Vec, DataStore11Vec
-# Drivers
 from dummydriver import instrument as dummy
 from keithley2000 import instrument as key2000
 from AnritzuSig import instrument as AnSigGen
@@ -21,33 +19,36 @@ from AfDigi import instrument as AfDig  # Digitizer driver
 import gc  # Garbage memory collection
 from IQcorr import Process as CorrProc  # Handle Correlation measurements
 import sys
-
+import os
 
 thisfile = __file__
-filen_0 = '1129_SN1'
-folder = 'data_May12\\'
+filen_0 = '1208_SN11_down'
+folder = 'data_Jul17\\'
+folder = folder + filen_0 + '\\'  # in one new folder
+if not os.path.exists(folder):
+    os.makedirs(folder)
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 5e4
+BW = 1e5
 lsamples = 1e6
 corrAvg = 1
-f1 = 4.799999e9
+f1 = 4.1e9  # 4.799999e9
 f2 = 4.1e9
 
 #BPF implemented to kill noise sideband,
 #FFT filtering not yet working, possibly BW not large enough
 #D1 4670MHZ Edge (4.8GHz) LO above
 #D2 4330MHz Edge (4.1GHz) LO below
-D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=1, LoRef=0,
+D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0,
            name='D1 Lags (sec)', cfreq=f1, inputlvl=-3,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 
-D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=3,
+D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=1, LoRef=3,
            name='D2 Lags (sec)', cfreq=f2, inputlvl=-3,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
@@ -57,16 +58,16 @@ nothing = dummy('none', name='nothing',
                 start=0, stop=1, pt=1,
                 sstep=20e-3, stime=0.0)
 
-vBias = sim928c(sim900, name='V 1Mohm', sloti=2, 
-                start=-20.0, stop=20.0, pt=101, 
+vBias = sim928c(sim900, name='V 1Mohm', sloti=4, 
+                start=20.0, stop=-20.0, pt=801, 
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.58, stop=-0.58, pt=1,
+               start=1.5, stop=1.5, pt=1,
                sstep=0.03, stime=0.020)
 
-pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=0.03, stop=2.03, pt=1,
+pFlux = AnSigGen('GPIB0::8::INSTR', name='FluxPump',
+                 start=0.03, stop=0.03, pt=1,
                  sstep=30e-3, stime=1e-3)
 #-30 dB at output
 
@@ -80,15 +81,16 @@ pFlux.sweep_par='power'  # Power sweep
 dim_1 = vBias
 dim_1.defval = 0.0
 dim_2 = vMag
-dim_2.defval = 0.0
+dim_2.defval = 1.5
 dim_3 = pFlux
 dim_3.defval = 0.03
 dim_1.UD = False
 recordD12 = True  # activates /deactivates all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
 D12.doHist2d = False
-D12.takeBG = False
-
+D12.doBG = False
+D12.doRaw = True
+D12.doCorrel = True
 
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)

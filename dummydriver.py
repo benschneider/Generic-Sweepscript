@@ -43,6 +43,14 @@ class instrument():
         f1 = self.D1.digitizer.rf_centre_frequency_get()
         f2 = self.D2.digitizer.rf_centre_frequency_get()
         return f2-f1
+        
+    def set_f11(self, f11):
+        self.D1.digitizer.rf_centre_frequency_set(f11)
+        self.D2.digitizer.rf_centre_frequency_set(f11)
+        self.f11 = f11
+
+    def get_f11(self):
+        return self.f11
     
     def set_fspacing(self, spacing):        
         self.f1 = (self.cfreq - spacing)/2.0

@@ -7,20 +7,47 @@ Created on Wed May 04 17:34:26 2016
 from parsers import copy_file_interminal
 import os
 
-filen_0 = '1177_18GLPSN0'
-folder = 'data_May29\\'
-if not os.path.exists(folder):
-    os.makedirs(folder)
-    
-copy_file_interminal('GsweepSN1.py', filen_0, folder)
-execfile('GsweepSN1.py')
+'''
+8x8 Cov Matrix
+- Shotnoise
+- I1 I1  upper left quad
+- I2 I2 lower right quad
+- I1 I2 Cov Mat with Gain 1
+- I2 I1 Cov Mat with Gain 2
+- Shotnoise
+'''
 
-filen_0 = '1177_18GLP'
-copy_file_interminal('Gsweep.py', filen_0, folder)
-execfile('Gsweep.py')
+'''
+No RT narrow bandpass filter involved
+'''
+filen_0 = '1208_SN11_up'
+folder = 'data_Jul17\\'
+copy_file_interminal('GsweepSN11_1.py', filen_0, folder)
+execfile('GsweepSN11_1.py')
 
-filen_0 = '1177_18GLPSN1'
-copy_file_interminal('GsweepSN1.py', filen_0, folder)
-execfile('GsweepSN1.py')
+filen_0 = '1208_SN11_down'
+folder = 'data_Jul17\\'
+copy_file_interminal('GsweepSN11_2.py', filen_0, folder)
+execfile('GsweepSN11_2.py')
 
-execfile('Gsweeplist2.py')  # Possibility to add more measurements here
+#folder = 'data_Jul15\\'
+#filen_0 = '1206_SN22_0'
+#copy_file_interminal('GsweepSN22.py', filen_0, folder)
+#execfile('GsweepSN22.py')
+#
+#folder = 'data_Jul15\\'
+#filen_0 = '1206'
+#copy_file_interminal('GsweepCov2.py', filen_0, folder)
+#execfile('GsweepCov2.py')
+#
+#folder = 'data_Jul15\\'
+#filen_0 = '1206_SN11_1'
+#copy_file_interminal('GsweepSN11.py', filen_0, folder)
+#execfile('GsweepSN11.py')
+#
+#folder = 'data_Jul15\\'
+#filen_0 = '1206_SN22_1'
+#copy_file_interminal('GsweepSN22.py', filen_0, folder)
+#execfile('GsweepSN22.py')
+
+# execfile('Gsweeplist2.py')  # Possibility to add more measurements here

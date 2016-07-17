@@ -26,7 +26,7 @@ import os
 
 thisfile = __file__
 # filen_0 = '1174_18GHLPF'
-folder = 'data_May29\\'
+#folder = 'data_May29\\'
 folder = folder + filen_0 + '\\'  # in one new folder
 if not os.path.exists(folder):
     os.makedirs(folder)
@@ -36,10 +36,10 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 1e6
-lsamples = 1e6
+BW = 1e4
+lsamples = 1e4
 corrAvg = 1
-f1 = 4.8e9  # 4.799999e9
+f1 = 4.1e9  # 4.799999e9
 f2 = 4.1e9
 
 #BPF implemented to kill noise sideband,
@@ -61,16 +61,16 @@ nothing = dummy('none', name='nothing',
                 start=0, stop=1, pt=1,
                 sstep=20e-3, stime=0.0)
 
-vBias = sim928c(sim900, name='V 1Mohm', sloti=2, 
-                start=-20.0, stop=20.0, pt=101, 
+vBias = sim928c(sim900, name='V 1Mohm', sloti=4, 
+                start=-20.0, stop=20.0, pt=201, 
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-0.68, stop=-0.68, pt=1,
+               start=1.5, stop=1.5, pt=1,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=0.03, stop=2.03, pt=1,
+                 start=0.03, stop=0.03, pt=1,
                  sstep=30e-3, stime=1e-3)
 #-30 dB at output
 
