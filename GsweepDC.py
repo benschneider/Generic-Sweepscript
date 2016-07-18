@@ -21,11 +21,14 @@ from Sim928 import instrument as sim928c
 import gc  # Garbage memory collection
 #from IQcorr import Process as CorrProc  # Handle Correlation measurements
 import sys
-
+import os
 
 thisfile = __file__
-filen_0 = '1137DC_'
-folder = 'data_May20\\'
+filen_0 = '1209DC'
+folder = 'data_Jul18\\'
+if not os.path.exists(folder):
+    os.makedirs(folder)
+
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
@@ -35,8 +38,8 @@ vm = key2000('GPIB0::29::INSTR')
 #BW = 1e6
 #lsamples = 1e6
 #corrAvg = 1
-#f1 = 4.799999e9
-#f2 = 4.1e9
+f1 = 4.8e9
+f2 = 4.1e9
 
 #BPF implemented to kill noise sideband,
 #FFT filtering not yet working, possibly BW not large enough
@@ -57,7 +60,7 @@ nothing = dummy('none', name='nothing',
                 start=0, stop=1, pt=1,
                 sstep=20e-3, stime=0.0)
 
-vBias = sim928c(sim900, name='V 1Mohm', sloti=2,
+vBias = sim928c(sim900, name='V 1Mohm', sloti=4,
                 start=(-6 +0.002), stop=6.002, pt=301,
                 sstep=0.060, stime=0.020)
 
@@ -65,7 +68,7 @@ vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
                start=-2.0, stop=5.0, pt=351,
                sstep=0.03, stime=0.020)
 
-pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
+pFlux = AnSigGen('GPIB0::8::INSTR', name='FluxPump',
                  start=0.03, stop=0.03, pt=1,
                  sstep=10, stime=0)
 #-30 dB at output
@@ -202,10 +205,10 @@ finally:
     sweep_dim_2(dim_2, dim_2.defval)
     sleep(1)
     sweep_dim_3(dim_3, dim_3.defval)
-    sleep(1)
-    dim_1.output(0)
-    sleep(1)
-    dim_2.output(0)
+    #sleep(1)
+    #dim_1.output(0)
+    #sleep(1)
+    #dim_2.output(0)
     sleep(1)
     dim_3.output(0)
     sim900._dconn()
