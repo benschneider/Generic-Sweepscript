@@ -22,8 +22,8 @@ import sys
 import os
 
 thisfile = __file__
-filen_0 = '1208_SN11_down'
-folder = 'data_Jul17\\'
+filen_0 = '1210SN22_down'
+folder = 'data_Jul18\\'
 folder = folder + filen_0 + '\\'  # in one new folder
 if not os.path.exists(folder):
     os.makedirs(folder)
@@ -36,8 +36,8 @@ lags = 30
 BW = 1e5
 lsamples = 1e6
 corrAvg = 1
-f1 = 4.1e9  # 4.799999e9
-f2 = 4.1e9
+f1 = 4.8e9  # 4.799999e9
+f2 = 4.8e9
 
 #BPF implemented to kill noise sideband,
 #FFT filtering not yet working, possibly BW not large enough
@@ -59,11 +59,11 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=4, 
-                start=20.0, stop=-20.0, pt=801, 
+                start=20.0, stop=-20.0, pt=201, 
                 sstep=0.060, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=1.5, stop=1.5, pt=1,
+               start=1.52, stop=1.52, pt=1,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::8::INSTR', name='FluxPump',

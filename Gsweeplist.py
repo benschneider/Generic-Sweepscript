@@ -20,13 +20,13 @@ import os
 '''
 No RT narrow bandpass filter involved
 '''
-filen_0 = '1208_SN11_up'
-folder = 'data_Jul17\\'
+filen_0 = '1210SN22_up'
+folder = 'data_Jul18\\'
 copy_file_interminal('GsweepSN11_1.py', filen_0, folder)
 execfile('GsweepSN11_1.py')
 
-filen_0 = '1208_SN11_down'
-folder = 'data_Jul17\\'
+filen_0 = '1210SN22_down'
+folder = 'data_Jul18\\'
 copy_file_interminal('GsweepSN11_2.py', filen_0, folder)
 execfile('GsweepSN11_2.py')
 

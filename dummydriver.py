@@ -20,6 +20,7 @@ class instrument():
         self.D1 = None
         self.D2 = None
         self.cfreq = None
+        self.f11 = 2e9
 
     def instrument_1(self, adress):
         return (5, adress)
@@ -48,6 +49,7 @@ class instrument():
         self.D1.digitizer.rf_centre_frequency_set(f11)
         self.D2.digitizer.rf_centre_frequency_set(f11)
         self.f11 = f11
+        sleep(0.02)
 
     def get_f11(self):
         return self.f11

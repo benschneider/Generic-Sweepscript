@@ -56,11 +56,4 @@ afDigitizerDll.lib
 cov.dat
 data_May12
 *.hdf5
-data_May20
-data_May24
-data_May27
-data_May28
-data_May29
-data_Jul12
-data_Jul17
-data_Jul15
+data_*
