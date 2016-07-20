@@ -55,7 +55,7 @@ D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=3,
 
 # Sweep equipment setup
 Dfreq = dummy('DigiFreq', name='Frequency',
-                start=4e9, stop=6.0e9, pt=201,
+                start=4e9, stop=6.0e9, pt=401,
                 sstep=10e9, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=4, 
@@ -67,7 +67,7 @@ vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::8::INSTR', name='FluxPump',
-                 start=0.1, stop=0.00, pt=51,
+                 start=0.028, stop=0.00, pt=29,
                  sstep=30e-3, stime=1e-3)
 # -30 dB at output
 
