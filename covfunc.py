@@ -12,7 +12,6 @@ from numpy.fft import rfftn, irfftn
 _rfft_lock = threading.Lock()
 
 
-
 def get_g2(P1, P2, lags=20):
     ''' Returns the Top part of the G2 equation (<P1P2> - <P1><P2>)'''
     lags = int(lags)
@@ -41,7 +40,7 @@ def get_g2(P1, P2, lags=20):
             fftP1 = np.concatenate((np.zeros(HPfilt), fftP1[HPfilt:]))
             rfftP2 = np.concatenate((np.zeros(HPfilt), rfftP2[HPfilt:]))
             G2 = irfftn((fftP1*rfftP2))[fslice].copy()[start:stop]/len(fftP1)
-            return 
+            return
 
         finally:
             _rfft_lock.release()
@@ -60,7 +59,6 @@ def get_g2(P1, P2, lags=20):
     P12var = np.var(P1)*np.var(P2)
     return G2-P12var
 
- 
 
 def getCovMatrix(I1, Q1, I2, Q2, lags=20):
     '''
@@ -114,60 +112,44 @@ def getCovMatrix(I1, Q1, I2, Q2, lags=20):
             fftQ1 = rfftn(Q1, fshape)
             fftI2 = rfftn(I2, fshape)
             fftQ2 = rfftn(Q2, fshape)
-
             rfftI1 = rfftn(I1[::-1], fshape)
             rfftQ1 = rfftn(Q1[::-1], fshape)
             rfftI2 = rfftn(I2[::-1], fshape)
             rfftQ2 = rfftn(Q2[::-1], fshape)
-
             # filter frequencies outside the lags range
             fftI1 = np.concatenate((np.zeros(HPfilt), fftI1[HPfilt:]))
             fftQ1 = np.concatenate((np.zeros(HPfilt), fftQ1[HPfilt:]))
             fftI2 = np.concatenate((np.zeros(HPfilt), fftI2[HPfilt:]))
             fftQ2 = np.concatenate((np.zeros(HPfilt), fftQ2[HPfilt:]))
-
             # filter frequencies outside the lags range
             rfftI1 = np.concatenate((np.zeros(HPfilt), rfftI1[HPfilt:]))
             rfftQ1 = np.concatenate((np.zeros(HPfilt), rfftQ1[HPfilt:]))
             rfftI2 = np.concatenate((np.zeros(HPfilt), rfftI2[HPfilt:]))
             rfftQ2 = np.concatenate((np.zeros(HPfilt), rfftQ2[HPfilt:]))
-
             # 0: <I1I1>
-            CovMat[0, :] = (irfftn((fftI1*rfftI1))[fslice].copy()[start:stop]
-                            / len(fftI1))
+            CovMat[0, :] = (irfftn((fftI1*rfftI1))[fslice].copy()[start:stop] / len(fftI1))
             # 1: <Q1Q1>
-            CovMat[1, :] = (irfftn((fftQ1*rfftQ1))[fslice].copy()[start:stop]
-                            / len(fftI1))
+            CovMat[1, :] = (irfftn((fftQ1*rfftQ1))[fslice].copy()[start:stop] / len(fftI1))
             # 2: <I2I2>
-            CovMat[2, :] = (irfftn((fftI2*rfftI2))[fslice].copy()[start:stop]
-                            / len(fftI1))
+            CovMat[2, :] = (irfftn((fftI2*rfftI2))[fslice].copy()[start:stop] / len(fftI1))
             # 3: <Q2Q2>
-            CovMat[3, :] = (irfftn((fftQ2*rfftQ2))[fslice].copy()[start:stop]
-                            / len(fftI1))
+            CovMat[3, :] = (irfftn((fftQ2*rfftQ2))[fslice].copy()[start:stop] / len(fftI1))
             # 4: <I1Q1>
-            CovMat[4, :] = (irfftn((fftI1*rfftQ1))[fslice].copy()[start:stop]
-                            / len(fftI1))
+            CovMat[4, :] = (irfftn((fftI1*rfftQ1))[fslice].copy()[start:stop] / len(fftI1))
             # 5: <I2Q2>
-            CovMat[5, :] = (irfftn((fftI2*rfftQ2))[fslice].copy()[start:stop]
-                            / len(fftI1))
+            CovMat[5, :] = (irfftn((fftI2*rfftQ2))[fslice].copy()[start:stop] / len(fftI1))
             # 6: <I1I2>
-            CovMat[6, :] = (irfftn((fftI1*rfftI2))[fslice].copy()[start:stop]
-                            / len(fftI1))
+            CovMat[6, :] = (irfftn((fftI1*rfftI2))[fslice].copy()[start:stop] / len(fftI1))
             # 7: <Q1Q2>
-            CovMat[7, :] = (irfftn((fftQ1*rfftQ2))[fslice].copy()[start:stop]
-                            / len(fftI1))
+            CovMat[7, :] = (irfftn((fftQ1*rfftQ2))[fslice].copy()[start:stop] / len(fftI1))
             # 8: <I1Q2>
-            CovMat[8, :] = (irfftn((fftI1*rfftQ2))[fslice].copy()[start:stop]
-                            / len(fftI1))
+            CovMat[8, :] = (irfftn((fftI1*rfftQ2))[fslice].copy()[start:stop] / len(fftI1))
             # 9: <Q1I2>
-            CovMat[9, :] = (irfftn((fftQ1*rfftI2))[fslice].copy()[start:stop]
-                            / len(fftI1))
+            CovMat[9, :] = (irfftn((fftQ1*rfftI2))[fslice].copy()[start:stop] / len(fftI1))
             # 10: <Squeezing> Magnitude
-            CovMat[10, :] = (abs(1j*(CovMat[8, :]+CovMat[9, :])
-                                 + (CovMat[6, :] - CovMat[7, :])))
+            CovMat[10, :] = (abs(1j*(CovMat[8, :]+CovMat[9, :]) + (CovMat[6, :] - CovMat[7, :])))
             # 10: <Squeezing> Angle
             CovMat[11, :] = np.angle(1j*(CovMat[8, :]+CovMat[9, :]) + (CovMat[6, :] - CovMat[7, :]))
-            
             return CovMat
 
         finally:
@@ -182,6 +164,7 @@ def getCovMatrix(I1, Q1, I2, Q2, lags=20):
         print 'Abort, reason:complex input or Multithreaded FFT not available'
 
         if not complex_result:
+            print 'Not a complex result'
             pass  # ret = ret.real
 
     return CovMat
