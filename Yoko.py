@@ -17,7 +17,10 @@ rm = visa.ResourceManager()
 
 class instrument():
     '''
-    yoko = instrument2('GPIB0::10::INSTR')
+    yoko = instrument('GPIB0::10::INSTR')
+    yoko = instrument('RS232...')
+    yoko._visainstrument.set_baud(...)
+
     w write
     r read
     a ask
@@ -40,7 +43,7 @@ class instrument():
         self.stime = stime
         if self.pt > 1 :
             self.linstep = np.abs(self.lin[1]-self.lin[0])
-        self.sweep_par = 'iv'  # xx, ramper will use get_xx and set_xx 
+        self.sweep_par = 'iv'  # xx, ramper will use get_xx and set_xx
 
     def w(self,write_cmd):
         self._visainstrument.write(write_cmd)

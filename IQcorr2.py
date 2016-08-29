@@ -19,8 +19,9 @@ class Process():
         acesses the procedure to calculate covariance Matrixes
     '''
 
-    def __init__(self, D1, D2, pflux, sgen, lags=20, 
-                 BW=1e6, lsamples=1e4, mTypeNames=('ON12','ON11','ON21','ON22','OFF21','OFF12'), corrAvg=1):
+    def __init__(self, D1, D2, pflux, sgen, lags=20,
+                 BW=1e6, lsamples=1e4,
+                 mTypeNames=('ON12', 'ON11', 'ON21', 'ON22', 'OFF21', 'OFF12'), corrAvg=1):
         '''
         D1, D2, pgen, pstar
         D1,2: Digitizer 1,2 object
@@ -31,7 +32,7 @@ class Process():
         self.D1 = D1
         self.D2 = D2
         self.f1 = D1.freq
-        self.f2 = D2.freq        
+        self.f2 = D2.freq
         self.D1w = self.D1.digitizer
         self.D2w = self.D2.digitizer
         self.sgen = sgen
@@ -93,13 +94,13 @@ class Process():
 
     def create_datastore_objs(self, folder, filen_0, dim_1, dim_2, dim_3):
         for mType in self.mTypes:
-            self.mTypes[mType].create_objs(folder, filen_0, dim_1, dim_2, dim_3, 
-                                 self.doHist2d, self.doRaw, self.doCorrel)
+            self.mTypes[mType].create_objs(folder, filen_0, dim_1, dim_2, dim_3,
+                                           self.doHist2d, self.doRaw, self.doCorrel)
 
     def data_save(self):
         for mType in self.mTypes:
             self.mTypes[mType].data_save()
-            
+
     def data_record(self, kk, jj, ii):
         for mType in self.mTypes:
             self.mTypes[mType].data_record(kk, jj, ii)
@@ -125,7 +126,7 @@ class Process():
             self.download_data(cz)
         elif (bool(self.D1.ADCoverflow) or bool(self.D1.ADCoverflow)):
             self.nnnnn += 1
-            print 'remeasure this: '+str(self.nnnnn)
+            print 'remeasure this: ' + str(self.nnnnn)
             if self.nnnnn > 7:
                 raise Exception('Continuous ADC-overflow')
             self.init_trigger()
@@ -150,17 +151,17 @@ class Process():
             self.dDsFiT(self.f1, self.f1, cz)  # Get Prev data update settings
             self.mTypes['ON12'].process_data()  # process and store ON data
             self.dDsFiT(self.f2, self.f1, cz)
-            self.mTypes['ON11'].process_data()         
+            self.mTypes['ON11'].process_data()
             self.dDsFiT(self.f2, self.f2, cz)
-            self.mTypes['ON21'].process_data()            
+            self.mTypes['ON21'].process_data()
             self.dDsFiT(self.f2, self.f1, cz, drive=0)
-            self.mTypes['ON22'].process_data()             
+            self.mTypes['ON22'].process_data()
             self.dDsFiT(self.f1, self.f2, cz, drive=0)
-            self.mTypes['OFF21'].process_data()            
+            self.mTypes['OFF21'].process_data()
             self.download_data(cz)  # ['OFF12']
             self.pflux.output(1)  # Drive ON
             self.mTypes['OFF12'].process_data()
-            if (cz+1) < int(self.corrAvg):
+            if (cz + 1) < int(self.corrAvg):
                 self.init_trigger()  # Initiate trigger for next average
 
     def full_aqc(self, kk, jj, ii):
@@ -176,9 +177,17 @@ class Process():
         self.D2.checkADCOverload()
         self.avg_corr()  # 3
         self.data_record(kk, jj, ii)  # 4 (This is fast !)
-        
+
 if __name__ == '__main__':
     D1 = 'D1'
     D2 = 'D2'
-    mTypeNames=('ON12','ON11','ON21','ON22','OFF21','OFF12')
-    test0 = Process(D1=D1, D2=D2, pflux=None, sgen=None, lags=10, BW=1e5, lsamples=1e3, mTypeNames=mTypeNames)
+    mTypeNames = ('ON12', 'ON11', 'ON21', 'ON22', 'OFF21', 'OFF12')
+    test0 = Process(
+        D1=D1,
+        D2=D2,
+        pflux=None,
+        sgen=None,
+        lags=10,
+        BW=1e5,
+        lsamples=1e3,
+        mTypeNames=mTypeNames)

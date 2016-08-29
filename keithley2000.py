@@ -70,17 +70,17 @@ class instrument():
         self.testspeed()
         self.testspeed()
 
-       
+
     def get_val_ascii(self):
         ''' works if mode is set to ASCII'''
         return eval(self.a('READ?'))
-    
+
     def get_val_dreal(self):
         ''' works if mode is set to DREAL'''
         self.w('READ?')
         a = self._visainstrument.read_raw()
         return unpack('d', a[2:-1])[0]
-        
+
     def get_val(self):
         ''' works if mode is set to DREAL'''
         self.w('READ?')
@@ -99,12 +99,12 @@ class instrument():
         self._filen_1 = filen_0 + '.mtx'
         self._head_1 = make_header(dim_1, dim_2, dim_3, colour_name)
         self.matrix3d_1 = np.zeros((dim_3.pt, dim_2.pt, dim_1.pt))
-                
+
     def record_data(self,vdata,kk,jj,ii=1):
         self.matrix3d_1[kk,jj,ii] = vdata
-        
+
     def save_data(self):
         savemtx(self._folder + self._filen_1, self.matrix3d_1, header = self._head_1)
-                
+
     def ask_overwrite(self):
         ask_overwrite(self._folder+self._filen_1)

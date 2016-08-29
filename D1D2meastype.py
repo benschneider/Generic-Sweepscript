@@ -5,6 +5,7 @@ import os
 from parsers import storehdf5
 from covfunc import getCovMatrix  # Function to calculate Covarianve Matrixes
 
+
 class meastype(object):
     ''' This class contains the different types of measurements done:
         one where the Drive is switched off, one, where its on,
@@ -42,9 +43,9 @@ class meastype(object):
         self.DS2mD1 = DataStore2Vec(nfolder, filen_0, dim_1, dim_2, dim_3, 'D1mAvg')
         self.DS2mD2 = DataStore2Vec(nfolder, filen_0, dim_1, dim_2, dim_3, 'D2mAvg')
         if self.doCorrel:
-            self.DS11 = DataStore11Vec(nfolder, filen_0, dim_1, dim_2, 
-                                       self.D1, 'CovMat')  
-                                       # Cov Matrix D1 has dim_3 info
+            self.DS11 = DataStore11Vec(nfolder, filen_0, dim_1, dim_2, self.D1, 'CovMat')
+            # Cov Matrix D1 has dim_3 info
+
         if self.doHist2d:
             '''If doHist2d is set to True, a hdf5 file will be created
             to save the histogram data.'''
@@ -58,7 +59,7 @@ class meastype(object):
             self.Rdata = storehdf5(Rname)
             self.Rdata.clev = 1  # Compression level to a minimum for speed
             self.Rdata.open_f(mode='w')  # create a new empty file
-            self.create_Rtables(dim_3.pt, dim_2.pt, dim_1.pt)            
+            self.create_Rtables(dim_3.pt, dim_2.pt, dim_1.pt)
 
     def create_Htables(self, d3pt, d2pt, d1pt):
         shape = (d3pt, d2pt, d1pt, self.bin_size[0], self.bin_size[1])
@@ -99,7 +100,7 @@ class meastype(object):
         r5 = self.Rdata.h5.root
         r5.D12raw.append([[self.D1.scaledI, self.D1.scaledQ, self.D2.scaledI, self.D2.scaledQ]])
         r5.D12raw.flush()
-        self.Rdata.h5.flush()       
+        self.Rdata.h5.flush()
 
     def calculate_histograms(self):
         I1 = self.D1.scaledI
@@ -146,8 +147,8 @@ class meastype(object):
         self.D2vPha += self.D2.vAvgPh
         self.D2aPow += self.D2.vAvgPow
         if self.doCorrel:
-            self.covAvgMat += getCovMatrix(self.D1.scaledI, self.D1.scaledQ, 
-                                           self.D2.scaledI, self.D2.scaledQ, 
+            self.covAvgMat += getCovMatrix(self.D1.scaledI, self.D1.scaledQ,
+                                           self.D2.scaledI, self.D2.scaledQ,
                                            self.lags)
 
     def data_record(self, kk, jj, ii):
@@ -205,7 +206,7 @@ class meastype(object):
         self.DS2vD1.save_data()
         self.DS2vD2.save_data()
         if self.doCorrel:
-            self.DS11.save_data()            
+            self.DS11.save_data()
         if self.doHist2d:
             self.Hdata.h5.flush()
             self.Hdata.close()
