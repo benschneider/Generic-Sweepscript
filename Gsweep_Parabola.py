@@ -22,8 +22,8 @@ import sys
 import os
 
 thisfile = __file__
-filen_0 = '1214_Par'
-folder = 'data_Jul19\\'
+filen_0 = '1216_Par'
+folder = 'data_Jul20\\'
 folder = folder + filen_0 + '\\'  # in one new folder
 if not os.path.exists(folder):
     os.makedirs(folder)
@@ -34,7 +34,7 @@ vm = key2000('GPIB0::29::INSTR')
 # Digitizer setup
 lags = 30
 BW = 1e6
-lsamples = 1e6
+lsamples = 5e5
 corrAvg = 1
 f1 = 4.8e9  # 4.799999e9
 f2 = 4.8e9
@@ -55,7 +55,7 @@ D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=3,
 
 # Sweep equipment setup
 Dfreq = dummy('DigiFreq', name='Frequency',
-                start=4e9, stop=6.0e9, pt=401,
+                start=4e9, stop=6.0e9, pt=201,
                 sstep=10e9, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=4, 
@@ -67,8 +67,8 @@ vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::8::INSTR', name='FluxPump',
-                 start=0.028, stop=0.00, pt=29,
-                 sstep=30e-3, stime=1e-3)
+                 start=0.024, stop=0.00, pt=49,
+                 sstep=30e-3, stime=0.0)
 # -30 dB at output
 
 sgen = None
@@ -82,10 +82,10 @@ Dfreq.sweep_par='f11'
 Dfreq.D1 = D1
 Dfreq.D2 = D2
 
-dim_1 = Dfreq
-dim_1.defval = 4.8e9
-dim_2 = pFlux
-dim_2.defval = 0.0
+dim_2 = Dfreq
+dim_2.defval = 4.8e9
+dim_1 = pFlux
+dim_1.defval = 0.0
 dim_3 = vMag
 dim_3.defval = -1.1
 dim_1.UD = False

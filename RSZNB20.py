@@ -11,7 +11,7 @@ Vector Network Analyzer
 '''
 
 import numpy as np
-from struct import unpack  # , pack
+# from struct import unpack  # , pack
 from time import sleep, time
 import visa
 from parsers import savemtx, make_header, ask_overwrite
