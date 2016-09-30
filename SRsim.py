@@ -131,7 +131,7 @@ class instrument():
         t1 = time()
         self.w('SRST')
         self.w('*RST')
-        print time()-t1
+        print 'Reset Sim', time()-t1
         self.w('*CLS')
 
     def clearslot(self, slot):
