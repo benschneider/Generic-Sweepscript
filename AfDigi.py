@@ -7,7 +7,6 @@ reload(PXIDigitizer_wrapper)
 # Digitizer.boot_instrument('PXI7::15::INSTR', 'PXI6::10::INSTR')
 # Digitizer.boot_instrument('3011D1', '3036D1')
 
-
 class instrument():
 
     '''Upon start, creates connection to Digitizer and Local oscillator
@@ -21,7 +20,7 @@ class instrument():
     '''
 
     def __init__(self, adressDigi='3036D1', adressLo='3011D1',
-                 LoPosAB=1, LoRef=0, name='D', cfreq=4.8e9, inputlvl=0,
+                 LoPosAB=1, LoRef=2, name='D', cfreq=4.8e9, inputlvl=0,
                  start=4.1e9, stop=0, pt=1, nSample=1e6, sampFreq=1e6,
                  buffmode=True):
         self.ADCFAIL = False
@@ -97,6 +96,10 @@ class instrument():
         self.digitizer.lo_reference_set(self.LoRef)
         self.digitizer.trigger_source_set(self.trig_source)
         self.digitizer.set_piplining(1)  # activate Pipelining (download data while it keeps measuring)
+
+    def set_frequency(self, freq):
+        self.freq = freq
+        self.digitizer.rf_centre_frequency_set(self.freq)
 
     def prep_data(self):
         '''Creates a range of empty variables which are used store data in'''
@@ -323,6 +326,18 @@ class instrument():
         else:
             self.Overload = 0
 
+    def do_measurement(self, pstar):
+        ''' Arms the digitizer,
+        Sends a Trigger via the refered object pstar,
+        downloads the data.
+        '''
+        self.init_trigger_buff()
+        sleep(0.020)
+        pstar.send_software_trigger()
+        self.wait_capture_complete()
+        self.get_data_complete()
+
+
 if __name__ == '__main__':
     ''' Test code to see if this Driver works on its own '''
     from nirack import nit
@@ -332,17 +347,19 @@ if __name__ == '__main__':
     lsamples = 1e5
     corrAvg = 1
     f1 = 4.799999e9
-    D1 = instrument(adressDigi='3036D1', adressLo='3011D1', LoPosAB=1, LoRef=0,
+    D1 = instrument(adressDigi='3036D1', adressLo='3011D1', LoPosAB=1, LoRef=2,
            name='D1 Lags (sec)', cfreq=f1, inputlvl=-6,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
            nSample=lsamples, sampFreq=BW)
 
-    D1.setup_captmem()
-    D1.init_trigger()
-    pstar.send_software_trigger()
-    sleep(1)
-    D1.digitizer.get_IQ_trigger_detected()
-    D1.downl_data()
-    D1.get_Levelcorr()
-    D1.process_data()
-    #D1.set_freq(f1)
+    D1.do_measurement(pstar)
+    print D1.cIQ
+    # D1.setup_captmem()
+    # D1.init_trigger()
+    # pstar.send_software_trigger()
+    # sleep(1)
+    # D1.digitizer.get_IQ_trigger_detected()
+    # D1.downl_data()
+    # D1.get_Levelcorr()
+    # D1.process_data()
+    # #D1.set_freq(f1)

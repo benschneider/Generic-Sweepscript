@@ -131,15 +131,13 @@ class afDigitizer_BS():
 
     def lo_reference_set(self, lLORef):
         """Modes are [lormOCXO=0, lormInternal=1, lormExternalDaisy=2, lormExternalTerminated=3]"""
-        obj = getDllObject('afDigitizerDll_LO_Reference_Set',
-                           argtypes=[afDigitizerInstance_t, c_long])
+        obj = getDllObject('afDigitizerDll_LO_Reference_Set', argtypes=[afDigitizerInstance_t, c_long])
         error = obj(self.session, c_long(lLORef))
         self.check_error(error)
 
     def lo_reference_get(self):
         """Modes are [lormOCXO=0, lormInternal=1, lormExternalDaisy=2, lormExternalTerminated=3]"""
-        obj = getDllObject('afDigitizerDll_LO_Reference_Get',
-                           argtypes=[afDigitizerInstance_t, POINTER(c_long)])
+        obj = getDllObject('afDigitizerDll_LO_Reference_Get', argtypes=[afDigitizerInstance_t, POINTER(c_long)])
         dValue = c_long()
         error = obj(self.session, byref(dValue))
         self.check_error(error)
@@ -465,10 +463,8 @@ class afDigitizer_BS():
 if __name__ == '__main__':
     # test driver
     D1 = afDigitizer_BS()
-    # D1.create_object()  # Implemented in the __init__
-    # Digitizer.boot_instrument('PXI8::15::INSTR', 'PXI8::14::INSTR')
-    # Digitizer.boot_instrument('PXI7::15::INSTR', 'PXI6::10::INSTR')
-    D1.boot_instrument('3011D1', '3036D1')
+    D1.boot_instrument('PXI7::14::INSTR', 'PXI7::13::INSTR')
+    D1.lo_reference_set(2)
     print D1.modulation_mode_get()
     dFreq = D1.modulation_generic_sampling_frequency_get()
     print 'Current frequency: ' + str(dFreq)
@@ -477,6 +473,6 @@ if __name__ == '__main__':
     print 'Current frequency: ' + str(dFreq)
     [lI, lQ] = D1.capture_iq_capt_mem(2048)
     print D1.modulation_mode_get()
-    #print lI, lQ
-    D1.close_instrument()
-    D1.destroy_object()
+    # print lI, lQ
+    # D1.close_instrument()
+    # D1.destroy_object()

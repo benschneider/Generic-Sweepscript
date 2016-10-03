@@ -74,7 +74,8 @@ class DataStore4Vec():
 
     def record_data(self, vnadata, kk, jj, ii=1):
         self._phase_data = np.angle(vnadata)
-        if vnadata.shape[0] == 1:
+        vnadata = np.array(vnadata)
+        if vnadata.shape is ():
             self._matrix3d_1[kk, jj, ii] = vnadata.real
             self._matrix3d_2[kk, jj, ii] = vnadata.imag
             self._matrix3d_3[kk, jj, ii] = np.absolute(vnadata)

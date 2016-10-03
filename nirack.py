@@ -12,10 +12,8 @@ NISYNC_VAL_PXISTAR1="PXI_Star1"
 NISYNC_VAL_PXISTAR5="PXI_Star5"
 NISYNC_VAL_PFI0="PFI0"
 NISYNC_VAL_SYNC_CLK_FULLSPEED="SyncClkFullSpeed"
-
 NISYNC_VAL_DONT_INVERT=0
 NISYNC_VAL_INVERT=1
-
 NISYNC_VAL_UPDATE_EDGE_RISING=0
 NISYNC_VAL_UPDATE_EDGE_FALLING=1
 
@@ -29,13 +27,9 @@ class nit(object):
         res = self._lib.niSync_init(adress, False, False, byref(self.session))
         self.error_message(res) 
         self.reset()
-        self.connect_SW_trigger(1)  # Digitizer 1
-        # self.connect_SW_trigger(2)
-        # self.connect_SW_trigger(3)
-        # self.connect_SW_trigger(4)
-        self.connect_SW_trigger(5)  # Digitizer 2
-        self.connect_SW_trigger(9)  # Sig Gen
-  
+        for i in range(13):
+            self.connect_SW_trigger(i) # Trigger the full rack
+
     def error_message(self, error_code):
         if error_code == 0:
             # success
