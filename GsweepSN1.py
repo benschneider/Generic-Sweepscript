@@ -22,11 +22,13 @@ import gc  # Garbage memory collection
 from IQcorr import Process as CorrProc  # Handle Correlation measurements
 import sys
 import os
+# import logging
+
 
 
 thisfile = __file__
-# filen_0 = '1174_18GHLPF'
-#folder = 'data_May29\\'
+filen_0 = '2023_SN_wide'
+folder = 'data_Oct02\\'
 folder = folder + filen_0 + '\\'  # in one new folder
 if not os.path.exists(folder):
     os.makedirs(folder)
@@ -35,9 +37,9 @@ sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
-lags = 30
-BW = 1e4
-lsamples = 1e4
+lags = 25
+BW = 1e5
+lsamples = 5e5
 corrAvg = 1
 f1 = 4.1e9  # 4.799999e9
 f2 = 4.1e9
@@ -46,47 +48,52 @@ f2 = 4.1e9
 #FFT filtering not yet working, possibly BW not large enough
 #D1 4670MHZ Edge (4.8GHz) LO above
 #D2 4330MHz Edge (4.1GHz) LO below
-D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=0, LoRef=0,
-           name='D1 Lags (sec)', cfreq=f1, inputlvl=-3,
-           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
+D1 = AfDig(adressDigi='PXI7::13::INSTR', adressLo='PXI7::14::INSTR', LoPosAB=1, LoRef=3,
+           name='D1 Lags (sec)', cfreq=f1, inputlvl=-10,
+           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 + 1),
            nSample=lsamples, sampFreq=BW)
 
-D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=1, LoRef=3,
-           name='D2 Lags (sec)', cfreq=f2, inputlvl=-3,
-           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
+D2 = AfDig(adressDigi='PXI8::14::INSTR', adressLo='PXI8::15::INSTR', LoPosAB=0, LoRef=0,
+           name='D2 Lags (sec)', cfreq=f2, inputlvl=-10,
+           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 + 1),
            nSample=lsamples, sampFreq=BW)
 
 # Sweep equipment setup
-nothing = dummy('none', name='nothing',
-                start=0, stop=1, pt=1,
-                sstep=20e-3, stime=0.0)
+dummyD1D2 = dummy('none', name='nothing',
+                start=4e9, stop=6e9, pt=51,
+                sstep=6e9, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=4, 
-                start=-20.0, stop=20.0, pt=201, 
-                sstep=0.060, stime=0.020)
+                start=-20.0, stop=20.0, pt=101, 
+                sstep=0.200, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=1.5, stop=1.5, pt=1,
+               start=0.52, stop=0.52, pt=1,
                sstep=0.03, stime=0.020)
 
-pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
+pFlux = AnSigGen('GPIB0::8::INSTR', name='FluxPump',
                  start=0.03, stop=0.03, pt=1,
                  sstep=30e-3, stime=1e-3)
 #-30 dB at output
 
+
+dummyD1D2.setup_digitizers(D1, D2)
+dummyD1D2.sweep_par = 'f11'
+
+
 sgen = None
 
 pFlux.set_power_mode(1)  # Linear mode in mV
-# f1+f2
 pFlux.set_freq(f1+f2)
 pFlux.sweep_par='power'  # Power sweep
+pFlux.output(0)
 
 dim_1 = vBias
 dim_1.defval = 0.0
-dim_2 = vMag
-dim_2.defval = -0.67
-dim_3 = pFlux
-dim_3.defval = 0.03
+dim_3 = vMag
+dim_3.defval = 0.0
+dim_2 = dummyD1D2
+dim_2.defval = 5e9
 dim_1.UD = False
 recordD12 = True  # activates /deactivates all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
@@ -160,7 +167,7 @@ sweep_dim_2(dim_2, dim_2.defval)
 sweep_dim_3(dim_3, dim_3.defval)
 dim_1.output(1)
 dim_2.output(1)
-dim_3.output(0)
+dim_3.output(1)
 
 print 'Executing sweep'
 texp = (2.0*dim_3.pt*dim_2.pt*dim_1.pt*(0.032+corrAvg*lsamples/BW)/60.0)
@@ -171,11 +178,10 @@ t0 = time()
 try:
     for kk in range(dim_3.pt):
         sweep_dim_3(dim_3, dim_3.lin[kk])
-        sweep_dim_2(dim_2, dim_2.start)
 
         for jj in range(dim_2.pt):
             sweep_dim_2(dim_2, dim_2.lin[jj])
-            sweep_dim_1(dim_1, dim_1.start)
+            # sweep_dim_1(dim_1, dim_1.start)
 
             sleep(0.2)
             print 'Up Trace'
@@ -192,11 +198,16 @@ try:
                     sweep_dim_1(dim_1, dim_1.lin[ii])
                     record_data(kk, jj, ii, True)
 
+            sweep_dim_1(dim_1, dim_1.start)
+
             save_recorded()
             t1 = time()
             t_rem = ((t1 - t0) / (jj + 1) * dim_2.pt * dim_3.pt - (t1 - t0))
             print 'req time (h):' + str(t_rem / 3600)
             gc.collect()
+
+        # sweep_dim_2(dim_2, dim_2.start)
+
     print 'Measurement Finished'
 
 finally:

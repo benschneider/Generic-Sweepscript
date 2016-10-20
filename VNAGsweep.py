@@ -21,11 +21,11 @@ from RSZNB20 import instrument as ZNB20
 import gc  # Garbage memory collection
 import os
 
-''' DC and VNA (1KHz IF) sweep S2A4 '''
+''' DC and VNA (1KHz IF) -20dB at output sweep S1A1 '''
 
 thisfile = __file__
-filen_0 = 'sweep3'
-folder = 'Ida_test\\'
+filen_0 = '2005VNA'
+folder = 'data_26Sep\\'
 folder = folder + filen_0 + '\\'  # in one new folder
 if not os.path.exists(folder):
     os.makedirs(folder)
@@ -36,16 +36,21 @@ sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 VNA = ZNB20('TCPIP::129.16.115.137::INSTR', name='ZNB20',
-                start=4.5e9, stop=5.0e9, pt=801, BW=100, power=-15,
+                start=3.5e9, stop=8.5e9, pt=1201, BW=1000, power=0,
                 sstep=20e-3, stime=0.0, copy_setup=False)
 
 # Sweep equipment setup
 nothing = dummy(name='nothing', start=0, stop=1, pt=1, sstep=20e-3, stime=0.0)
 
 
-vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=4,
-               start=0.0, stop=3.0, pt=601,
+vBias = sim928c(sim900, name='V 1Mohm', sloti=4,
+                start=0.0, stop=0.0, pt=1,
+                sstep=0.120, stime=0.020)
+
+vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
+               start=-4.0, stop=4.0, pt=401,
                sstep=0.03, stime=0.020)
+
 
 # pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
 #                  start=2.03, stop=0.03, pt=101,
@@ -56,7 +61,7 @@ dim_1.defval = 0.0
 dim_1.UD = False
 dim_2 = vMag
 dim_2.defval = 0.0
-dim_3 = nothing
+dim_3 = vBias
 dim_3.defval = 0.0
 
 

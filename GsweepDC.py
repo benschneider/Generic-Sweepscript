@@ -13,7 +13,7 @@ from DataStorer import DataStoreSP  # , DataStore2Vec, DataStore11Vec
 # Drivers
 from dummydriver import instrument as dummy
 from keithley2000 import instrument as key2000
-from AnritzuSig import instrument as AnSigGen
+# from AnritzuSig import instrument as AnSigGen
 from SRsim import instrument as sim900c
 from Sim928 import instrument as sim928c
 # from Yoko import instrument as yoko
@@ -24,11 +24,10 @@ import sys
 import os
 
 thisfile = __file__
-filen_0 = '1211DC'
-folder = 'data_Jul18\\'
+filen_0 = '2020'
+folder = 'data_Oct02\\'
 if not os.path.exists(folder):
     os.makedirs(folder)
-
 
 sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
@@ -61,32 +60,30 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=4,
-                start=(-6 +0.002), stop=6.002, pt=301,
-                sstep=0.060, stime=0.020)
+                start=-6.0, stop=6.0, pt=1201,
+                sstep=0.200, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-2.0, stop=5.0, pt=351,
+               start=-3.0, stop=4.0, pt=701,
                sstep=0.03, stime=0.020)
 
-pFlux = AnSigGen('GPIB0::8::INSTR', name='FluxPump',
-                 start=0.03, stop=0.03, pt=1,
-                 sstep=10, stime=0)
-#-30 dB at output
+#pFlux = AnSigGen('GPIB0::8::INSTR', name='FluxPump',
+#                 start=0.03, stop=0.03, pt=1,
+#                 sstep=10, stime=0)
 
 sgen = None
 
-pFlux.set_power_mode(1)  # Linear mode in mV
-# f1+f2
-pFlux.set_freq(f1+f2)
-pFlux.sweep_par='power'  # Power sweep
+#pFlux.set_power_mode(1)  # Linear mode in mV
+#pFlux.set_freq(f1+f2)
+#pFlux.sweep_par='power'  # Power sweep
 
-dim_3 = pFlux
-dim_3.defval = 0.03 #pFlux
+dim_3 = nothing
+dim_3.defval = 0.0 #pFlux
 dim_2 = vMag
 dim_2.defval = 0.0
 dim_1 = vBias
-dim_1.defval = 0.002
-dim_1.UD = True
+dim_1.defval = 0.0
+dim_1.UD = False
 recordD12 = False  # all D1 D2 data storage
 #D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
 #D12.doHist2d = True  # Record Histograms (Larger -> Slower)
@@ -168,11 +165,9 @@ t0 = time()
 try:
     for kk in range(dim_3.pt):
         sweep_dim_3(dim_3, dim_3.lin[kk])
-        sweep_dim_2(dim_2, dim_2.start)
 
         for jj in range(dim_2.pt):
             sweep_dim_2(dim_2, dim_2.lin[jj])
-            sweep_dim_1(dim_1, dim_1.start)
 
             sleep(0.2)
             print 'Up Trace'
@@ -189,12 +184,16 @@ try:
                 for ii2 in range((dim_1.pt - 1), -1, -1):
                     sweep_dim_1(dim_1, dim_1.lin[ii2])
                     record_data(kk, jj, ii2, True)
+            
+            sweep_dim_1(dim_1, dim_1.start)
 
             save_recorded()
+            sleep(1)
             runt = time()-t0  # time run so far
             avgtime = runt / ((kk+1)*(jj+1)*(ii+1))  # per point
             t_rem = avgtime*dim_3.pt*dim_2.pt*dim_1.pt - runt  # time left
             print 'req time (h):' + str(t_rem / 3600) + ' pt: ' + str(avgtime)
+
     print 'Measurement Finished'
 
 finally:
