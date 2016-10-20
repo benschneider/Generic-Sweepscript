@@ -124,7 +124,7 @@ class meastype(object):
         self.D2vPha = np.float(0.0)
         self.D2Ma = np.float(0.0)
         self.D2Pha = np.float(0.0)
-        self.covAvgMat = np.zeros([12, self.lags * 2 - 1])  # For one particular ii, jj, kk
+        self.covAvgMat = np.zeros([14, self.lags * 2 + 1])  # For one particular ii, jj, kk
         self.D1aPow = np.float(0.0)
         self.D2aPow = np.float(0.0)
         if self.doHist2d:
@@ -333,7 +333,7 @@ class meastype_single_digitizer(object):
         self.D2vPha = np.float(0.0)
         self.D2Ma = np.float(0.0)
         self.D2Pha = np.float(0.0)
-        self.covAvgMat = np.zeros([12, self.lags * 2 - 1])  # For one particular ii, jj, kk
+        self.covAvgMat = np.zeros([13, self.lags * 2 + 1])  # For one particular ii, jj, kk
         self.D1aPow = np.float(0.0)
         self.D2aPow = np.float(0.0)
         if self.doHist2d:

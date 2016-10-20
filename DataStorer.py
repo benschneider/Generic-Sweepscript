@@ -144,13 +144,17 @@ class DataStore11Vec():
         self.filen.append(filen_0 + label + '_cQ1I2' + '.mtx')
         self.filen.append(filen_0 + label + '_SqMag' + '.mtx')
         self.filen.append(filen_0 + label + '_SqPhs' + '.mtx')
+        self.filen.append(filen_0 + label + '_SqMag2' + '.mtx')
+        self.filen.append(filen_0 + label + '_cPow' + '.mtx')
         for i in range(10):
             self.head.append(make_header(dim_1, dim_2, dim_3, 'cCov'))
 
         self.head.append(make_header(dim_1, dim_2, dim_3, 'Sq-Mag'))
         self.head.append(make_header(dim_1, dim_2, dim_3, 'Sq-Phs'))
+        self.head.append(make_header(dim_1, dim_2, dim_3, 'Sq-Mag2'))
+        self.head.append(make_header(dim_1, dim_2, dim_3, 'cPower'))
         self.matrix3d = np.memmap(folder+'cov.dat', dtype=np.float32, mode='w+',
-                                  shape=(12, dim_3.pt, dim_2.pt, dim_1.pt))
+                                  shape=(14, dim_3.pt, dim_2.pt, dim_1.pt))
 
     def ask_overwrite(self):
         ask_overwrite(self._folder+self._filen_1)
