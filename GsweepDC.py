@@ -13,7 +13,7 @@ from DataStorer import DataStoreSP  # , DataStore2Vec, DataStore11Vec
 # Drivers
 from dummydriver import instrument as dummy
 from keithley2000 import instrument as key2000
-# from AnritzuSig import instrument as AnSigGen
+from AnritzuSig import instrument as AnSigGen
 from SRsim import instrument as sim900c
 from Sim928 import instrument as sim928c
 # from Yoko import instrument as yoko
@@ -24,8 +24,8 @@ import sys
 import os
 
 thisfile = __file__
-filen_0 = '2020'
-folder = 'data_Oct02\\'
+filen_0 = '3009'
+folder = 'data_Dec04\\'
 if not os.path.exists(folder):
     os.makedirs(folder)
 
@@ -60,25 +60,25 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=4,
-                start=-6.0, stop=6.0, pt=1201,
+                start=-6.0, stop=6.0, pt=301,
                 sstep=0.200, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-3.0, stop=4.0, pt=701,
+               start=-4.3, stop=0.2, pt=216,
                sstep=0.03, stime=0.020)
 
-#pFlux = AnSigGen('GPIB0::8::INSTR', name='FluxPump',
-#                 start=0.03, stop=0.03, pt=1,
-#                 sstep=10, stime=0)
+pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
+                 start=0.5, stop=0.03, pt=26,
+                 sstep=10, stime=0)
 
 sgen = None
 
-#pFlux.set_power_mode(1)  # Linear mode in mV
-#pFlux.set_freq(f1+f2)
-#pFlux.sweep_par='power'  # Power sweep
+pFlux.set_power_mode(1)  # Linear mode in mV
+pFlux.set_freq(4e9)
+pFlux.sweep_par='power'  # Power sweep
 
-dim_3 = nothing
-dim_3.defval = 0.0 #pFlux
+dim_3 = pFlux
+dim_3.defval = 0.03 #pFlux
 dim_2 = vMag
 dim_2.defval = 0.0
 dim_1 = vBias
@@ -154,7 +154,7 @@ sweep_dim_2(dim_2, dim_2.defval)
 sweep_dim_3(dim_3, dim_3.defval)
 dim_1.output(1)
 dim_2.output(1)
-dim_3.output(0)
+dim_3.output(1)
 
 print 'Executing sweep'
 texp = (2.0*dim_3.pt*dim_2.pt*dim_1.pt*(0.032)/60.0)
@@ -212,6 +212,7 @@ finally:
     dim_3.output(0)
     sim900._dconn()
     gc.collect()
+    pFlux.output(0)
     # D1.downl_data_buff()
     # D2.downl_data_buff()
     # D1.performClose()
