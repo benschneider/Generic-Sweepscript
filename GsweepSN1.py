@@ -35,12 +35,13 @@ sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
-lags = 25
+lags = 200
 BW = 1e5
-lsamples = 5e5
+lsamples = 1e6
 corrAvg = 1
-f1 = 4.4e9
-f2 = 4.5e9
+f1 = 4.45e9
+f2 = 4.45e9
+fd = f1+f2
 
 D1 = AfDig(adressDigi='PXI7::13::INSTR', adressLo='PXI7::14::INSTR', LoPosAB=1, LoRef=3,
            name='D1 Lags (sec)', cfreq=f1, inputlvl=-10,
@@ -52,41 +53,41 @@ D2 = AfDig(adressDigi='PXI8::14::INSTR', adressLo='PXI8::15::INSTR', LoPosAB=0, 
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 + 1),
            nSample=lsamples, sampFreq=BW)
 
-# Sweep equipment setup
-dummyD1D2 = dummy('none', name='nothing', start=4e9, stop=6e9, pt=51, sstep=6e9, stime=0.0)
+dummyD1D2 = dummy('none', name='nothing', start=4.4e9, stop=4.5e9, pt=1, sstep=6e9, stime=0.0)
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=4,
                 start=-20.0, stop=20.0, pt=101,
                 sstep=0.200, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=0.52, stop=0.52, pt=1,
+               start=-2.50, stop=-2.50, pt=1,
                sstep=0.03, stime=0.020)
 
-pFlux = AnSigGen('GPIB0::8::INSTR', name='FluxPump',
+pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
                  start=0.03, stop=0.03, pt=1,
                  sstep=30e-3, stime=1e-3)
 
-# -20 dB at output
-
+nothing = dummy('none', name='nothing',
+                start=0, stop=1, pt=1,
+                sstep=20e-3, stime=0.0)
 
 dummyD1D2.setup_digitizers(D1, D2)
 dummyD1D2.sweep_par = 'f11'
 
-
 sgen = None
 
 pFlux.set_power_mode(1)  # Linear mode in mV
-pFlux.set_freq(f1+f2)
+pFlux.set_freq(fd)
 pFlux.sweep_par = 'power'  # Power sweep
-pFlux.output(0)
+pFlux.output(0)  # Power OFF (0)/ On (1)
+# -20 dB at output
 
 dim_1 = vBias
 dim_1.defval = 0.0
 dim_3 = vMag
 dim_3.defval = 0.0
-dim_2 = dummyD1D2
-dim_2.defval = 5e9
+dim_2 = nothing
+dim_2.defval = 0.0
 dim_1.UD = False
 recordD12 = True  # activates /deactivates all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
