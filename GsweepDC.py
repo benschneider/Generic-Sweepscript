@@ -5,7 +5,7 @@ Generic Sweep script
 20/10/2015
 - B
 '''
-#import numpy as np
+# import numpy as np
 from time import time, sleep
 from parsers import copy_file
 from ramp_mod import ramp
@@ -17,9 +17,9 @@ from AnritzuSig import instrument as AnSigGen
 from SRsim import instrument as sim900c
 from Sim928 import instrument as sim928c
 # from Yoko import instrument as yoko
-#from AfDigi import instrument as AfDig  # Digitizer driver
+# from AfDigi import instrument as AfDig  # Digitizer driver
 import gc  # Garbage memory collection
-#from IQcorr import Process as CorrProc  # Handle Correlation measurements
+# from IQcorr import Process as CorrProc  # Handle Correlation measurements
 import sys
 import os
 
@@ -33,26 +33,26 @@ sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
-#lags = 30
-#BW = 1e6
-#lsamples = 1e6
-#corrAvg = 1
+# lags = 30
+# BW = 1e6
+# lsamples = 1e6
+# corrAvg = 1
 f1 = 4.8e9
 f2 = 4.1e9
 
-#BPF implemented to kill noise sideband,
-#FFT filtering not yet working, possibly BW not large enough
-#D1 4670MHZ Edge (4.8GHz) LO above
-#D2 4330MHz Edge (4.1GHz) LO below
-#D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=1, LoRef=0,
-#           name='D1 Lags (sec)', cfreq=f1, inputlvl=-6,
-#           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
-#           nSample=lsamples, sampFreq=BW)
+# BPF implemented to kill noise sideband,
+# FFT filtering not yet working, possibly BW not large enough
+# D1 4670MHZ Edge (4.8GHz) LO above
+# D2 4330MHz Edge (4.1GHz) LO below
+# D1 = AfDig(adressDigi='3036D1', adressLo='3011D1', LoPosAB=1, LoRef=0,
+#            name='D1 Lags (sec)', cfreq=f1, inputlvl=-6,
+#            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
+#            nSample=lsamples, sampFreq=BW)
 #
-#D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=3,
-#           name='D2 Lags (sec)', cfreq=f2, inputlvl=-6,
-#           start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
-#           nSample=lsamples, sampFreq=BW)
+# D2 = AfDig(adressDigi='3036D2', adressLo='3010D2', LoPosAB=0, LoRef=3,
+#            name='D2 Lags (sec)', cfreq=f2, inputlvl=-6,
+#            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 - 1),
+#            nSample=lsamples, sampFreq=BW)
 
 # Sweep equipment setup
 nothing = dummy('none', name='nothing',
@@ -75,20 +75,21 @@ sgen = None
 
 pFlux.set_power_mode(1)  # Linear mode in mV
 pFlux.set_freq(4e9)
-pFlux.sweep_par='power'  # Power sweep
+pFlux.sweep_par = 'power'  # Power sweep
 
 dim_3 = pFlux
-dim_3.defval = 0.03 #pFlux
+dim_3.defval = 0.03  # pFlux
 dim_2 = vMag
 dim_2.defval = 0.0
 dim_1 = vBias
 dim_1.defval = 0.0
 dim_1.UD = False
 recordD12 = False  # all D1 D2 data storage
-#D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
-#D12.doHist2d = True  # Record Histograms (Larger -> Slower)
-#D12.doRaw = False
-#D12.doBG = False
+# D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
+# D12.doHist2d = True  # Record Histograms (Larger -> Slower)
+# D12.doRaw = False
+# D12.doBG = False
+
 
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
@@ -108,10 +109,12 @@ DS.ask_overwrite()
 copy_file(thisfile, filen_0, folder)
 
 # CorrProc controls, coordinates D1 and D2 together (also does thes calcs.)
-#if recordD12:
+# if recordD12:
 #    D12.create_datastore_objs(folder, filen_0, dim_1, dim_2, dim_3)
 
 # describe how data is to be stored
+
+
 def record_data(kk, jj, ii, back):
     '''This function is called with each change in ii,jj,kk
         content: what to measure each time
@@ -130,6 +133,7 @@ def record_data(kk, jj, ii, back):
 #        #if (lsamples/BW > 30):
 #        #    save_recorded()
 
+
 def save_recorded():
     '''
     Which functions to call to save the recored data
@@ -137,6 +141,7 @@ def save_recorded():
     DS.save_data()  # save Volt data
 #    if recordD12:
 #        D12.data_save()  # save Digitizer data
+
 
 def progresbar(kk, jj, ii):
     ''' shows the progress (only from cmd line) '''
@@ -172,10 +177,9 @@ try:
             sleep(0.2)
             print 'Up Trace'
             for ii in range(dim_1.pt):
-                #txx = time()
                 sweep_dim_1(dim_1, dim_1.lin[ii])
                 record_data(kk, jj, ii, False)
-                #print 'sweep+record ', time()-txx
+                # print 'sweep+record ', time()-txx
 
             if dim_1.UD is True:
                 sweep_dim_1(dim_1, dim_1.stop)
@@ -184,7 +188,7 @@ try:
                 for ii2 in range((dim_1.pt - 1), -1, -1):
                     sweep_dim_1(dim_1, dim_1.lin[ii2])
                     record_data(kk, jj, ii2, True)
-            
+
             sweep_dim_1(dim_1, dim_1.start)
 
             save_recorded()
@@ -204,10 +208,10 @@ finally:
     sweep_dim_2(dim_2, dim_2.defval)
     sleep(1)
     sweep_dim_3(dim_3, dim_3.defval)
-    #sleep(1)
-    #dim_1.output(0)
-    #sleep(1)
-    #dim_2.output(0)
+    # sleep(1)
+    # dim_1.output(0)
+    # sleep(1)
+    # dim_2.output(0)
     sleep(1)
     dim_3.output(0)
     sim900._dconn()
