@@ -42,12 +42,12 @@ class instrument():
         self.sweep_par = 'power'
         self.output_val = None
 
-    def get_freq(self):
+    def get_frequency(self):
         '''Return in Hz'''
         # return eval(self.a('OM1')*1e3)
         return eval(self.a('OF0'))*1e3
 
-    def set_freq(self, freq):
+    def set_frequency(self, freq):
         '''Set in Hz'''
         return self.w('F1 '+str(freq)+' Hz')
 

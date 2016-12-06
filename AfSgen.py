@@ -56,7 +56,8 @@ class instrument(object):
         
     @error_check
     def boot(self, LO, SIG):
-        self.S.BootInstrument('PXI8::10::INSTR','PXI8::9::INSTR', False)
+        # self.S.BootInstrument('PXI8::10::INSTR','PXI8::9::INSTR', False)
+        self.S.BootInstrument(LO, SIG, False)
     
     @error_check    
     def set_LO_Ref(self, loref=2):

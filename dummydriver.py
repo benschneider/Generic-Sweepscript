@@ -39,16 +39,12 @@ class instrument():
         
     def _dconn(self):
         return
-        
-    def setup_digitizers(self, D1, D2):
-        self.D1 = D1
-        self.D2 = D2
 
     def get_fspacing(self):
         f1 = self.D1.digitizer.rf_centre_frequency_get()
         f2 = self.D2.digitizer.rf_centre_frequency_get()
         return f2-f1
-        
+
     def set_f11(self, f11):
         self.D1.digitizer.rf_centre_frequency_set(f11)
         self.D2.digitizer.rf_centre_frequency_set(f11)
@@ -56,6 +52,16 @@ class instrument():
         sleep(0.02)
 
     def get_f11(self):
+        return self.D12freq
+        
+    def set_f11_2(self, f11):
+        self.D1.digitizer.rf_centre_frequency_set(f11)
+        self.D2.digitizer.rf_centre_frequency_set(f11)
+        self.sgen.set_frequency(f11)
+        self.D12freq = f11
+        sleep(0.02)
+
+    def get_f11_2(self):
         return self.D12freq
         
     def set_fspacing(self, spacing):        
