@@ -126,6 +126,12 @@ class Process():
         self.D1.downl_data()
         self.D2.downl_data()
         if (self.D1.ADCFAIL or self.D2.ADCFAIL):
+            if self.D1.ADCFAIL:
+                self.D1.ADCOverload +=1
+                self.D1.digi_adjust_ADC()
+            if self.D2.ADCFAIL:
+                self.D2.ADCOverload +=1
+                self.D1.digi_adjust_ADC()
             print 'Remeasure --'
             self.init_trigger()
             self.D1.ADCFAIL = False
@@ -138,6 +144,8 @@ class Process():
                 raise Exception('Continuous ADC-overflow')
             self.init_trigger()
             self.download_data(cz)
+        self.D1.ADCOverload = 0
+        self.D2.ADCOverload = 0
 
     def avg_corr(self):
         '''init_trigger() should have run once before. This is the averaging,
