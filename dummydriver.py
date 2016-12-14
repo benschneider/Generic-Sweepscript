@@ -20,6 +20,7 @@ class instrument():
         self.D1 = None
         self.D2 = None
         self.cfreq = None
+        self.pFlux = None
         self.D12freq = 4e9
 
     def instrument_1(self, adress):
@@ -39,6 +40,12 @@ class instrument():
         
     def _dconn(self):
         return
+
+    def set_pfreq(self, freq):
+        self.pFlux.set_frequency(freq)
+        
+    def get_pfreq(self):
+        return self.pFlux.get_frequency()
 
     def get_fspacing(self):
         f1 = self.D1.digitizer.rf_centre_frequency_get()
