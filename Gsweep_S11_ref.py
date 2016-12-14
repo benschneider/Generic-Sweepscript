@@ -20,14 +20,14 @@ from Sim928 import instrument as sim928c
 from AfDigi import instrument as AfDig  # Digitizer driver
 import gc  # Garbage memory collection
 from IQcorr import Process as CorrProc  # Handle Correlation measurements
-import sys
+# import sys
 import os
 from AfSgen import instrument as Afsgen_inst
 # import logging
 
 
 thisfile = __file__
-filen_0 = '3012'
+filen_0 = '3016'
 folder = 'data_Dec05\\'
 if not os.path.exists(folder):
     os.makedirs(folder)
@@ -38,7 +38,7 @@ vm = key2000('GPIB0::29::INSTR')
 # Digitizer setup
 lags = 50
 BW = 1e6
-lsamples = 1e4
+lsamples = 1e3
 corrAvg = 1
 f1 = 4.45e9
 f2 = 4.45e9
@@ -46,57 +46,60 @@ fd = f1+f2
 
 # Using a bandpass filter in front of both digitizers (3.9-6GHz)
 D1 = AfDig(adressDigi='PXI7::13::INSTR', adressLo='PXI7::14::INSTR', LoPosAB=1, LoRef=3,
-           name='D1 Lags (sec)', cfreq=f1, inputlvl=-15,
+           name='D1 Lags (sec)', cfreq=f1, inputlvl=-13,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 + 1),
            nSample=lsamples, sampFreq=BW)
 
 D2 = AfDig(adressDigi='PXI8::14::INSTR', adressLo='PXI8::15::INSTR', LoPosAB=0, LoRef=0,
-           name='D2 Lags (sec)', cfreq=f2, inputlvl=-15,
+           name='D2 Lags (sec)', cfreq=f2, inputlvl=-13,
            start=(-lags / BW), stop=(lags / BW), pt=(lags * 2 + 1),
            nSample=lsamples, sampFreq=BW)
 
 sgen = Afsgen_inst(adressSig='PXI8::9::INSTR', adressLo='PXI8::10::INSTR', 
                      LoRef=2, name='Signal Gen', start=2e9, stop=6e9, pt=1, 
                      sstep=1e9, stime=0.0)
-sgen.set_power(-5)
-sgen.output(1)                     
-                     
-dummyD1D2 = dummy('prober', name='Probe frequency', start=3.5e9, stop=6e9, pt=51, sstep=6e9, stime=0.0)
+sgen.set_power(-30)
+sgen.output(0)                     
+  
+pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
+                 start=0.03, stop=0.03, pt=1,
+                 sstep=30e-3, stime=1e-3)            
+pFlux.set_power_mode(0)  # Log(0)/Linear mode in mV (1)
+pFlux.set_frequency(fd)
+pFlux.sweep_par = 'power'  # Power sweep
+pFlux.set_power(-50)
+pFlux.output(0)  # Power OFF (0)/ On (1)
+# -20 dB at output
+                   
+dummyD1D2 = dummy('prober', name='Probe frequency', start=4.45e9, stop=4.45e9, pt=1, sstep=6e9, stime=0.0)
 dummyD1D2.D1 = D1
 dummyD1D2.D2 = D2
-dummyD1D2.sgen = sgen
+dummyD1D2.sgen = pFlux
 dummyD1D2.sweep_par = 'f11_2'
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=4,
-                start=0.0, stop=0.0, pt=1,
+                start=-6.0, stop=6.0, pt=301,
                 sstep=0.200, stime=0.020)
 
 vBias.set_volt(0.0)
 vBias.output(1)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-6.75, stop=2.25, pt=201,
+               start=-6.75, stop=2.25, pt=301,
                sstep=0.03, stime=0.020)
 
-pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=0.03, stop=0.03, pt=1,
-                 sstep=30e-3, stime=1e-3)            
-pFlux.set_power_mode(1)  # Linear mode in mV
-pFlux.set_frequency(fd)
-pFlux.sweep_par = 'power'  # Power sweep
-pFlux.output(0)  # Power OFF (0)/ On (1)
-# -20 dB at output
+
 
 nothing = dummy('none', name='nothing',
                 start=0, stop=1, pt=1,
                 sstep=20e-3, stime=0.0)
 
-dim_1 = vMag
+dim_1 = vBias
 dim_1.defval = 0.0
-dim_2 = dummyD1D2
-dim_2.defval = 3.5e9
-dim_3 = nothing
-dim_3.defval = 0.0
+dim_2 = vMag
+dim_2.defval = 0.0
+dim_3 = dummyD1D2
+dim_3.defval = 4.45e9
 dim_1.UD = False
 
 recordD12 = True  # activates /deactivates all D1 D2 data storage

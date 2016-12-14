@@ -24,8 +24,8 @@ import sys
 import os
 
 thisfile = __file__
-filen_0 = '3009'
-folder = 'data_Dec04\\'
+filen_0 = '3016'
+folder = 'data_Dec05\\'
 if not os.path.exists(folder):
     os.makedirs(folder)
 
@@ -64,7 +64,8 @@ vBias = sim928c(sim900, name='V 1Mohm', sloti=4,
                 sstep=0.200, stime=0.020)
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-4.3, stop=0.2, pt=216,
+               start=-6.75, stop=2.25, pt=301,
+               #start=-4.3, stop=0.2, pt=216,
                sstep=0.03, stime=0.020)
 
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
@@ -73,11 +74,12 @@ pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
 
 sgen = None
 
-pFlux.set_power_mode(1)  # Linear mode in mV
-pFlux.set_freq(4e9)
+pFlux.set_power_mode(0)  # Linear mode in mV
+pFlux.set_frequency(4.45e9)
 pFlux.sweep_par = 'power'  # Power sweep
+pFlux.output(0)
 
-dim_3 = pFlux
+dim_3 = nothing
 dim_3.defval = 0.03  # pFlux
 dim_2 = vMag
 dim_2.defval = 0.0

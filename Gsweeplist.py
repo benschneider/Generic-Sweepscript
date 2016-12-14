@@ -5,49 +5,27 @@ Created on Wed May 04 17:34:26 2016
 @author: Ben
 """
 from parsers import copy_file_interminal
-import os
-
-'''
-8x8 Cov Matrix
-- Shotnoise
-- I1 I1  upper left quad
-- I2 I2 lower right quad
-- I1 I2 Cov Mat with Gain 1
-- I2 I1 Cov Mat with Gain 2
-- Shotnoise
-'''
+# import os
 
 '''
 No RT narrow bandpass filter involved
 '''
-filen_0 = '1210SN22_up'
-folder = 'data_Jul18\\'
-copy_file_interminal('GsweepSN11_1.py', filen_0, folder)
-execfile('GsweepSN11_1.py')
+# filen_0 = '3040_SN1'
+# folder = 'data_Dec09\\'
+# scriptfile = 'GsweepSN11_f.py'
+# copy_file_interminal(scriptfile, filen_0, folder)
+# execfile(scriptfile)
 
-filen_0 = '1210SN22_down'
-folder = 'data_Jul18\\'
-copy_file_interminal('GsweepSN11_2.py', filen_0, folder)
-execfile('GsweepSN11_2.py')
+filen_0 = '3041_par'
+folder = 'data_Dec09\\'
+scriptfile = 'GsweepSN11_Parabola.py'
+copy_file_interminal(scriptfile, filen_0, folder)
+execfile(scriptfile)
 
-#folder = 'data_Jul15\\'
-#filen_0 = '1206_SN22_0'
-#copy_file_interminal('GsweepSN22.py', filen_0, folder)
-#execfile('GsweepSN22.py')
-#
-#folder = 'data_Jul15\\'
-#filen_0 = '1206'
-#copy_file_interminal('GsweepCov2.py', filen_0, folder)
-#execfile('GsweepCov2.py')
-#
-#folder = 'data_Jul15\\'
-#filen_0 = '1206_SN11_1'
-#copy_file_interminal('GsweepSN11.py', filen_0, folder)
-#execfile('GsweepSN11.py')
-#
-#folder = 'data_Jul15\\'
-#filen_0 = '1206_SN22_1'
-#copy_file_interminal('GsweepSN22.py', filen_0, folder)
-#execfile('GsweepSN22.py')
+filen_0 = '3042_SN2'
+folder = 'data_Dec09\\'
+scriptfile = 'GsweepSN11_f2.py'
+copy_file_interminal(scriptfile, filen_0, folder)
+execfile(scriptfile)
 
-# execfile('Gsweeplist2.py')  # Possibility to add more measurements here
+execfile('Gsweeplist2.py')  # Possibility to add more measurements here

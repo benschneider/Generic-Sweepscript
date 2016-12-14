@@ -27,7 +27,7 @@ from AfSgen import instrument as Afsgen_inst
 
 
 thisfile = __file__
-filen_0 = '3041_par'
+filen_0 = '3035_CrossT'
 folder = 'data_Dec09\\'
 if not os.path.exists(folder):
     os.makedirs(folder)
@@ -62,31 +62,31 @@ sgen.set_power(-30)
 sgen.output(0)                     
   
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=0.03, stop=1.03, pt=51,
-                 sstep=30e-3, stime=1e-3)            
+                 start=0.03, stop=1.5, pt=151,
+                 sstep=300e-3, stime=1e-3)            
 pFlux.set_power_mode(1)  # Log(0)/Linear mode in mV (1)
 pFlux.set_frequency(fd)
 pFlux.sweep_par = 'power'  # Power sweep
 pFlux.set_power(0.03)
-pFlux.output(1)  # Power OFF (0)/ On (1)
+pFlux.output(0)  # Power OFF (0)/ On (1)
 # -20 dB at output
                    
-dummyD1D2 = dummy('prober', name='Probe frequency', start=4.0e9, stop=5.8e9, pt=361, sstep=6e9, stime=0.0)
+dummyD1D2 = dummy('prober', name='Drive frequency', start=8.5e9, stop=15.5e9, pt=351, sstep=6e9, stime=0.0)
 dummyD1D2.D1 = D1
 dummyD1D2.D2 = D2
-dummyD1D2.sgen = pFlux
-dummyD1D2.sweep_par = 'f11'
+dummyD1D2.pFlux = pFlux
+dummyD1D2.sweep_par = 'pfreq'
 
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=4,
-                start=-0.0017, stop=-0.0017, pt=1,
+                start=0.0017, stop=0.0017, pt=1,
                 sstep=0.200, stime=0.025)
-vBias.set_volt(-0.0017)
+vBias.set_volt(0.0)
 vBias.output(1)
 
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-2.6, stop=-2.6, pt=1,
+               start=0.03, stop=0.03, pt=1,
                sstep=0.03, stime=0.020)
 vMag.set_volt(0.0)
 vMag.output(1)
@@ -96,27 +96,26 @@ nothing = dummy('none', name='nothing',
                 start=0, stop=1, pt=1,
                 sstep=20e-3, stime=0.0)
 
-DC_check = True
-dim_1 = dummyD1D2
-dim_1.defval = 4e9
-dim_2 = pFlux
-dim_2.defval = 0.03
+DC_check = False
+dim_1 = pFlux
+dim_1.defval = 0.03
+dim_1.UD = False
+dim_2 = dummyD1D2
+dim_2.defval = 8.5e9
 dim_3 = vMag
 dim_3.defval = 0.0
-dim_1.UD = False
 
 recordD12 = True  # activates /deactivates all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
 D12.doHist2d = False
-D12.doBG = True
+D12.doBG = False
 D12.doRaw = False
 D12.doCorrel = True
 
 
 def sweep_dim_1(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
-    sleep(0.1)
-
+    
 
 def sweep_dim_2(obj, value):
     ramp(obj, obj.sweep_par, value, obj.sstep, obj.stime)
@@ -228,6 +227,8 @@ finally:
     dim_3.output(0)
     sim900._dconn()
     gc.collect()
+    vBias.output(0)
+    vMag.output(0)
     D1.performClose()
     D2.performClose()
     print 'done'

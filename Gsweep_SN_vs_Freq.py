@@ -27,7 +27,7 @@ from AfSgen import instrument as Afsgen_inst
 
 
 thisfile = __file__
-filen_0 = '3041_par'
+filen_0 = '3040_SN1'
 folder = 'data_Dec09\\'
 if not os.path.exists(folder):
     os.makedirs(folder)
@@ -36,7 +36,7 @@ sim900 = sim900c('GPIB0::12::INSTR')
 vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
-lags = 50
+lags = 200
 BW = 5e5
 lsamples = 1e6
 corrAvg = 1
@@ -62,16 +62,16 @@ sgen.set_power(-30)
 sgen.output(0)                     
   
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=0.03, stop=1.03, pt=51,
+                 start=0.03, stop=0.03, pt=1,
                  sstep=30e-3, stime=1e-3)            
-pFlux.set_power_mode(1)  # Log(0)/Linear mode in mV (1)
+pFlux.set_power_mode(0)  # Log(0)/Linear mode in mV (1)
 pFlux.set_frequency(fd)
 pFlux.sweep_par = 'power'  # Power sweep
-pFlux.set_power(0.03)
-pFlux.output(1)  # Power OFF (0)/ On (1)
+pFlux.set_power(-50)
+pFlux.output(0)  # Power OFF (0)/ On (1)
 # -20 dB at output
                    
-dummyD1D2 = dummy('prober', name='Probe frequency', start=4.0e9, stop=5.8e9, pt=361, sstep=6e9, stime=0.0)
+dummyD1D2 = dummy('prober', name='Probe frequency', start=4.5e9, stop=5.8e9, pt=391, sstep=6e9, stime=0.0)
 dummyD1D2.D1 = D1
 dummyD1D2.D2 = D2
 dummyD1D2.sgen = pFlux
@@ -79,9 +79,9 @@ dummyD1D2.sweep_par = 'f11'
 
 
 vBias = sim928c(sim900, name='V 1Mohm', sloti=4,
-                start=-0.0017, stop=-0.0017, pt=1,
+                start=-20.0+0.0017, stop=20.0017, pt=9,
                 sstep=0.200, stime=0.025)
-vBias.set_volt(-0.0017)
+vBias.set_volt(0.0)
 vBias.output(1)
 
 
@@ -97,10 +97,10 @@ nothing = dummy('none', name='nothing',
                 sstep=20e-3, stime=0.0)
 
 DC_check = True
-dim_1 = dummyD1D2
-dim_1.defval = 4e9
-dim_2 = pFlux
-dim_2.defval = 0.03
+dim_1 = vBias
+dim_1.defval = 0.0
+dim_2 = dummyD1D2
+dim_2.defval = 4e9
 dim_3 = vMag
 dim_3.defval = 0.0
 dim_1.UD = False
@@ -108,7 +108,7 @@ dim_1.UD = False
 recordD12 = True  # activates /deactivates all D1 D2 data storage
 D12 = CorrProc(D1, D2, pFlux, sgen, lags, BW, lsamples, corrAvg)
 D12.doHist2d = False
-D12.doBG = True
+D12.doBG = False
 D12.doRaw = False
 D12.doCorrel = True
 
