@@ -37,8 +37,6 @@ def get_g2(P1, P2, lags=20):
         try:
             fftP1 = rfftn(P1, fshape)
             rfftP2 = rfftn(P2[::-1], fshape)
-            fftP1 = np.concatenate((np.zeros(HPfilt), fftP1[HPfilt:]))
-            rfftP2 = np.concatenate((np.zeros(HPfilt), rfftP2[HPfilt:]))
             G2 = irfftn((fftP1*rfftP2))[fslice].copy()[start:stop]/len(fftP1)
             return
 
