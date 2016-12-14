@@ -325,7 +325,13 @@ class instrument():
             #     raise Exception('ADC overloaded 4x in a row')
         else:
             self.Overload = 0
-
+    
+    def digi_adjust_ADC(self):
+         if self.ADCOverload > 2:
+            self.inputLvl +=1
+            self.digitizer.rf_rf_input_level_set(self.inputLvl)
+            print 'ajdust input level to:', self.inputLvl
+       
     def do_measurement(self, pstar):
         ''' Arms the digitizer,
         Sends a Trigger via the refered object pstar,
