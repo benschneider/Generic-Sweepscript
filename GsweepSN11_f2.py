@@ -27,7 +27,7 @@ from AfSgen import instrument as Afsgen_inst
 
 
 thisfile = __file__
-filen_0 = '3042_SN2'
+filen_0 = '3045_SN2'
 folder = 'data_Dec09\\'
 if not os.path.exists(folder):
     os.makedirs(folder)
@@ -37,7 +37,7 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 200
-BW = 5e5
+BW = 1e6
 lsamples = 1e6
 corrAvg = 1
 f1 = 5.2e9
@@ -86,7 +86,7 @@ vBias.output(1)
 
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-2.6, stop=-2.6, pt=1,
+               start=0.1, stop=0.1, pt=1,
                sstep=0.03, stime=0.020)
 vMag.set_volt(0.0)
 vMag.output(1)

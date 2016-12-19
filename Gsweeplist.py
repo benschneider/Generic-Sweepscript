@@ -9,20 +9,21 @@ from parsers import copy_file_interminal
 
 '''
 No RT narrow bandpass filter involved
+-Corrected VG
 '''
-# filen_0 = '3040_SN1'
-# folder = 'data_Dec09\\'
-# scriptfile = 'GsweepSN11_f.py'
-# copy_file_interminal(scriptfile, filen_0, folder)
-# execfile(scriptfile)
+filen_0 = '3043_SN1'
+folder = 'data_Dec09\\'
+scriptfile = 'GsweepSN11_f.py'
+copy_file_interminal(scriptfile, filen_0, folder)
+execfile(scriptfile)
 
-filen_0 = '3041_par'
+filen_0 = '3044_par'
 folder = 'data_Dec09\\'
 scriptfile = 'GsweepSN11_Parabola.py'
 copy_file_interminal(scriptfile, filen_0, folder)
 execfile(scriptfile)
 
-filen_0 = '3042_SN2'
+filen_0 = '3045_SN2'
 folder = 'data_Dec09\\'
 scriptfile = 'GsweepSN11_f2.py'
 copy_file_interminal(scriptfile, filen_0, folder)

@@ -22,8 +22,8 @@ import sys
 import os
 
 thisfile = __file__
-# filen_0 = '1205_SN11'
-# folder = 'data_Jul12\\'
+filen_0 = '3046'
+folder = 'data_Dec09\\'
 folder = folder + filen_0 + '\\'  # in one new folder
 if not os.path.exists(folder):
     os.makedirs(folder)
@@ -33,7 +33,7 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 30
-BW = 1e5
+BW = 1e6
 lsamples = 1e6
 corrAvg = 1
 f1 = 4.1e9  # 4.799999e9

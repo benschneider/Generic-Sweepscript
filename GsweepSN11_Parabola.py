@@ -27,7 +27,7 @@ from AfSgen import instrument as Afsgen_inst
 
 
 thisfile = __file__
-filen_0 = '3041_par'
+filen_0 = '3044_par'
 folder = 'data_Dec09\\'
 if not os.path.exists(folder):
     os.makedirs(folder)
@@ -37,7 +37,7 @@ vm = key2000('GPIB0::29::INSTR')
 
 # Digitizer setup
 lags = 50
-BW = 5e5
+BW = 1e6
 lsamples = 1e6
 corrAvg = 1
 f1 = 5.2e9
@@ -62,7 +62,7 @@ sgen.set_power(-30)
 sgen.output(0)                     
   
 pFlux = AnSigGen('GPIB0::17::INSTR', name='FluxPump',
-                 start=0.03, stop=1.03, pt=51,
+                 start=0.03, stop=2.03, pt=101,
                  sstep=30e-3, stime=1e-3)            
 pFlux.set_power_mode(1)  # Log(0)/Linear mode in mV (1)
 pFlux.set_frequency(fd)
@@ -86,7 +86,7 @@ vBias.output(1)
 
 
 vMag = sim928c(sim900, name='Magnet V R=22.19KOhm', sloti=3,
-               start=-2.6, stop=-2.6, pt=1,
+               start=0.1, stop=0.1, pt=1,
                sstep=0.03, stime=0.020)
 vMag.set_volt(0.0)
 vMag.output(1)
